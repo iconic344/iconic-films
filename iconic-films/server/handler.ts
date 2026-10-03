@@ -94,7 +94,8 @@ export async function handler(req:RequestLike,res:ServerResponse) {
         const attempt=await store().attemptGet(key);
         if(attempt&&attempt.until>Date.now()&&attempt.count>=8)throw new HttpError(429,'시도 횟수를 초과했습니다. 10분 후 다시 시도해 주세요.');
         const {pin}=await body(req);if(typeof pin!=='string'||!/^\d{4}$/.test(pin))throw new HttpError(400,'숫자 4자리를 입력하세요.');
-        const stored=await store().get('pin')||hash('iconic:'+(process.env.ADMIN_PIN||'1211'));
+        const configuredPin=(process.env.ADMIN_PIN||'').trim();
+        const stored=configuredPin?hash('iconic:'+configuredPin):(await store().get('pin')||hash('iconic:1211'));
         const computed=hash('iconic:'+pin);
         if(typeof stored!=='string'||stored.length!==computed.length||!timingSafeEqual(Buffer.from(stored),Buffer.from(computed))) {await store().attemptFail(key);throw new HttpError(401,'비밀번호가 일치하지 않습니다.');}
         await store().attemptClear(key);
