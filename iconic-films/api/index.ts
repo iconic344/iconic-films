@@ -41,10 +41,9 @@ async function authorized(req:Req){
 async function requireAdmin(req:Req){if(!await authorized(req))throw new HttpError(401,'관리자 로그인이 필요합니다.');}
 async function expectedPin(){
   const configured=process.env.ADMIN_PIN?.trim();
+  if(configured&&/^\d{4}$/.test(configured))return hash('iconic:'+configured);
   const stored=await getSetting('pin');
-  const marker=configured?await getSetting('pin-env-version'):undefined;
-  if(configured&&marker!==hash('iconic:'+configured))return hash('iconic:'+configured);
-  return typeof stored==='string'&&stored?stored:hash('iconic:1211');
+  return typeof stored==='string'&&stored?stored:hash('iconic:1124');
 }
 function json(res:ServerResponse,value:unknown,status=200){
   res.statusCode=status;
