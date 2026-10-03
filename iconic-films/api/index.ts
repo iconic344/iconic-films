@@ -2,6 +2,7 @@ import type {IncomingMessage,ServerResponse} from 'node:http';
 import {createHash,randomUUID,timingSafeEqual} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {createClient,type SupabaseClient} from '@supabase/supabase-js';
 
 type Req=IncomingMessage & {body?:any};
@@ -65,10 +66,22 @@ async function body(req:Req){
   try{return JSON.parse(buf.toString('utf8')||'{}')}catch{throw new HttpError(400,'올바른 JSON이 아닙니다.')}
 }
 function seed(){
-  try{
-    const file=path.join(process.cwd(),'src','site-config.json');
-    return JSON.parse(readFileSync(file,'utf8'));
-  }catch{return {name:'ICONIC',works:[],tracks:[]};}
+  // Vercel may start a nested project from the repository root. Resolve the
+  // traced JSON next to this module before trying working-directory layouts.
+  const candidates=[
+    fileURLToPath(new URL('../src/site-config.json',import.meta.url)),
+    path.join(process.cwd(),'src','site-config.json'),
+    path.join(process.cwd(),'iconic-films','src','site-config.json'),
+  ];
+  for(const file of candidates){
+    try{
+      const config=JSON.parse(readFileSync(file,'utf8'));
+      if(config&&typeof config.name==='string'&&Array.isArray(config.works)&&Array.isArray(config.tracks))return config;
+    }catch{}
+  }
+  // The React bundle already contains the exported snapshot. Null keeps that
+  // fallback intact; empty arrays would overwrite and hide all existing media.
+  return null;
 }
 
 const legacyOrigin='https://iconic-films.tlscndgus9.chatgpt.site';
@@ -180,16 +193,10 @@ export default async function handler(req:Req,res:ServerResponse){
 
         const configuredPin=process.env.ADMIN_PIN?.trim();
         let stored:string|undefined;
-        try{stored=await getSetting('pin')}catch{}
+        if(!configuredPin){try{stored=await getSetting('pin')}catch{}}
+        const expected=configuredPin?hash('iconic:'+configuredPin):(typeof stored==='string'&&stored?stored:hash('iconic:1211'));
         const computed=hash('iconic:'+pin);
-        const candidates=[
-          configuredPin?hash('iconic:'+configuredPin):'',
-          typeof stored==='string'?stored:'',
-          hash('iconic:1124')
-        ].filter(Boolean);
-        const ok=candidates.some(expected=>expected.length===computed.length&&timingSafeEqual(Buffer.from(expected),Buffer.from(computed)));
-        if(!ok)throw new HttpError(401,'비밀번호가 일치하지 않습니다.');
-        try{await putSetting('pin',hash('iconic:1124'))}catch{}
+        if(expected.length!==computed.length||!timingSafeEqual(Buffer.from(expected),Buffer.from(computed)))throw new HttpError(401,'비밀번호가 일치하지 않습니다.');
 
         const visit=randomUUID()+randomUUID();
         const token=signedToken(visit);
