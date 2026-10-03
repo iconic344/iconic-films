@@ -58,3 +58,55 @@ button{transition:transform .35s cubic-bezier(.2,.9,.2,1.25),background .3s,box-
 .logo-center-button{margin-bottom:24px}
 
 .model-status.error{pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:12px}.model-status.error button{font-size:14px}
+
+
+/* Prevent the bundled/old portfolio snapshot from flashing before the
+   latest saved configuration has finished loading from the API. */
+.site-boot{
+  position:fixed;
+  inset:0;
+  z-index:999999;
+  display:grid;
+  place-items:center;
+  min-height:100dvh;
+  background:#f7f7f5;
+  color:#0d0d0d;
+  overflow:hidden;
+}
+.site-boot-inner{
+  width:min(210px,46vw);
+  display:grid;
+  gap:16px;
+}
+.site-boot-logo{
+  text-align:center;
+  font:700 18px/1 Arial,Helvetica,sans-serif;
+  letter-spacing:-.055em;
+}
+.site-boot-logo span{
+  margin-left:2px;
+  font-size:7px;
+  vertical-align:top;
+  letter-spacing:0;
+}
+.site-boot-line{
+  width:100%;
+  height:1px;
+  overflow:hidden;
+  background:rgba(13,13,13,.12);
+}
+.site-boot-line i{
+  display:block;
+  width:42%;
+  height:100%;
+  background:currentColor;
+  animation:iconicBoot 1.05s cubic-bezier(.65,0,.35,1) infinite;
+}
+@keyframes iconicBoot{
+  0%{transform:translateX(-110%)}
+  55%{transform:translateX(110%)}
+  100%{transform:translateX(250%)}
+}
+@media (prefers-reduced-motion:reduce){
+  .site-boot-line i{animation:none;width:100%;opacity:.45}
+}
