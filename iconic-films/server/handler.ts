@@ -4,7 +4,7 @@ import {mkdir, writeFile, stat} from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
 import path from 'node:path';
 import seed from '../src/site-config.json';
-import {store, cloudStorage, supabase, bucketName, dataDirectory} from './store';
+import {store, cloudStorage, supabase, bucketName, dataDirectory} from './store.ts';
 
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const maxFile=100*1024*1024, maxConfig=10*1024*1024;
