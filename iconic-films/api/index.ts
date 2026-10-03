@@ -130,9 +130,10 @@ export default async function handler(req:Req,res:ServerResponse){
         const pin=input?.pin;
         if(typeof pin!=='string'||!/^\d{4}$/.test(pin))throw new HttpError(400,'숫자 4자리를 입력하세요.');
 
+        const configuredPin=process.env.ADMIN_PIN?.trim();
         let stored:string|undefined;
-        try{stored=await getSetting('pin')}catch{}
-        const expected=typeof stored==='string'&&stored?stored:hash('iconic:'+(process.env.ADMIN_PIN?.trim()||'1211'));
+        if(!configuredPin){try{stored=await getSetting('pin')}catch{}}
+        const expected=configuredPin?hash('iconic:'+configuredPin):(typeof stored==='string'&&stored?stored:hash('iconic:1211'));
         const computed=hash('iconic:'+pin);
         if(expected.length!==computed.length||!timingSafeEqual(Buffer.from(expected),Buffer.from(computed)))throw new HttpError(401,'비밀번호가 일치하지 않습니다.');
 
