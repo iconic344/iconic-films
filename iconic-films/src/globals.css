@@ -329,7 +329,7 @@ button{transition:transform .35s cubic-bezier(.2,.9,.2,1.25),background .3s,box-
 }
 .hero>.main-logo{
   width:100%;
-  margin:-28px auto 34px!important;
+  margin:20px auto 34px!important;
 }
 .hero-bottom{
   width:min(1040px,100%);
@@ -343,7 +343,7 @@ button{transition:transform .35s cubic-bezier(.2,.9,.2,1.25),background .3s,box-
   .hero{padding:0 4%!important}
   .hero-top{padding:20px 14px 0}
   .hero>.stage{padding:82px 14px 0!important}
-  .hero>.main-logo{margin:-4px auto 24px!important}
+  .hero>.main-logo{margin:14px auto 24px!important}
   .hero-bottom{padding:0 14px 26px!important}
 }
 
