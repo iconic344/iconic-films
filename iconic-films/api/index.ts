@@ -51,6 +51,7 @@ function json(res:ServerResponse,value:unknown,status=200){
   res.setHeader('Content-Type','application/json; charset=utf-8');
   res.setHeader('Cache-Control','no-store');
   res.setHeader('X-Content-Type-Options','nosniff');
+  res.setHeader('X-Iconic-Revision','iconic-recovery-20261003-v1');
   res.end(JSON.stringify(value));
 }
 async function raw(req:Req,limit:number){
