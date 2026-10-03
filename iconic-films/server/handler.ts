@@ -1,5 +1,5 @@
 import type {IncomingMessage, ServerResponse} from 'node:http';
-import {createHash, randomUUID, timingSafeEqual} from 'node:crypto';
+import {createHash, randomUUID, randomBytes, timingSafeEqual} from 'node:crypto';
 import {mkdir, writeFile, stat} from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
 import path from 'node:path';
@@ -20,14 +20,9 @@ function sameOrigin(req:RequestLike) {
   const expected=(isSecure(req)?'https':'http')+'://'+header(req,'host');
   return origin===expected;
 }
-function sessionSecret(){return process.env.ADMIN_SESSION_SECRET||process.env.SUPABASE_SERVICE_ROLE_KEY||process.env.ADMIN_PIN||'1211';}
-function adminCookieForVisit(visit:string){return hash('admin:'+visit+':'+sessionSecret());}
 async function authorized(req:RequestLike) {
   if(!sameOrigin(req))return false;
-  const cookie=cookieToken(req),visit=header(req,'x-iconic-visit');
-  if(!cookie||!/^[a-f0-9-]{72}$/.test(visit))return false;
-  const expected=adminCookieForVisit(visit);
-  return cookie.length===expected.length&&timingSafeEqual(Buffer.from(cookie),Buffer.from(expected));
+  const key=sessionHash(req);return !!key&&Number(await store().sessionGet(key))>Date.now();
 }
 async function requireAdmin(req:RequestLike) {if(!await authorized(req))throw new HttpError(401,'관리자 로그인이 필요합니다.');}
 function json(res:ServerResponse,value:unknown,status=200) {
@@ -93,33 +88,35 @@ export async function handler(req:RequestLike,res:ServerResponse) {
     if(route==='/api/auth') {
       if(method==='GET'){json(res,{authenticated:await authorized(req)});return;}
       if(method==='DELETE') {
-        res.setHeader('Set-Cookie',`iconic_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${isSecure(req)?'; Secure':''}`);json(res,{ok:true});return;
+        const key=sessionHash(req);if(key)await store().sessionDelete(key);
+        res.setHeader('Set-Cookie','iconic_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'+(isSecure(req)?'; Secure':''));
+        json(res,{ok:true});return;
       }
       if(method==='POST') {
-        // PIN authentication must not depend on Supabase being reachable.
+        const key=hash(process.env.VERCEL?header(req,'x-forwarded-for').split(',')[0].trim():req.socket.remoteAddress||'local');
+        const attempt=await store().attemptGet(key);
+        if(attempt&&attempt.until>Date.now()&&attempt.count>=8)throw new HttpError(429,'시도 횟수를 초과했습니다. 10분 후 다시 시도해 주세요.');
         const {pin}=await body(req);if(typeof pin!=='string'||!/^\d{4}$/.test(pin))throw new HttpError(400,'숫자 4자리를 입력하세요.');
-        const configuredPin=(process.env.ADMIN_PIN||'').trim();
-        const stored=configuredPin?hash('iconic:'+configuredPin):(await store().get('pin')||hash('iconic:1211'));
+        const configured=(process.env.ADMIN_PIN||'').trim(),marker=configured?await store().get('pin-env-version'):undefined;
+        const stored=configured&&marker!==hash('iconic:'+configured)?hash('iconic:'+configured):(await store().get('pin')||hash('iconic:1211'));
         const computed=hash('iconic:'+pin);
-        if(typeof stored!=='string'||stored.length!==computed.length||!timingSafeEqual(Buffer.from(stored),Buffer.from(computed))) {
-          try {
-            const key=hash(process.env.VERCEL?header(req,'x-forwarded-for').split(',')[0].trim():req.socket.remoteAddress||'local');
-            await store().attemptFail(key);
-          } catch {}
-          throw new HttpError(401,'비밀번호가 일치하지 않습니다.');
+        if(typeof stored!=='string'||stored.length!==computed.length||!timingSafeEqual(Buffer.from(stored),Buffer.from(computed))){
+          await store().attemptFail(key);throw new HttpError(401,'비밀번호가 일치하지 않습니다.');
         }
-        const visitKey=randomUUID()+randomUUID();
-        const token=adminCookieForVisit(visitKey);
-        try {
-          const key=hash(process.env.VERCEL?header(req,'x-forwarded-for').split(',')[0].trim():req.socket.remoteAddress||'local');
-          await store().attemptClear(key);
-        } catch {}
-        res.setHeader('Set-Cookie',`iconic_session=${token}; HttpOnly; SameSite=Strict; Path=/${isSecure(req)?'; Secure':''}`);json(res,{ok:true,visitKey});return;
+        await store().attemptClear(key);
+        const token=randomBytes(32).toString('hex'),visitKey=randomUUID()+randomUUID();
+        await store().sessionPut(hash('visit:'+token+':'+visitKey),Date.now()+21600000);
+        res.setHeader('Set-Cookie','iconic_session='+token+'; HttpOnly; SameSite=Strict; Path=/'+(isSecure(req)?'; Secure':''));
+        json(res,{ok:true,visitKey});return;
       }
     }
     if(route==='/api/security'&&method==='PUT') {
-      await requireAdmin(req);const {pin}=await body(req);if(typeof pin!=='string'||!/^\d{4}$/.test(pin))throw new HttpError(400,'숫자 4자리를 입력하세요.');
-      await store().resetPin(hash('iconic:'+pin));json(res,{ok:true});return;
+      await requireAdmin(req);const {pin}=await body(req);
+      if(typeof pin!=='string'||!/^\d{4}$/.test(pin))throw new HttpError(400,'숫자 4자리를 입력하세요.');
+      await store().resetPin(hash('iconic:'+pin));
+      const configured=(process.env.ADMIN_PIN||'').trim();
+      await store().put('pin-env-version',configured?hash('iconic:'+configured):'');
+      json(res,{ok:true});return;
     }
     if(route==='/api/config/chunk') {
       const {revision,kind,index}=chunkCoordinates(url),key=chunkKey(revision,kind,index);

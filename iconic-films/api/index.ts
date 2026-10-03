@@ -1,5 +1,5 @@
 import type {IncomingMessage,ServerResponse} from 'node:http';
-import {createHash,randomUUID,timingSafeEqual} from 'node:crypto';
+import {createHash,randomUUID,randomBytes,timingSafeEqual} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -30,17 +30,22 @@ function sameOrigin(req:Req){
 }
 function cookieToken(req:Req){return header(req,'cookie').match(/(?:^|;\s*)iconic_session=([a-f0-9]{64})(?:;|$)/)?.[1];}
 function visitKey(req:Req){return header(req,'x-iconic-visit');}
-function sessionSecret(){return process.env.ADMIN_SESSION_SECRET||process.env.SUPABASE_SERVICE_ROLE_KEY||process.env.ADMIN_PIN||'1211';}
-function signedToken(visit:string){return hash('admin:'+visit+':'+sessionSecret());}
-function owner(req:Req){const c=cookieToken(req),v=visitKey(req);return c&&v?hash('visit:'+c+':'+v):'';}
-function authorized(req:Req){
+function owner(req:Req){const c=cookieToken(req),v=visitKey(req);return c&&/^[a-f0-9-]{72}$/.test(v)?hash('visit:'+c+':'+v):'';}
+function checked(result:{error:any}){if(result.error)throw result.error;}
+async function authorized(req:Req){
   if(!sameOrigin(req))return false;
-  const c=cookieToken(req),v=visitKey(req);
-  if(!c||!/^[a-f0-9-]{72}$/.test(v))return false;
-  const expected=signedToken(v);
-  return c.length===expected.length&&timingSafeEqual(Buffer.from(c),Buffer.from(expected));
+  const token=owner(req);if(!token)return false;
+  const result=await db().from('iconic_sessions').select('expires').eq('token',token).maybeSingle();
+  checked(result);return Number(result.data?.expires)>Date.now();
 }
-function requireAdmin(req:Req){if(!authorized(req))throw new HttpError(401,'관리자 로그인이 필요합니다.');}
+async function requireAdmin(req:Req){if(!await authorized(req))throw new HttpError(401,'관리자 로그인이 필요합니다.');}
+async function expectedPin(){
+  const configured=process.env.ADMIN_PIN?.trim();
+  const stored=await getSetting('pin');
+  const marker=configured?await getSetting('pin-env-version'):undefined;
+  if(configured&&marker!==hash('iconic:'+configured))return hash('iconic:'+configured);
+  return typeof stored==='string'&&stored?stored:hash('iconic:1211');
+}
 function json(res:ServerResponse,value:unknown,status=200){
   res.statusCode=status;
   res.setHeader('Content-Type','application/json; charset=utf-8');
@@ -187,35 +192,39 @@ export default async function handler(req:Req,res:ServerResponse){
     if(!['GET','HEAD'].includes(method)&&!sameOrigin(req))throw new HttpError(403,'다른 사이트에서 관리자 요청을 보낼 수 없습니다.');
 
     if(route==='/api/auth'){
-      if(method==='GET'){json(res,{authenticated:authorized(req)});return;}
+      if(method==='GET'){json(res,{authenticated:await authorized(req)});return;}
       if(method==='DELETE'){
-        res.setHeader('Set-Cookie',`iconic_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${isSecure(req)?'; Secure':''}`);
+        const key=owner(req);if(key)checked(await db().from('iconic_sessions').delete().eq('token',key));
+        res.setHeader('Set-Cookie','iconic_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'+(isSecure(req)?'; Secure':''));
         json(res,{ok:true});return;
       }
       if(method==='POST'){
-        const input=await body(req);
-        const pin=input?.pin;
+        const input=await body(req),pin=input?.pin;
         if(typeof pin!=='string'||!/^\d{4}$/.test(pin))throw new HttpError(400,'숫자 4자리를 입력하세요.');
-
-        const configuredPin=process.env.ADMIN_PIN?.trim();
-        let stored:string|undefined;
-        if(!configuredPin){try{stored=await getSetting('pin')}catch{}}
-        const expected=configuredPin?hash('iconic:'+configuredPin):(typeof stored==='string'&&stored?stored:hash('iconic:1211'));
-        const computed=hash('iconic:'+pin);
-        if(expected.length!==computed.length||!timingSafeEqual(Buffer.from(expected),Buffer.from(computed)))throw new HttpError(401,'비밀번호가 일치하지 않습니다.');
-
-        const visit=randomUUID()+randomUUID();
-        const token=signedToken(visit);
-        res.setHeader('Set-Cookie',`iconic_session=${token}; HttpOnly; SameSite=Strict; Path=/${isSecure(req)?'; Secure':''}`);
+        const key=hash(process.env.VERCEL?header(req,'x-forwarded-for').split(',')[0].trim():req.socket.remoteAddress||'local');
+        const attempt=await db().from('iconic_attempts').select('count,until').eq('key',key).maybeSingle();checked(attempt);
+        if(attempt.data&&Number(attempt.data.until)>Date.now()&&attempt.data.count>=8)throw new HttpError(429,'시도 횟수를 초과했습니다. 10분 후 다시 시도해 주세요.');
+        const expected=await expectedPin(),computed=hash('iconic:'+pin);
+        if(expected.length!==computed.length||!timingSafeEqual(Buffer.from(expected),Buffer.from(computed))){
+          checked(await db().rpc('iconic_failed_attempt',{p_key:key}));
+          throw new HttpError(401,'비밀번호가 일치하지 않습니다.');
+        }
+        checked(await db().from('iconic_attempts').delete().eq('key',key));
+        const token=randomBytes(32).toString('hex'),visit=randomUUID()+randomUUID();
+        checked(await db().from('iconic_sessions').delete().lt('expires',Date.now()));
+        checked(await db().from('iconic_sessions').insert({token:hash('visit:'+token+':'+visit),expires:Date.now()+21600000}));
+        res.setHeader('Set-Cookie','iconic_session='+token+'; HttpOnly; SameSite=Strict; Path=/'+(isSecure(req)?'; Secure':''));
         json(res,{ok:true,visitKey:visit});return;
       }
     }
 
     if(route==='/api/security'&&method==='PUT'){
-      requireAdmin(req);
+      await requireAdmin(req);
       const input=await body(req),pin=input?.pin;
       if(typeof pin!=='string'||!/^\d{4}$/.test(pin))throw new HttpError(400,'숫자 4자리를 입력하세요.');
-      await putSetting('pin',hash('iconic:'+pin));
+      checked(await db().rpc('iconic_reset_pin',{p_hash:hash('iconic:'+pin)}));
+      const configured=process.env.ADMIN_PIN?.trim();
+      await putSetting('pin-env-version',configured?hash('iconic:'+configured):'');
       json(res,{ok:true});return;
     }
 
@@ -223,7 +232,7 @@ export default async function handler(req:Req,res:ServerResponse){
       const {revision,kind,index}=chunkCoordinates(url);
       const key=chunkKey(revision,kind,index);
       if(method==='POST'){
-        requireAdmin(req);
+        await requireAdmin(req);
         const input=await body(req),items=input?.items;
         if(!Array.isArray(items)||items.length>100||Buffer.byteLength(JSON.stringify(items))>700000)throw new HttpError(400,'목록 항목의 정보가 너무 큽니다.');
         await putSetting(key,{items,owner:owner(req)});
@@ -247,7 +256,7 @@ export default async function handler(req:Req,res:ServerResponse){
         json(res,{config});return;
       }
       if(method==='PUT'){
-        requireAdmin(req);
+        await requireAdmin(req);
         const cfg=await body(req);
         validateConfig(cfg);
         if(cfg._mediaRevision){
@@ -273,7 +282,7 @@ export default async function handler(req:Req,res:ServerResponse){
     }
 
     if(route==='/api/upload'&&method==='POST'){
-      requireAdmin(req);
+      await requireAdmin(req);
       const input=await body(req);
       const meta=normalizeUpload(input.name,input.type,input.size);
       const filename=randomUUID()+'.'+meta.ext;
