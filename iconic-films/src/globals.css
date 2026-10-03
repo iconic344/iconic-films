@@ -1348,7 +1348,11 @@ button{transition:transform .35s cubic-bezier(.2,.9,.2,1.25),background .3s,box-
 
 /* Restore admin login modal visual */
 .login-dialog{
-  position:relative!important;
+  position:fixed!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  z-index:9001!important;
   width:min(470px,calc(100vw - 32px))!important;
   max-height:calc(100dvh - 32px)!important;
   padding:40px!important;
