@@ -246,3 +246,61 @@ button{transition:transform .35s cubic-bezier(.2,.9,.2,1.25),background .3s,box-
 }
 
 @media(max-width:640px){.scroll-toggle{right:82px;width:48px;height:48px}.scroll-toggle--solo{right:20px}.sound-toggle{right:20px;width:48px;height:48px}}
+/* Hard-fix Radix dialogs so admin login never enters the document flow. */
+[data-slot="dialog-overlay"]{
+  position:fixed!important;
+  inset:0!important;
+  z-index:9000!important;
+  display:block!important;
+  background:rgba(0,0,0,.56)!important;
+  -webkit-backdrop-filter:blur(10px)!important;
+  backdrop-filter:blur(10px)!important;
+}
+[data-slot="dialog-content"]{
+  position:fixed!important;
+  left:50%!important;
+  top:50%!important;
+  z-index:9001!important;
+  width:min(520px,calc(100vw - 32px))!important;
+  max-height:min(760px,calc(100dvh - 32px))!important;
+  margin:0!important;
+  transform:translate(-50%,-50%)!important;
+  overflow:auto!important;
+  box-sizing:border-box!important;
+}
+.login-dialog{
+  width:min(470px,calc(100vw - 32px))!important;
+  max-height:calc(100dvh - 32px)!important;
+  padding:40px!important;
+  display:grid!important;
+  gap:22px!important;
+  border:1px solid var(--line)!important;
+  border-radius:24px!important;
+  background:var(--page)!important;
+  color:var(--ink)!important;
+  box-shadow:0 30px 90px rgba(0,0,0,.35)!important;
+}
+.login-dialog [data-slot="input-otp-group"]{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  gap:10px!important;
+}
+.login-dialog [data-slot="input-otp-slot"]{
+  width:54px!important;
+  height:64px!important;
+  flex:0 0 54px!important;
+}
+@media(max-width:560px){
+  .login-dialog{padding:28px!important}
+  .login-dialog [data-slot="input-otp-group"]{gap:8px!important}
+  .login-dialog [data-slot="input-otp-slot"]{width:48px!important;height:58px!important;flex-basis:48px!important}
+}
+
+/* Hero composition: main film first, identity/marquee second. */
+.hero>.stage{margin-top:34px}
+.hero>.main-logo{margin-top:16px;margin-bottom:18px}
+@media(max-width:760px){
+  .hero>.stage{margin-top:24px}
+  .hero>.main-logo{margin-top:10px;margin-bottom:14px}
+}
