@@ -131,7 +131,7 @@ export async function handler(req:RequestLike,res:ServerResponse) {
       }
     }
     if(route==='/api/config') {
-      if(method==='GET'){json(res,{config:await store().get('config')||seed});return;}
+      if(method==='GET'){let config:any=seed;try{config=await store().get('config')||seed}catch(e){console.warn('ICONIC config fallback:',e)}json(res,{config});return;}
       if(method==='PUT') {
         await requireAdmin(req);const c=await body(req);validateConfig(c);
         if(c._mediaRevision) {
