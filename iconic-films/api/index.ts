@@ -70,6 +70,54 @@ function seed(){
     return JSON.parse(readFileSync(file,'utf8'));
   }catch{return {name:'ICONIC',works:[],tracks:[]};}
 }
+
+const legacyOrigin='https://iconic-films.tlscndgus9.chatgpt.site';
+
+function resolveLegacyMedia(value:any):any{
+  if(typeof value==='string'){
+    const match=value.match(/^\/(?:api\/)?media\/([a-f0-9-]{36})(?:\.[a-z0-9]+)?$/i);
+    return match?`${legacyOrigin}/api/media/${match[1]}`:value;
+  }
+  if(Array.isArray(value))return value.map(resolveLegacyMedia);
+  if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,resolveLegacyMedia(v)]));
+  return value;
+}
+
+async function legacyConfig(){
+  try{
+    const response=await fetch(legacyOrigin+'/api/config',{cache:'no-store',signal:AbortSignal.timeout(4500)});
+    if(!response.ok)return null;
+    const payload=await response.json();
+    return resolveLegacyMedia(payload?.config||payload);
+  }catch{return null;}
+}
+
+function fillMedia(current:any,fallback:any){
+  const base=current&&typeof current==='object'?structuredClone(current):{};
+  const source=fallback&&typeof fallback==='object'?fallback:{};
+  const fields=['heroPoster','heroVideo','logo','aboutImage','aboutModel','backgroundImage','backgroundVideo'];
+  for(const key of fields)if((base[key]===undefined||base[key]===null||base[key]==='')&&source[key])base[key]=source[key];
+
+  base.mainLogo={...(source.mainLogo||{}),...(base.mainLogo||{})};
+  for(const key of ['image','model'])if(!base.mainLogo[key]&&source.mainLogo?.[key])base.mainLogo[key]=source.mainLogo[key];
+
+  if((!Array.isArray(base.hdriEnvironments)||!base.hdriEnvironments.length)&&Array.isArray(source.hdriEnvironments)&&source.hdriEnvironments.length)base.hdriEnvironments=source.hdriEnvironments;
+  if((!Array.isArray(base.musicPlaylists)||!base.musicPlaylists.length)&&Array.isArray(source.musicPlaylists)&&source.musicPlaylists.length)base.musicPlaylists=source.musicPlaylists;
+
+  if(!base._mediaRevision){
+    if((!Array.isArray(base.works)||!base.works.length)&&Array.isArray(source.works)&&source.works.length)base.works=source.works;
+    else if(Array.isArray(base.works)&&Array.isArray(source.works)){
+      const byId=new Map(source.works.map((w:any)=>[w.id,w]));
+      base.works=base.works.map((w:any)=>{const s:any=byId.get(w.id);return s?{...w,poster:w.poster||s.poster||'',video:w.video||s.video||''}:w});
+    }
+    if((!Array.isArray(base.tracks)||!base.tracks.length)&&Array.isArray(source.tracks)&&source.tracks.length)base.tracks=source.tracks;
+    else if(Array.isArray(base.tracks)&&Array.isArray(source.tracks)){
+      const byId=new Map(source.tracks.map((t:any)=>[t.id,t]));
+      base.tracks=base.tracks.map((t:any)=>{const s:any=byId.get(t.id);return s?{...t,url:t.url||s.url||'',cover:t.cover||s.cover||''}:t});
+    }
+  }
+  return resolveLegacyMedia(base);
+}
 async function getSetting(key:string){
   const {data,error}=await db().from('iconic_settings').select('value').eq('key',key).maybeSingle();
   if(error)throw error;return data?.value;
@@ -179,8 +227,15 @@ export default async function handler(req:Req,res:ServerResponse){
 
     if(route==='/api/config'){
       if(method==='GET'){
-        let config=seed();
-        try{config=await getSetting('config')||config}catch{}
+        const bundled=resolveLegacyMedia(seed());
+        let stored:any=null;
+        try{stored=await getSetting('config')}catch{}
+        const legacy=await legacyConfig();
+        const fallback=legacy||bundled;
+        const config=fillMedia(stored||bundled,fallback);
+        try{
+          if(!stored||JSON.stringify(stored)!==JSON.stringify(config))await putSetting('config',config);
+        }catch{}
         json(res,{config});return;
       }
       if(method==='PUT'){
