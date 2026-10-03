@@ -1,0 +1,24 @@
+{
+  "sourceVersion": 10,
+  "sourceCommit": "211b5e6ac0e341f05db397adb42494956d175e68",
+  "copiedMedia": 33,
+  "missingMedia": 0,
+  "hashesVerified": true,
+  "unchangedFrontendFiles": [
+    "spring.ts",
+    "admin-session.ts",
+    "model-upload.ts",
+    "logo-settings.ts",
+    "media-library.tsx",
+    "cursor-motion.ts",
+    "main-logo.tsx",
+    "model-return.ts",
+    "model-source.ts",
+    "pointer-experience.tsx",
+    "glass-scene.tsx",
+    "logo-editor.tsx",
+    "globals.css"
+  ],
+  "uiComponentsByteIdentical": true,
+  "configAssetPathsChecked": 34
+}

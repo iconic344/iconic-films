@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.vercel/
+.env
+.env.*
+!.env.example
+data/*
+!data/.gitkeep
+*.log
+*.tsbuildinfo
+*.zip
+.DS_Store

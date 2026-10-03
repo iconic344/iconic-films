@@ -1,0 +1,398 @@
+[
+  {
+    "source": "/api/media/6318979f-2f44-453b-9795-4c04aeeda791",
+    "local": "/media/6318979f-2f44-453b-9795-4c04aeeda791.png",
+    "contentType": "image/png",
+    "bytes": 1806720,
+    "sha256": "ee91e156cc227af3dddee4545821513838193efaf11ed800b8b7730136011bfe",
+    "originalFilename": null,
+    "usedBy": [
+      "config.aboutImage"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/da61feaa-799d-45b5-8e01-81cd8ad8801a",
+    "local": "/media/da61feaa-799d-45b5-8e01-81cd8ad8801a.glb",
+    "contentType": "model/gltf-binary",
+    "bytes": 919996,
+    "sha256": "58f5f9ea179c261c46cf9287c88568ea6cbe6503a2bd00b7e71ec2f47250d011",
+    "originalFilename": null,
+    "usedBy": [
+      "config.aboutModel"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/8091a227-4883-4f87-8a17-7645109f704b",
+    "local": "/media/8091a227-4883-4f87-8a17-7645109f704b.mp4",
+    "contentType": "video/mp4",
+    "bytes": 15029433,
+    "sha256": "4f31dc12685cb3ac8bc1130d8c20ee39b5376b3fb94a48622faa014a96eea9ab",
+    "originalFilename": null,
+    "usedBy": [
+      "config.heroVideo"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/bf6feeca-5ec3-44aa-9cac-c676fe0b4bfe",
+    "local": "/media/bf6feeca-5ec3-44aa-9cac-c676fe0b4bfe.jpg",
+    "contentType": "image/jpeg",
+    "bytes": 46991,
+    "sha256": "c3e17c2aedccfb0662a88717b8b66cccebadc15a1b5a18024d3e9a1e62f98c94",
+    "originalFilename": null,
+    "usedBy": [
+      "config.works[0].poster"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/b87ab81b-42ce-4478-b2ff-037f2c0073ea",
+    "local": "/media/b87ab81b-42ce-4478-b2ff-037f2c0073ea.mp4",
+    "contentType": "video/mp4",
+    "bytes": 41761373,
+    "sha256": "c4a1b53bc1e4282517bd91001b005c0f2ca7e7a91545861e5fe0749b0fb03224",
+    "originalFilename": "billboard_01.mp4",
+    "usedBy": [
+      "config.works[0].video"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/6ac0a220-c575-4040-9688-050554532609",
+    "local": "/media/6ac0a220-c575-4040-9688-050554532609.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 5191752,
+    "sha256": "14d3161ebe023ea8adcc3197395fc247d8b7e524b46db6166c4c7bb8b62d392b",
+    "originalFilename": "What The Hell - E SENS.mp3",
+    "usedBy": [
+      "config.tracks[0].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/2becb1aa-af59-46c1-b66a-8a3654c77b0d",
+    "local": "/media/2becb1aa-af59-46c1-b66a-8a3654c77b0d.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 4509212,
+    "sha256": "b258a069e75a1e445f56406f268c8adcc6eb8be54aad1176ce6a04d047735fc9",
+    "originalFilename": "Locked And Loaded (Feat. Owen Ovadoz).mp3",
+    "usedBy": [
+      "config.tracks[1].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/1892d739-906f-43ec-8d59-15d1894bebb9",
+    "local": "/media/1892d739-906f-43ec-8d59-15d1894bebb9.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 3878440,
+    "sha256": "d6953e2ba802e6a90a72b33c5c5cff4e9ed2c7cc7bb43f1385a5312e7d3dfdf1",
+    "originalFilename": "Work out - Kid milli, Jvcki wai, NO EL, Young B, Swings.mp3",
+    "usedBy": [
+      "config.tracks[2].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/dd5608fc-92c1-43e4-a68f-dc4c811c2a99",
+    "local": "/media/dd5608fc-92c1-43e4-a68f-dc4c811c2a99.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 5788035,
+    "sha256": "28c537f7c39a92a4526f64a8c45cc51ab2fa273324df6669efeac645d7ddc38c",
+    "originalFilename": "IndiGO - 저스디스, 키드밀리, NO EL, 양홍원.mp3",
+    "usedBy": [
+      "config.tracks[3].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/f5894905-4f1c-4f30-afe0-df2dd0d05e33",
+    "local": "/media/f5894905-4f1c-4f30-afe0-df2dd0d05e33.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 3978779,
+    "sha256": "cfa67206d0f79f1e4e8941c1c9392f04cca4613274bbefa30fea427e57745426",
+    "originalFilename": "TICK TOCK - (Prod. by ZICO, Crush).mp3",
+    "usedBy": [
+      "config.tracks[4].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/cdc843a6-69bb-41e5-ba28-60469d5941c8",
+    "local": "/media/cdc843a6-69bb-41e5-ba28-60469d5941c8.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 4023203,
+    "sha256": "6ed0e2a67957a6afa5885f06b5cf9ba6a1993f9e2dfbc1f5be57ecfb2372bcc3",
+    "originalFilename": "MAKGEOLLI BANGER - Effie.mp3",
+    "usedBy": [
+      "config.tracks[5].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/bc542a2d-48f5-4b6c-a3dc-8db0f530057c",
+    "local": "/media/bc542a2d-48f5-4b6c-a3dc-8db0f530057c.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 4537919,
+    "sha256": "c63d562e355e75ec94b2e81a5e5522ff4de7453bf0ae7797e2be7e932a56fd6e",
+    "originalFilename": "PUBLIC ENEMY - (Feat. 노윤하, Wuuslime).mp3",
+    "usedBy": [
+      "config.tracks[6].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/d15837dc-dd0e-41ea-9990-2bd8025c83f3",
+    "local": "/media/d15837dc-dd0e-41ea-9990-2bd8025c83f3.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 2301594,
+    "sha256": "b904dde636d620230cbfeefbed62334d6cb21f914b2f5b805084b0d55fe47f0c",
+    "originalFilename": "Super Star - Tray B.mp3",
+    "usedBy": [
+      "config.tracks[7].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/908da290-ceca-479a-a94c-c87c869a842c",
+    "local": "/media/908da290-ceca-479a-a94c-c87c869a842c.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 3827224,
+    "sha256": "2ca5087f6cda596f635ec212799f8418cc79c3971e6f9a1138e5186d7070aa45",
+    "originalFilename": "Call Me.mp3",
+    "usedBy": [
+      "config.tracks[8].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/1116f7d0-3fbb-4de2-8836-dad018b1c835",
+    "local": "/media/1116f7d0-3fbb-4de2-8836-dad018b1c835.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 4530396,
+    "sha256": "288f8b6bf90528c26f26abb1eee477d5b3e4c35b4776225f76f0a3bf0c7b4bf5",
+    "originalFilename": "FAMOUS - ALLDAY PROJECT.mp3",
+    "usedBy": [
+      "config.tracks[9].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/3c75518a-edd3-4d8d-865e-110d677908ec",
+    "local": "/media/3c75518a-edd3-4d8d-865e-110d677908ec.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 2901926,
+    "sha256": "e1638160ee5d5e7c49c111f21bd19e6fbbcb305037535c65f05339ec0115f7e2",
+    "originalFilename": "No Blueberries - DPR IAN.mp3",
+    "usedBy": [
+      "config.tracks[10].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/4fb037cc-42c0-43f2-ad50-adcb1a89f3b1",
+    "local": "/media/4fb037cc-42c0-43f2-ad50-adcb1a89f3b1.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 3984333,
+    "sha256": "35ce045a35fdab67f1c54fd108ab8b3b10c633f068d307e05704623ed060772e",
+    "originalFilename": "25 - Kid Milli (Feat. 양홍원).mp3",
+    "usedBy": [
+      "config.tracks[11].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/23dc7c7e-5832-42a6-802d-b3d44b73cd72",
+    "local": "/media/23dc7c7e-5832-42a6-802d-b3d44b73cd72.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 2722072,
+    "sha256": "f34ae4a8ed91d0e69a7c5289f2aa001bc7af26fc7e02015f43bf99ea391673c4",
+    "originalFilename": "AH AH - NOWIMYOUNG (Feat. Sik-K).mp3",
+    "usedBy": [
+      "config.tracks[12].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/5948fb3e-2ac7-4f7c-9b0b-261246ab393b",
+    "local": "/media/5948fb3e-2ac7-4f7c-9b0b-261246ab393b.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 5150439,
+    "sha256": "971f71cf59ebdddb01db551db6e3741be09b7f8a7299472e744e6a8545f9fc26",
+    "originalFilename": "All I Wanna Do - Jay Park (Feat. Hoody & Loco).mp3",
+    "usedBy": [
+      "config.tracks[13].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/10439d05-2b2e-440d-8ffc-0961c82201bd",
+    "local": "/media/10439d05-2b2e-440d-8ffc-0961c82201bd.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 2742874,
+    "sha256": "4f0946c27b9e38f53cf212283a022f2edf1846809184637de5a6658f2b93d728",
+    "originalFilename": "Come and kiss me - BLOO.mp3",
+    "usedBy": [
+      "config.tracks[14].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/2d29da71-a98c-44fc-8352-a08dc5c89b34",
+    "local": "/media/2d29da71-a98c-44fc-8352-a08dc5c89b34.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 4878974,
+    "sha256": "1bedf222677f19618811ace1588e2007222f6ccbb0ebf444f44ef9d1abc53341",
+    "originalFilename": "DEEP GREEN - CHRISTIAN KURIA.mp3",
+    "usedBy": [
+      "config.tracks[15].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/dda1e02d-0278-4a5f-b6f4-45f8c773f826",
+    "local": "/media/dda1e02d-0278-4a5f-b6f4-45f8c773f826.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 4718478,
+    "sha256": "46ccf6cccbf4976b07d52748366bf84bc052cf7449a890f2e9c0866028e2bd5d",
+    "originalFilename": "Downtown Baby - BLOO.mp3",
+    "usedBy": [
+      "config.tracks[16].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/f0919cc8-209a-4db2-89bf-f3992500e91a",
+    "local": "/media/f0919cc8-209a-4db2-89bf-f3992500e91a.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 684989,
+    "sha256": "92f50a51752811ca552b841dd561dcdcd5b72c399c2acfd7b8e95c22b8598cd6",
+    "originalFilename": "G-DRAGON - 3RD ALBUM CONCEPT FILM.mp3",
+    "usedBy": [
+      "config.tracks[17].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/44e4692c-308e-47b9-b96f-e96b6606d14d",
+    "local": "/media/44e4692c-308e-47b9-b96f-e96b6606d14d.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 2902526,
+    "sha256": "c06c06faee4407a9bcfbec565645872f4782fb30ecb758c4d93831a53678c55f",
+    "originalFilename": "Genesis - Mnelia.mp3",
+    "usedBy": [
+      "config.tracks[18].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/16ec1c59-0f0e-44d0-800d-8d862100d7e9",
+    "local": "/media/16ec1c59-0f0e-44d0-800d-8d862100d7e9.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 2702041,
+    "sha256": "cd618aa2698dd006acd0759c0a4246e52c83aa71aa6908760711e3734f362672",
+    "originalFilename": "Girl in New York - BLOO.mp3",
+    "usedBy": [
+      "config.tracks[19].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/e6406b0a-b838-43df-92f1-33e857e9f89f",
+    "local": "/media/e6406b0a-b838-43df-92f1-33e857e9f89f.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 2637700,
+    "sha256": "f9100eb552503138e1ce9a5fcd2a6aa33aad4f21231850599d277e9592cb0883",
+    "originalFilename": "Lie - Autograf x your friend polly.mp3",
+    "usedBy": [
+      "config.tracks[20].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/52c06981-6499-4f6a-884b-2cd6c7def056",
+    "local": "/media/52c06981-6499-4f6a-884b-2cd6c7def056.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 6761671,
+    "sha256": "5494c4643f4957eb7cd0609eaba6a143c51c45bef6a34e225ed28390f69fcb81",
+    "originalFilename": "LOV3 - Sik-K, Lil Moshpit.mp3",
+    "usedBy": [
+      "config.tracks[21].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/af4f114d-d6fb-4529-b922-24ec2a3cef74",
+    "local": "/media/af4f114d-d6fb-4529-b922-24ec2a3cef74.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 2484071,
+    "sha256": "5dcce17b325b7dc3d4a4dafc2524c3c167fd1d3ddb7fd03b5a951d781f45fab8",
+    "originalFilename": "muse - BLOO.mp3",
+    "usedBy": [
+      "config.tracks[22].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/0a6ded0e-82bf-4215-83d8-5a2d80d93c64",
+    "local": "/media/0a6ded0e-82bf-4215-83d8-5a2d80d93c64.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 2553279,
+    "sha256": "7a3f50f276f2fa696a3862443b48308a4fc73de8884ecc3b664b97b20b290d59",
+    "originalFilename": "Saturday Night - Brando x Ninetails.mp3",
+    "usedBy": [
+      "config.tracks[23].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/c63608ef-ba5d-48e2-a261-f153e0e69405",
+    "local": "/media/c63608ef-ba5d-48e2-a261-f153e0e69405.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 3132238,
+    "sha256": "bd32c9f1817d0e05f5b5e54348e3fb2e004fe1fc6825caf7404d7f774505fdb5",
+    "originalFilename": "Spirit - Moss Kena.mp3",
+    "usedBy": [
+      "config.tracks[24].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/55404cab-9147-461f-8def-161556b3b187",
+    "local": "/media/55404cab-9147-461f-8def-161556b3b187.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 2694813,
+    "sha256": "b17d3a6ee9bdfa7ebc31830d40874b744374250fc88c5269d0db68dd47d44b9e",
+    "originalFilename": "Yarrr - HAON.mp3",
+    "usedBy": [
+      "config.tracks[25].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/75895123-de05-4c3a-a7f1-ed4883ab75c6",
+    "local": "/media/75895123-de05-4c3a-a7f1-ed4883ab75c6.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 4657038,
+    "sha256": "e5a4f3a62ed41398efa5702a4df7aac152221c7a8f5219d69907054def37664e",
+    "originalFilename": "너 - SYSTEM SEOUL.mp3",
+    "usedBy": [
+      "config.tracks[26].url"
+    ],
+    "status": "copied"
+  },
+  {
+    "source": "/api/media/34d7ef82-0479-4952-a3b7-6990df253916",
+    "local": "/media/34d7ef82-0479-4952-a3b7-6990df253916.mp3",
+    "contentType": "audio/mpeg",
+    "bytes": 5494509,
+    "sha256": "099215dba6d6f5288460d1108ce686a29507023f013a15c448d79883555f81b2",
+    "originalFilename": "몸매 - Jay Park(Feat. Ugly Duck).mp3",
+    "usedBy": [
+      "config.tracks[27].url"
+    ],
+    "status": "copied"
+  }
+]

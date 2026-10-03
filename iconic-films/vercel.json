@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/index.ts": {"includeFiles": "src/site-config.json", "maxDuration": 60}
+  },
+  "rewrites": [{"source": "/api/:path*", "destination": "/api?__iconicPath=:path*"}],
+  "headers": [
+    {"source": "/api/:path*", "headers": [{"key":"Cache-Control","value":"no-store"}]},
+    {"source": "/media/:path*", "headers": [{"key":"X-Content-Type-Options","value":"nosniff"}]}
+  ]
+}
