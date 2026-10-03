@@ -85,29 +85,35 @@ function seed(){
 }
 
 const legacyOrigin='https://iconic-films.tlscndgus9.chatgpt.site';
+let bundledMedia:Map<string,string>|undefined;
+function mediaPaths(){
+  if(bundledMedia)return bundledMedia;
+  const paths=new Map<string,string>();
+  function visit(value:any){
+    if(typeof value==='string'){
+      const match=value.match(/^\/media\/([a-f0-9-]{36})\.[a-z0-9]+$/i);
+      if(match)paths.set(match[1],value);
+    }else if(Array.isArray(value))value.forEach(visit);
+    else if(value&&typeof value==='object')Object.values(value).forEach(visit);
+  }
+  visit(seed());
+  return bundledMedia=paths;
+}
 
 function resolveLegacyMedia(value:any):any{
   if(typeof value==='string'){
-    const match=value.match(/^\/(?:api\/)?media\/([a-f0-9-]{36})(?:\.[a-z0-9]+)?$/i);
-    return match?`${legacyOrigin}/api/media/${match[1]}`:value;
+    const local=value.startsWith(legacyOrigin+'/')?value.slice(legacyOrigin.length):value;
+    const match=local.match(/^\/(?:api\/)?media\/([a-f0-9-]{36})(?:\.[a-z0-9]+)?$/i);
+    return match?(mediaPaths().get(match[1])||value):value;
   }
   if(Array.isArray(value))return value.map(resolveLegacyMedia);
   if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,resolveLegacyMedia(v)]));
   return value;
 }
 
-async function legacyConfig(){
-  try{
-    const response=await fetch(legacyOrigin+'/api/config',{cache:'no-store',signal:AbortSignal.timeout(4500)});
-    if(!response.ok)return null;
-    const payload=await response.json();
-    return resolveLegacyMedia(payload?.config||payload);
-  }catch{return null;}
-}
-
 function fillMedia(current:any,fallback:any){
-  const base=current&&typeof current==='object'?structuredClone(current):{};
   const source=fallback&&typeof fallback==='object'?fallback:{};
+  const base={...structuredClone(source),...(current&&typeof current==='object'?structuredClone(current):{})};
   const fields=['heroPoster','heroVideo','logo','aboutImage','aboutModel','backgroundImage','backgroundVideo'];
   for(const key of fields)if((base[key]===undefined||base[key]===null||base[key]==='')&&source[key])base[key]=source[key];
 
@@ -237,12 +243,7 @@ export default async function handler(req:Req,res:ServerResponse){
         const bundled=resolveLegacyMedia(seed());
         let stored:any=null;
         try{stored=await getSetting('config')}catch{}
-        const legacy=await legacyConfig();
-        const fallback=legacy||bundled;
-        const config=fillMedia(stored||bundled,fallback);
-        try{
-          if(!stored||JSON.stringify(stored)!==JSON.stringify(config))await putSetting('config',config);
-        }catch{}
+        const config=stored||bundled?fillMedia(stored||bundled,bundled):null;
         json(res,{config});return;
       }
       if(method==='PUT'){

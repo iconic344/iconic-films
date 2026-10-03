@@ -11,8 +11,9 @@ test('deployed API loads the exported portfolio from nested and unrelated workin
   delete process.env.SUPABASE_URL;delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   process.env.ADMIN_PIN='0846';process.env.ADMIN_SESSION_SECRET='test-only-session-secret';
   const originalFetch=globalThis.fetch;
+  let legacyRequests=0;
   globalThis.fetch=async(input,init)=>{
-    if(String(input).startsWith('https://iconic-films.tlscndgus9.chatgpt.site/'))return new Response('',{status:503});
+    if(String(input).startsWith('https://iconic-films.tlscndgus9.chatgpt.site/')){legacyRequests++;return new Response('',{status:503});}
     return originalFetch(input,init);
   };
   const {default:handler}=await import('../api/index.ts');
@@ -26,7 +27,12 @@ test('deployed API loads the exported portfolio from nested and unrelated workin
       const response=await fetch(origin+'/api/config');assert.equal(response.status,200);
       const {config}=await response.json();assert.equal(config.name,'ICONIC');
       assert.equal(config.works.length,1);assert.equal(config.tracks.length,28);
+      assert(Object.keys(config).length>=64,'the full exported design configuration is retained');
+      assert.equal(config.heroVideo,'/media/8091a227-4883-4f87-8a17-7645109f704b.mp4');
+      assert.equal(config.aboutModel,'/media/da61feaa-799d-45b5-8e01-81cd8ad8801a.glb');
+      assert(config.tracks.every((track:any)=>track.url.startsWith('/media/')&&track.url.endsWith('.mp3')));
     }
+    assert.equal(legacyRequests,0,'the standalone deployment never requests the original Sites runtime');
     const login=await fetch(origin+'/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:'0846'})});
     assert.equal(login.status,200);const {visitKey}=await login.json();
     const cookie=login.headers.get('set-cookie')!.split(';')[0];
