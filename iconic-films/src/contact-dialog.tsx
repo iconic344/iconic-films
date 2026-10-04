@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useState} from 'react';
+import {useEffect,useState,type FormEvent} from 'react';
 import {X,Send} from 'lucide-react';
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
 import {api} from './site-api';
@@ -7,7 +7,7 @@ import {api} from './site-api';
 export default function ContactDialog({open,onOpenChange,recipient}:{open:boolean;onOpenChange:(v:boolean)=>void;recipient:string}){
   const [from,setFrom]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[status,setStatus]=useState('');
   useEffect(()=>{if(open)setStatus('')},[open]);
-  async function submit(e:React.FormEvent){
+  async function submit(e:FormEvent){
     e.preventDefault();
     if(!from.trim()||!/^\S+@\S+\.\S+$/.test(from.trim())){setStatus('보내는 이메일 주소를 확인해 주세요.');return}
     if(!message.trim()){setStatus('메시지를 입력해 주세요.');return}
