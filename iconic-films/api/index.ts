@@ -150,7 +150,7 @@ async function putSetting(key:string,value:unknown){
   const {error}=await db().from('iconic_settings').upsert({key,value});
   if(error)throw error;
 }
-type ContactMessage={id:string;from:string;subject:string;message:string;createdAt:string;read:boolean;emailed:boolean};
+type ContactMessage={id:string;from:string;subject:string;message:string;createdAt:string;read:boolean;emailed:boolean;repliedAt?:string};
 async function getContactInbox():Promise<ContactMessage[]>{
   const value=await getSetting('contact-inbox').catch(()=>[]);
   return Array.isArray(value)?value.filter(item=>item&&typeof item.id==='string'&&typeof item.from==='string'&&typeof item.message==='string').slice(0,120):[];
@@ -224,6 +224,56 @@ export default async function handler(req:Req,res:ServerResponse){
         res.setHeader('Set-Cookie','iconic_session='+token+'; HttpOnly; SameSite=Strict; Path=/'+(isSecure(req)?'; Secure':''));
         json(res,{ok:true,visitKey:visit});return;
       }
+    }
+
+    if(route==='/api/contact/reply'&&method==='POST'){
+      await requireAdmin(req);
+      const input=await body(req);
+      const id=typeof input?.id==='string'?input.id:'';
+      const to=typeof input?.to==='string'?input.to.trim():'';
+      const subject=typeof input?.subject==='string'?input.subject.trim():'';
+      const message=typeof input?.message==='string'?input.message.trim():'';
+      if(!uuid.test(id))throw new HttpError(400,'문의 ID가 올바르지 않습니다.');
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)||to.length>180)throw new HttpError(400,'받는 이메일 주소를 확인해 주세요.');
+      if(!subject||subject.length>180)throw new HttpError(400,'답장 제목을 확인해 주세요.');
+      if(!message||message.length>8000)throw new HttpError(400,'답장 내용은 1자 이상 8000자 이하로 입력해 주세요.');
+
+      const inbox=await getContactInbox();
+      const index=inbox.findIndex(item=>item.id===id);
+      if(index<0)throw new HttpError(404,'문의를 찾을 수 없습니다.');
+
+      const bundled=resolveLegacyMedia(seed());
+      const stored=await getSetting('config').catch(()=>null);
+      const config=stored||bundled?fillMedia(stored||bundled,bundled):null;
+      const adminReply=(process.env.CONTACT_TO_EMAIL?.trim()||config?.email?.trim()||'');
+      const apiKey=process.env.RESEND_API_KEY?.trim();
+
+      if(apiKey){
+        const sender=process.env.CONTACT_FROM_EMAIL?.trim()||'VIIVII sara <onboarding@resend.dev>';
+        const response=await fetch('https://api.resend.com/emails',{
+          method:'POST',
+          headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},
+          body:JSON.stringify({
+            from:sender,
+            to:[to],
+            reply_to:/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminReply)?adminReply:undefined,
+            subject,
+            text:message
+          })
+        });
+        if(!response.ok){
+          const detail=await response.text().catch(()=>'');
+          console.error('CONTACT REPLY:',response.status,detail.slice(0,500));
+          throw new HttpError(502,'사이트 내 이메일 전송에 실패했습니다. Gmail 또는 Naver Mail로 답장해 주세요.');
+        }
+        inbox[index]={...inbox[index],read:true,repliedAt:new Date().toISOString()};
+        await putContactInbox(inbox);
+        json(res,{ok:true,delivered:true});return;
+      }
+
+      const gmailUrl='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(to)+'&su='+encodeURIComponent(subject)+'&body='+encodeURIComponent(message);
+      const naverUrl='https://mail.naver.com/v2/new';
+      json(res,{ok:true,delivered:false,providerRequired:true,gmailUrl,naverUrl});return;
     }
 
     if(route==='/api/contact'){
