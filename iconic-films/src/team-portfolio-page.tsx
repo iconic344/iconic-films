@@ -1,11 +1,11 @@
 'use client';
 import {useEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
-import {ArrowLeft,ArrowUpRight,ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,X} from 'lucide-react';
+import {ArrowUpRight,ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,Moon,Sun,X} from 'lucide-react';
 import {Dialog,DialogContent,DialogTitle} from '@/components/ui/dialog';
 import type {Config,TeamMember} from './defaults';
 import TeamMedia from './team-media';
 
-export default function TeamPortfolioPage({config,member,onBack}:{config:Config;member:TeamMember;onBack:()=>void}){
+export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onToggleTheme,onContact,onAdmin}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void}){
   const [index,setIndex]=useState(0);
   const [viewerIndex,setViewerIndex]=useState<number|null>(null);
   const [viewerClosing,setViewerClosing]=useState(false);
@@ -100,12 +100,17 @@ export default function TeamPortfolioPage({config,member,onBack}:{config:Config;
   } as CSSProperties;
 
   return <div className="team-portfolio-page" style={pageStyle}>
-    <header className="team-portfolio-nav">
-      <button type="button" onClick={onBack} className="team-portfolio-back"><ArrowLeft size={15}/><span>Back</span></button>
-      <a href="/" className="brand team-portfolio-brand">{config.logo?<img src={config.logo} alt={config.name}/>:config.name}<span>®</span></a>
-      <div className="team-portfolio-nav-right">
-        <span>{member.role||'CREATIVE'}</span>
-        {member.instagram&&<a href={member.instagram} target="_blank" rel="noreferrer">Instagram <ArrowUpRight size={13}/></a>}
+    <header className="nav team-portfolio-site-nav">
+      <a href="/" className="brand" onClick={e=>{e.preventDefault();onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:config.name}<span>®</span></a>
+      <nav>
+        <a href="/#work" onClick={e=>{e.preventDefault();onNavigate('work')}}>{config.navWorkLabel}</a>
+        {config.showAbout&&<a href="/#about" onClick={e=>{e.preventDefault();onNavigate('about')}}>{config.navAboutLabel}</a>}
+        {config.showTeam&&<a href="/#team" onClick={e=>{e.preventDefault();onNavigate('team')}}>{config.navTeamLabel}</a>}
+        <button type="button" className="nav-contact" onClick={onContact}>{config.navContactLabel}</button>
+      </nav>
+      <div className="nav-tools">
+        <button type="button" className="icon" aria-label={theme==='light'?'다크 모드':'라이트 모드'} title={theme==='light'?'다크 모드':'라이트 모드'} onClick={onToggleTheme}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</button>
+        <button type="button" className="admin-link" onClick={onAdmin}>{config.footerAdminLabel||'admin'}</button>
       </div>
     </header>
 
