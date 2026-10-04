@@ -150,6 +150,14 @@ async function putSetting(key:string,value:unknown){
   const {error}=await db().from('iconic_settings').upsert({key,value});
   if(error)throw error;
 }
+type ContactMessage={id:string;from:string;subject:string;message:string;createdAt:string;read:boolean;emailed:boolean};
+async function getContactInbox():Promise<ContactMessage[]>{
+  const value=await getSetting('contact-inbox').catch(()=>[]);
+  return Array.isArray(value)?value.filter(item=>item&&typeof item.id==='string'&&typeof item.from==='string'&&typeof item.message==='string').slice(0,120):[];
+}
+async function putContactInbox(messages:ContactMessage[]){
+  await putSetting('contact-inbox',messages.slice(0,120));
+}
 async function getMany(keys:string[]){
   const map=new Map<string,any>();
   for(let i=0;i<keys.length;i+=80){
@@ -218,45 +226,98 @@ export default async function handler(req:Req,res:ServerResponse){
       }
     }
 
-    if(route==='/api/contact'&&method==='POST'){
-      const input=await body(req);
-      const from=typeof input?.from==='string'?input.from.trim():'';
-      const message=typeof input?.message==='string'?input.message.trim():'';
-      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(from)||from.length>180)throw new HttpError(400,'보내는 이메일 주소를 확인해 주세요.');
-      if(!message||message.length>5000)throw new HttpError(400,'메시지는 1자 이상 5000자 이하로 입력해 주세요.');
-
-      const ip=(process.env.VERCEL?header(req,'x-forwarded-for').split(',')[0].trim():req.socket.remoteAddress||'local');
-      const rateKey='contact-rate:'+hash(ip).slice(0,32);
-      const now=Date.now();
-      const rate=await getSetting(rateKey).catch(()=>null) as {count?:number;until?:number}|null;
-      if(rate&&Number(rate.until)>now&&Number(rate.count)>=5)throw new HttpError(429,'메시지 전송 횟수가 많습니다. 잠시 후 다시 시도해 주세요.');
-      await putSetting(rateKey,{count:rate&&Number(rate.until)>now?Number(rate.count||0)+1:1,until:rate&&Number(rate.until)>now?Number(rate.until):now+600000});
-
-      const bundled=resolveLegacyMedia(seed());
-      const stored=await getSetting('config').catch(()=>null);
-      const config=stored||bundled?fillMedia(stored||bundled,bundled):null;
-      const target=(process.env.CONTACT_TO_EMAIL?.trim()||config?.email?.trim()||'');
-      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target))throw new HttpError(503,'관리자에서 Contact 수신 이메일을 먼저 등록해 주세요.');
-
-      const subject='VIIVII sara · Portfolio contact';
-      const apiKey=process.env.RESEND_API_KEY?.trim();
-      if(apiKey){
-        const sender=process.env.CONTACT_FROM_EMAIL?.trim()||'VIIVII sara <onboarding@resend.dev>';
-        const response=await fetch('https://api.resend.com/emails',{
-          method:'POST',
-          headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},
-          body:JSON.stringify({from:sender,to:[target],reply_to:from,subject,text:'From: '+from+'\n\n'+message})
-        });
-        if(!response.ok){
-          const detail=await response.text().catch(()=>'');
-          console.error('CONTACT EMAIL:',response.status,detail.slice(0,500));
-          throw new HttpError(502,'메일 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.');
-        }
-        json(res,{ok:true,delivered:true});return;
+    if(route==='/api/contact'){
+      if(method==='GET'){
+        await requireAdmin(req);
+        json(res,{messages:await getContactInbox()});return;
       }
 
-      const mailto='mailto:'+encodeURIComponent(target)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent('From: '+from+'\n\n'+message);
-      json(res,{ok:true,delivered:false,mailto});return;
+      if(method==='POST'){
+        const input=await body(req);
+        const from=typeof input?.from==='string'?input.from.trim():'';
+        const subject=typeof input?.subject==='string'?input.subject.trim():'';
+        const message=typeof input?.message==='string'?input.message.trim():'';
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(from)||from.length>180)throw new HttpError(400,'보내는 이메일 주소를 확인해 주세요.');
+        if(subject.length>160)throw new HttpError(400,'제목은 160자 이하로 입력해 주세요.');
+        if(!message||message.length>5000)throw new HttpError(400,'메시지는 1자 이상 5000자 이하로 입력해 주세요.');
+
+        const ip=(process.env.VERCEL?header(req,'x-forwarded-for').split(',')[0].trim():req.socket.remoteAddress||'local');
+        const rateKey='contact-rate:'+hash(ip).slice(0,32);
+        const now=Date.now();
+        const rate=await getSetting(rateKey).catch(()=>null) as {count?:number;until?:number}|null;
+        if(rate&&Number(rate.until)>now&&Number(rate.count)>=5)throw new HttpError(429,'메시지 전송 횟수가 많습니다. 잠시 후 다시 시도해 주세요.');
+        await putSetting(rateKey,{count:rate&&Number(rate.until)>now?Number(rate.count||0)+1:1,until:rate&&Number(rate.until)>now?Number(rate.until):now+600000});
+
+        const item:ContactMessage={
+          id:randomUUID(),
+          from,
+          subject:subject||'Project inquiry',
+          message,
+          createdAt:new Date().toISOString(),
+          read:false,
+          emailed:false
+        };
+        const inbox=await getContactInbox();
+        await putContactInbox([item,...inbox]);
+
+        const bundled=resolveLegacyMedia(seed());
+        const stored=await getSetting('config').catch(()=>null);
+        const config=stored||bundled?fillMedia(stored||bundled,bundled):null;
+        const target=(process.env.CONTACT_TO_EMAIL?.trim()||config?.email?.trim()||'');
+        const apiKey=process.env.RESEND_API_KEY?.trim();
+        let emailDelivered=false;
+
+        if(apiKey&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)){
+          try{
+            const sender=process.env.CONTACT_FROM_EMAIL?.trim()||'VIIVII sara <onboarding@resend.dev>';
+            const response=await fetch('https://api.resend.com/emails',{
+              method:'POST',
+              headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},
+              body:JSON.stringify({
+                from:sender,
+                to:[target],
+                reply_to:from,
+                subject:'VIIVII sara · '+item.subject,
+                text:'From: '+from+'\n\n'+message
+              })
+            });
+            emailDelivered=response.ok;
+            if(!response.ok){
+              const detail=await response.text().catch(()=>'');
+              console.error('CONTACT EMAIL:',response.status,detail.slice(0,500));
+            }
+          }catch(error){
+            console.error('CONTACT EMAIL:',error);
+          }
+        }
+
+        if(emailDelivered){
+          item.emailed=true;
+          await putContactInbox([item,...inbox.filter(entry=>entry.id!==item.id)]);
+        }
+        json(res,{ok:true,stored:true,emailDelivered});return;
+      }
+
+      if(method==='PATCH'){
+        await requireAdmin(req);
+        const input=await body(req),id=input?.id;
+        if(typeof id!=='string'||!uuid.test(id))throw new HttpError(400,'문의 ID가 올바르지 않습니다.');
+        const inbox=await getContactInbox();
+        const index=inbox.findIndex(item=>item.id===id);
+        if(index<0)throw new HttpError(404,'문의를 찾을 수 없습니다.');
+        inbox[index]={...inbox[index],read:input?.read!==false};
+        await putContactInbox(inbox);
+        json(res,{ok:true});return;
+      }
+
+      if(method==='DELETE'){
+        await requireAdmin(req);
+        const input=await body(req),id=input?.id;
+        if(typeof id!=='string'||!uuid.test(id))throw new HttpError(400,'문의 ID가 올바르지 않습니다.');
+        const inbox=await getContactInbox();
+        await putContactInbox(inbox.filter(item=>item.id!==id));
+        json(res,{ok:true});return;
+      }
     }
 
     if(route==='/api/security'&&method==='PUT'){
