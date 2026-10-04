@@ -7,11 +7,13 @@ import type {Config,TeamMember} from './defaults';
 import {uploadFile} from './media-upload';
 import TeamMedia from './team-media';
 
-const blankMember=(draft:Config):TeamMember=>({id:crypto.randomUUID(),name:'',role:'',bio:'',instagram:'',photo:'',works:[],visible:true,photoRadius:draft.teamMediaRadius,photoSize:draft.teamMediaSize,portfolioSlug:'member-'+Date.now().toString(36),portfolioTitle:'Selected works',portfolioIntro:'',portfolioLayout:'grid',portfolioColumns:3,portfolioGap:14,portfolioRadius:18});
+const blankMember=(draft:Config):TeamMember=>({id:crypto.randomUUID(),name:'',role:'',bio:'',instagram:'',photo:'',works:[],visible:true,photoRadius:draft.teamMediaRadius,photoSize:draft.teamMediaSize,portfolioSlug:'member-'+Date.now().toString(36),portfolioTitle:'Selected works',portfolioIntro:'',portfolioLayout:'grid',portfolioColumns:3,portfolioGap:14,portfolioRadius:18,portfolioReturnLabel:'VIIVII sara / Team',portfolioProfileSize:430,portfolioNameFont:'Arial, Helvetica, sans-serif',portfolioNameSize:112,portfolioNameX:0,portfolioNameY:0,portfolioRoleFont:'Arial, Helvetica, sans-serif',portfolioRoleSize:10,portfolioRoleX:0,portfolioRoleY:0,portfolioBioFont:'Arial, Helvetica, sans-serif',portfolioBioSize:15,portfolioBioX:0,portfolioBioY:0,portfolioTitleFont:'Arial, Helvetica, sans-serif',portfolioTitleSize:76,portfolioTitleX:0,portfolioTitleY:0,portfolioIntroFont:'Arial, Helvetica, sans-serif',portfolioIntroSize:14,portfolioIntroX:0,portfolioIntroY:0,portfolioUtilityFont:'Arial, Helvetica, sans-serif',portfolioUtilitySize:11,portfolioReturnX:0,portfolioReturnY:0,portfolioSliderWidth:100,portfolioSliderHeight:760,portfolioGridWidth:100});
 
 export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:Config;setDraft:Dispatch<SetStateAction<Config>>;busy:boolean;setBusy:(v:boolean)=>void;notify:(v:string)=>void}){
   const members=draft.teamMembers||[];
   const patch=(id:string,key:keyof TeamMember,value:unknown)=>setDraft(d=>({...d,teamMembers:(d.teamMembers||[]).map(m=>m.id===id?{...m,[key]:value}:m)}));
+  const setConfig=<K extends keyof Config>(key:K,value:Config[K])=>setDraft(d=>({...d,[key]:value}));
+  const miniRange=(member:TeamMember,key:keyof TeamMember,label:string,min:number,max:number,step=1,suffix='px')=><label className="field layout-range">{label}<span className="val">{Number(member[key])}{suffix}</span><Slider value={[Number(member[key])]} min={min} max={max} step={step} onValueChange={v=>patch(member.id,key,v[0])}/></label>;
   const remove=(id:string)=>setDraft(d=>({...d,teamMembers:(d.teamMembers||[]).filter(m=>m.id!==id)}));
   const move=(index:number,dir:number)=>setDraft(d=>{const list=[...(d.teamMembers||[])],next=index+dir;if(next<0||next>=list.length)return d;[list[index],list[next]]=[list[next],list[index]];return {...d,teamMembers:list}});
   async function uploadOne(file:File|undefined,done:(url:string)=>void){
@@ -33,6 +35,14 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
       <div><h3>Team / collaborators</h3><p>대표·사진·영상·메이크업·헤어·세트 스타일링 등 역할을 자유롭게 입력하고, 프로필과 작품에 이미지·영상·GLB/glTF 3D를 올릴 수 있습니다.</p></div>
       <button type="button" className="add" onClick={()=>setDraft(d=>({...d,teamMembers:[...(d.teamMembers||[]),blankMember(d)]}))}><Plus size={16}/> 팀원 추가</button>
     </section>
+    <section className="editor-card">
+      <h3>Team headline</h3>
+      <label className="field">큰 제목 글씨체<input value={draft.teamHeadlineFont||''} onChange={e=>setConfig('teamHeadlineFont',e.target.value)}/></label>
+      <label className="field layout-range">큰 제목 크기 <span className="val">{draft.teamHeadlineSize}px</span><Slider value={[draft.teamHeadlineSize]} min={44} max={150} step={1} onValueChange={v=>setConfig('teamHeadlineSize',v[0])}/></label>
+      <label className="field">큰 제목 정렬<div className="team-layout-choice">{(['left','center','right'] as const).map(v=><button type="button" key={v} className={draft.teamHeadlineAlign===v?'active':''} onClick={()=>setConfig('teamHeadlineAlign',v)}>{v.toUpperCase()}</button>)}</div></label>
+      <label className="field layout-range">큰 제목 가로 위치 <span className="val">{draft.teamHeadlineX}px</span><Slider value={[draft.teamHeadlineX]} min={-320} max={320} step={1} onValueChange={v=>setConfig('teamHeadlineX',v[0])}/></label>
+      <label className="field layout-range">큰 제목 세로 위치 <span className="val">{draft.teamHeadlineY}px</span><Slider value={[draft.teamHeadlineY]} min={-220} max={220} step={1} onValueChange={v=>setConfig('teamHeadlineY',v[0])}/></label>
+    </section>
     {members.map((member,index)=><section className="editor-card team-editor-card" key={member.id}>
       <div className="team-editor-card-head">
         <div><span className="kicker">{String(index+1).padStart(2,'0')} / MEMBER</span><h3>{member.name||'새 팀원'}</h3></div>
@@ -51,6 +61,41 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
           <label className="field">포트폴리오 페이지 주소<input placeholder="xnives" value={member.portfolioSlug||''} onChange={e=>patch(member.id,'portfolioSlug',e.target.value.toLowerCase().replace(/[^a-z0-9가-힣-]/g,'-').replace(/-+/g,'-'))}/><span className="uploaded-file">/team/{member.portfolioSlug||'member'}</span></label>
           <label className="field">포트폴리오 제목<input value={member.portfolioTitle||'Selected works'} onChange={e=>patch(member.id,'portfolioTitle',e.target.value)}/></label>
           <label className="field">포트폴리오 소개<textarea placeholder="팀원 전용 포트폴리오 페이지 소개 문구" value={member.portfolioIntro||''} onChange={e=>patch(member.id,'portfolioIntro',e.target.value)}/></label>
+          <label className="field">팀으로 돌아가기 문구<input value={member.portfolioReturnLabel||'VIIVII sara / Team'} onChange={e=>patch(member.id,'portfolioReturnLabel',e.target.value)}/></label>
+          <div className="team-portfolio-type-editor">
+            <h4>Portfolio typography / position</h4>
+            <label className="field">이름 글씨체<input value={member.portfolioNameFont||''} onChange={e=>patch(member.id,'portfolioNameFont',e.target.value)}/></label>
+            {miniRange(member,'portfolioNameSize','이름 크기',36,180)}
+            {miniRange(member,'portfolioNameX','이름 가로 위치',-300,300)}
+            {miniRange(member,'portfolioNameY','이름 세로 위치',-240,240)}
+            <label className="field">역할 글씨체<input value={member.portfolioRoleFont||''} onChange={e=>patch(member.id,'portfolioRoleFont',e.target.value)}/></label>
+            {miniRange(member,'portfolioRoleSize','역할 크기',8,40)}
+            {miniRange(member,'portfolioRoleX','역할 가로 위치',-300,300)}
+            {miniRange(member,'portfolioRoleY','역할 세로 위치',-240,240)}
+            <label className="field">소개 글씨체<input value={member.portfolioBioFont||''} onChange={e=>patch(member.id,'portfolioBioFont',e.target.value)}/></label>
+            {miniRange(member,'portfolioBioSize','소개 크기',10,40)}
+            {miniRange(member,'portfolioBioX','소개 가로 위치',-300,300)}
+            {miniRange(member,'portfolioBioY','소개 세로 위치',-240,240)}
+            <label className="field">작품 제목 글씨체<input value={member.portfolioTitleFont||''} onChange={e=>patch(member.id,'portfolioTitleFont',e.target.value)}/></label>
+            {miniRange(member,'portfolioTitleSize','작품 제목 크기',30,140)}
+            {miniRange(member,'portfolioTitleX','작품 제목 가로 위치',-300,300)}
+            {miniRange(member,'portfolioTitleY','작품 제목 세로 위치',-240,240)}
+            <label className="field">작품 소개 글씨체<input value={member.portfolioIntroFont||''} onChange={e=>patch(member.id,'portfolioIntroFont',e.target.value)}/></label>
+            {miniRange(member,'portfolioIntroSize','작품 소개 크기',10,36)}
+            {miniRange(member,'portfolioIntroX','작품 소개 가로 위치',-300,300)}
+            {miniRange(member,'portfolioIntroY','작품 소개 세로 위치',-240,240)}
+            <label className="field">기타 문구 글씨체<input value={member.portfolioUtilityFont||''} onChange={e=>patch(member.id,'portfolioUtilityFont',e.target.value)}/></label>
+            {miniRange(member,'portfolioUtilitySize','기타 문구 크기',8,26)}
+            {miniRange(member,'portfolioReturnX','돌아가기 문구 가로 위치',-300,300)}
+            {miniRange(member,'portfolioReturnY','돌아가기 문구 세로 위치',-240,240)}
+          </div>
+          <div className="team-portfolio-size-editor">
+            <h4>Portfolio media size</h4>
+            {miniRange(member,'portfolioProfileSize','프로필 미디어 크기',180,560)}
+            {miniRange(member,'portfolioSliderWidth','슬라이드 폭',45,100,1,'%')}
+            {miniRange(member,'portfolioSliderHeight','슬라이드 높이',320,1100)}
+            {miniRange(member,'portfolioGridWidth','그리드 전체 폭',45,100,1,'%')}
+          </div>
           <label className="field">포트폴리오 보기 방식<div className="team-layout-choice"><button type="button" className={member.portfolioLayout!=='slider'?'active':''} onClick={()=>patch(member.id,'portfolioLayout','grid')}>GRID</button><button type="button" className={member.portfolioLayout==='slider'?'active':''} onClick={()=>patch(member.id,'portfolioLayout','slider')}>SLIDER</button></div></label>
           {member.portfolioLayout!=='slider'&&<label className="field layout-range">포트폴리오 열 수 <span className="val">{member.portfolioColumns||3}</span><Slider value={[member.portfolioColumns||3]} min={1} max={4} step={1} onValueChange={v=>patch(member.id,'portfolioColumns',v[0])}/></label>}
           <label className="field layout-range">포트폴리오 간격 <span className="val">{member.portfolioGap||14}px</span><Slider value={[member.portfolioGap||14]} min={4} max={48} step={1} onValueChange={v=>patch(member.id,'portfolioGap',v[0])}/></label>
