@@ -7,7 +7,7 @@ import type {Config,TeamMember} from './defaults';
 import {uploadFile} from './media-upload';
 import TeamMedia from './team-media';
 
-const blankMember=(draft:Config):TeamMember=>({id:crypto.randomUUID(),name:'',role:'',bio:'',instagram:'',photo:'',works:[],visible:true,photoRadius:draft.teamMediaRadius,photoSize:draft.teamMediaSize});
+const blankMember=(draft:Config):TeamMember=>({id:crypto.randomUUID(),name:'',role:'',bio:'',instagram:'',photo:'',works:[],visible:true,photoRadius:draft.teamMediaRadius,photoSize:draft.teamMediaSize,portfolioSlug:'member-'+Date.now().toString(36),portfolioTitle:'Selected works',portfolioIntro:'',portfolioLayout:'grid',portfolioColumns:3,portfolioGap:14,portfolioRadius:18});
 
 export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:Config;setDraft:Dispatch<SetStateAction<Config>>;busy:boolean;setBusy:(v:boolean)=>void;notify:(v:string)=>void}){
   const members=draft.teamMembers||[];
@@ -48,6 +48,13 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
           <label className="field">역할<input placeholder="Director / Photographer / Make-up / Hair..." value={member.role} onChange={e=>patch(member.id,'role',e.target.value)}/></label>
           <label className="field">소개<textarea placeholder="간단한 소개, 전문 분야, 크레딧 등을 적어주세요." value={member.bio||''} onChange={e=>patch(member.id,'bio',e.target.value)}/></label>
           <label className="field">Instagram 주소<div className="team-instagram-input"><span className="team-ig-mark" aria-hidden="true">IG</span><input placeholder="https://instagram.com/..." value={member.instagram} onChange={e=>patch(member.id,'instagram',e.target.value)}/></div></label>
+          <label className="field">포트폴리오 페이지 주소<input placeholder="xnives" value={member.portfolioSlug||''} onChange={e=>patch(member.id,'portfolioSlug',e.target.value.toLowerCase().replace(/[^a-z0-9가-힣-]/g,'-').replace(/-+/g,'-'))}/><span className="uploaded-file">/team/{member.portfolioSlug||'member'}</span></label>
+          <label className="field">포트폴리오 제목<input value={member.portfolioTitle||'Selected works'} onChange={e=>patch(member.id,'portfolioTitle',e.target.value)}/></label>
+          <label className="field">포트폴리오 소개<textarea placeholder="팀원 전용 포트폴리오 페이지 소개 문구" value={member.portfolioIntro||''} onChange={e=>patch(member.id,'portfolioIntro',e.target.value)}/></label>
+          <label className="field">포트폴리오 보기 방식<div className="team-layout-choice"><button type="button" className={member.portfolioLayout!=='slider'?'active':''} onClick={()=>patch(member.id,'portfolioLayout','grid')}>GRID</button><button type="button" className={member.portfolioLayout==='slider'?'active':''} onClick={()=>patch(member.id,'portfolioLayout','slider')}>SLIDER</button></div></label>
+          {member.portfolioLayout!=='slider'&&<label className="field layout-range">포트폴리오 열 수 <span className="val">{member.portfolioColumns||3}</span><Slider value={[member.portfolioColumns||3]} min={1} max={4} step={1} onValueChange={v=>patch(member.id,'portfolioColumns',v[0])}/></label>}
+          <label className="field layout-range">포트폴리오 간격 <span className="val">{member.portfolioGap||14}px</span><Slider value={[member.portfolioGap||14]} min={4} max={48} step={1} onValueChange={v=>patch(member.id,'portfolioGap',v[0])}/></label>
+          <label className="field layout-range">포트폴리오 모서리 <span className="val">{member.portfolioRadius??18}px</span><Slider value={[member.portfolioRadius??18]} min={0} max={48} step={1} onValueChange={v=>patch(member.id,'portfolioRadius',v[0])}/></label>
           <label className="toggle">사이트에 표시<Switch checked={member.visible} onCheckedChange={v=>patch(member.id,'visible',v)}/></label>
           <label className="field layout-range">프로필 미디어 크기 <span className="val">{member.photoSize||draft.teamMediaSize}px</span><Slider value={[member.photoSize||draft.teamMediaSize]} min={150} max={420} step={1} onValueChange={v=>patch(member.id,'photoSize',v[0])}/></label>
           <label className="field layout-range">프로필 모서리 <span className="val">{member.photoRadius??draft.teamMediaRadius}%</span><Slider value={[member.photoRadius??draft.teamMediaRadius]} min={0} max={50} step={1} onValueChange={v=>patch(member.id,'photoRadius',v[0])}/></label>
