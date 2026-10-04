@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
-import {RefreshCw,Trash2,Mail,MailOpen,Send,ExternalLink} from 'lucide-react';
+import {RefreshCw,Trash2,Mail,MailOpen,Send,ExternalLink,Link2,Unlink,CheckCircle2} from 'lucide-react';
 import {api} from './site-api';
 
 type ContactMessage={
@@ -29,6 +29,13 @@ export default function ContactInbox(){
   const [replyBusy,setReplyBusy]=useState(false);
   const [replyStatus,setReplyStatus]=useState('');
   const [fallback,setFallback]=useState<{gmailUrl:string;naverUrl:string}|null>(null);
+  const [mailOpen,setMailOpen]=useState(false);
+  const [mailLoading,setMailLoading]=useState(false);
+  const [mailConnected,setMailConnected]=useState(false);
+  const [mailProvider,setMailProvider]=useState<'gmail'|'naver'>('gmail');
+  const [mailEmail,setMailEmail]=useState('');
+  const [mailPassword,setMailPassword]=useState('');
+  const [mailStatus,setMailStatus]=useState('');
 
   const unread=useMemo(()=>messages.filter(m=>!m.read).length,[messages]);
 
@@ -39,7 +46,32 @@ export default function ContactInbox(){
       setMessages(Array.isArray(result.messages)?result.messages:[]);
     }catch(e){setError((e as Error).message)}finally{setLoading(false)}
   }
-  useEffect(()=>{load()},[]);
+  async function loadMail(){
+    try{
+      const result=await api('/api/mail');
+      setMailConnected(!!result.connected);
+      if(result.provider==='gmail'||result.provider==='naver')setMailProvider(result.provider);
+      setMailEmail(result.email||'');
+    }catch{}
+  }
+  async function connectMail(){
+    if(!mailEmail.trim()||!mailPassword.trim()){setMailStatus('메일 주소와 앱 비밀번호를 입력해 주세요.');return}
+    try{
+      setMailLoading(true);setMailStatus('');
+      const result=await api('/api/mail','PUT',{provider:mailProvider,email:mailEmail.trim(),appPassword:mailPassword});
+      setMailConnected(!!result.connected);setMailPassword('');
+      setMailStatus((mailProvider==='gmail'?'Gmail':'Naver Mail')+' 연결이 완료되었습니다.');
+    }catch(e){setMailStatus((e as Error).message)}finally{setMailLoading(false)}
+  }
+  async function disconnectMail(){
+    try{
+      setMailLoading(true);setMailStatus('');
+      await api('/api/mail','DELETE');
+      setMailConnected(false);setMailPassword('');
+      setMailStatus('메일 연결을 해제했습니다.');
+    }catch(e){setMailStatus((e as Error).message)}finally{setMailLoading(false)}
+  }
+  useEffect(()=>{load();loadMail()},[]);
 
   async function toggle(message:ContactMessage){
     const next=openId===message.id?'':message.id;
@@ -76,7 +108,7 @@ export default function ContactInbox(){
       setReplyBusy(true);setReplyStatus('');setFallback(null);
       const result=await api('/api/contact/reply','POST',{id:item.id,to:item.from,subject:replySubject.trim(),message:replyBody.trim()});
       if(result.delivered){
-        setReplyStatus('사이트에서 이메일 답장을 전송했습니다.');
+        setReplyStatus((result.provider==='gmail'?'Gmail':result.provider==='naver'?'Naver Mail':'사이트 메일')+' 계정으로 답장을 전송했습니다.');
         setMessages(list=>list.map(message=>message.id===item.id?{...message,read:true,repliedAt:new Date().toISOString()}:message));
         setReplyBody('');
       }else if(result.providerRequired){
@@ -111,6 +143,28 @@ export default function ContactInbox(){
       </div>
     </section>
 
+    <section className={'editor-card contact-mail-connection '+(mailConnected?'is-connected':'')}>
+      <button type="button" className="contact-mail-connection-head" onClick={()=>setMailOpen(v=>!v)}>
+        <span className="contact-mail-connection-icon">{mailConnected?<CheckCircle2 size={16}/>:<Link2 size={16}/>}</span>
+        <span><strong>{mailConnected?'사이트 메일 연결됨':'사이트 메일 연결'}</strong><small>{mailConnected?((mailProvider==='gmail'?'Gmail · ':'Naver Mail · ')+mailEmail):'관리자 문의함에서 Gmail 또는 Naver Mail 계정으로 바로 답장합니다.'}</small></span>
+        <span>{mailOpen?'닫기':'설정'}</span>
+      </button>
+      {mailOpen&&<div className="contact-mail-settings">
+        <div className="contact-mail-provider">
+          <button type="button" className={mailProvider==='gmail'?'active':''} onClick={()=>setMailProvider('gmail')}>Gmail</button>
+          <button type="button" className={mailProvider==='naver'?'active':''} onClick={()=>setMailProvider('naver')}>Naver Mail</button>
+        </div>
+        <label><span>EMAIL</span><input type="email" value={mailEmail} onChange={e=>setMailEmail(e.target.value)} placeholder={mailProvider==='gmail'?'your@gmail.com':'your@naver.com'}/></label>
+        <label><span>APP PASSWORD</span><input type="password" value={mailPassword} onChange={e=>setMailPassword(e.target.value)} placeholder={mailConnected?'변경할 때만 새 앱 비밀번호 입력':'앱 비밀번호 입력'} autoComplete="new-password"/></label>
+        <p className="contact-mail-help">{mailProvider==='gmail'?'Google 계정의 2단계 인증에서 발급한 앱 비밀번호를 사용합니다.':'Naver 메일에서 IMAP/SMTP를 사용함으로 켜고 2단계 인증용 앱 비밀번호를 사용합니다.'} 비밀번호는 공개 사이트 설정에는 포함되지 않고 서버 설정에만 저장됩니다.</p>
+        {mailStatus&&<p className="contact-mail-status">{mailStatus}</p>}
+        <div className="contact-mail-actions">
+          <button type="button" className="contact-mail-connect" disabled={mailLoading} onClick={connectMail}><Link2 size={14}/>{mailLoading?'연결 확인 중…':mailConnected?'연결 정보 업데이트':'계정 연결'}</button>
+          {mailConnected&&<button type="button" disabled={mailLoading} onClick={disconnectMail}><Unlink size={14}/>연결 해제</button>}
+        </div>
+      </div>}
+    </section>
+
     {error&&<div className="editor-card contact-inbox-error">{error}</div>}
     {!loading&&!messages.length&&<section className="editor-card contact-inbox-empty">아직 접수된 문의가 없습니다.</section>}
 
@@ -140,7 +194,7 @@ export default function ContactInbox(){
             <label><span>MESSAGE</span><textarea value={replyBody} onChange={e=>setReplyBody(e.target.value)} placeholder="Write your reply..." maxLength={8000}/></label>
             {replyStatus&&<p className="contact-reply-status">{replyStatus}</p>}
             <div className="contact-reply-actions">
-              <button type="button" className="contact-direct-send" disabled={replyBusy} onClick={()=>sendReply(item)}><Send size={14}/>{replyBusy?'Sending…':'사이트에서 전송'}</button>
+              <button type="button" className="contact-direct-send" disabled={replyBusy} onClick={()=>sendReply(item)}><Send size={14}/>{replyBusy?'Sending…':mailConnected?(mailProvider==='gmail'?'Gmail로 전송':'Naver로 전송'):'사이트에서 전송'}</button>
               <a href={fallback?.gmailUrl||('https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(item.from)+'&su='+encodeURIComponent(replySubject)+'&body='+encodeURIComponent(replyBody))} target="_blank" rel="noreferrer"><ExternalLink size={14}/> Gmail</a>
               <button type="button" onClick={()=>openNaver(item)}><ExternalLink size={14}/> Naver Mail</button>
               <button type="button" className="contact-delete" onClick={()=>remove(item)}><Trash2 size={14}/> 삭제</button>
