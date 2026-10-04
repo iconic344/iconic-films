@@ -8,6 +8,7 @@ import TeamMedia from './team-media';
 export default function TeamPortfolioPage({config,member,onBack}:{config:Config;member:TeamMember;onBack:()=>void}){
   const [index,setIndex]=useState(0);
   const [viewerIndex,setViewerIndex]=useState<number|null>(null);
+  const [viewerClosing,setViewerClosing]=useState(false);
   const dragStart=useRef<number|null>(null);
   const swiped=useRef(false);
   const works=useMemo(()=>member.works||[],[member.works]);
@@ -15,8 +16,14 @@ export default function TeamPortfolioPage({config,member,onBack}:{config:Config;
   const next=()=>setIndex(i=>(i+1)%works.length);
   const viewerPrev=()=>setViewerIndex(i=>i===null?null:(i-1+works.length)%works.length);
   const viewerNext=()=>setViewerIndex(i=>i===null?null:(i+1)%works.length);
+  const openViewer=(i:number)=>{setViewerClosing(false);setViewerIndex(i)};
+  const closeViewer=()=>{
+    if(viewerIndex===null||viewerClosing)return;
+    setViewerClosing(true);
+    window.setTimeout(()=>{setViewerIndex(null);setViewerClosing(false)},260);
+  };
 
-  useEffect(()=>{setIndex(0);setViewerIndex(null);window.scrollTo({top:0,behavior:'auto'})},[member.id]);
+  useEffect(()=>{setIndex(0);setViewerClosing(false);setViewerIndex(null);window.scrollTo({top:0,behavior:'auto'})},[member.id]);
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>{
       if(viewerIndex!==null){
@@ -119,14 +126,14 @@ export default function TeamPortfolioPage({config,member,onBack}:{config:Config;
         {!works.length&&<div className="team-portfolio-empty">Portfolio coming soon.</div>}
 
         {!!works.length&&member.portfolioLayout==='grid'&&<div className="team-portfolio-grid">
-          {works.map((url,i)=><button type="button" className="team-portfolio-grid-item" key={url+i} onClick={()=>setViewerIndex(i)}>
+          {works.map((url,i)=><button type="button" className="team-portfolio-grid-item" key={url+i} onClick={()=>openViewer(i)}>
             <TeamMedia src={url} alt={(member.name||'Team member')+' portfolio '+(i+1)} className="team-portfolio-work-media"/>
             <span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span>
           </button>)}
         </div>}
 
         {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider">
-          <button type="button" className="team-portfolio-slide-stage" onPointerDown={e=>begin(e.clientX)} onPointerUp={e=>end(e.clientX,d=>d>0?next():prev())} onClick={()=>{if(swiped.current){swiped.current=false;return}setViewerIndex(index)}}>
+          <button type="button" className="team-portfolio-slide-stage" onPointerDown={e=>begin(e.clientX)} onPointerUp={e=>end(e.clientX,d=>d>0?next():prev())} onClick={()=>{if(swiped.current){swiped.current=false;return}openViewer(index)}}>
             <TeamMedia key={works[index]} src={works[index]} alt={(member.name||'Team member')+' portfolio '+(index+1)} className="team-portfolio-slide-media"/>
             <span className="team-portfolio-slide-count">{String(index+1).padStart(2,'0')} / {String(works.length).padStart(2,'0')}</span>
           </button>
@@ -141,11 +148,11 @@ export default function TeamPortfolioPage({config,member,onBack}:{config:Config;
 
     <footer className="team-portfolio-footer"><span>© 2026 {config.name}</span><button type="button" onClick={onBack}>Back to team</button></footer>
 
-    <Dialog open={viewerIndex!==null} onOpenChange={open=>!open&&setViewerIndex(null)}>
+    <Dialog open={viewerIndex!==null&&!viewerClosing} onOpenChange={open=>!open&&closeViewer()}>
       <DialogContent className="team-media-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}>
         {viewerIndex!==null&&works[viewerIndex]&&<div className="team-media-viewer" onPointerDown={e=>begin(e.clientX)} onPointerUp={e=>end(e.clientX,d=>d>0?viewerNext():viewerPrev())}>
           <TeamMedia key={works[viewerIndex]} src={works[viewerIndex]} alt={(member.name||'Team member')+' portfolio '+(viewerIndex+1)} className="team-media-viewer-media" interactive/>
-          <button type="button" className="team-media-close" aria-label="닫기" onClick={()=>setViewerIndex(null)}><X size={18}/></button>
+          <button type="button" className="team-media-close" aria-label="닫기" onClick={closeViewer}><X size={18}/></button>
           {works.length>1&&<>
             <button type="button" className="team-media-nav is-prev" aria-label="이전" onClick={viewerPrev}><ChevronLeft size={22}/></button>
             <button type="button" className="team-media-nav is-next" aria-label="다음" onClick={viewerNext}><ChevronRight size={22}/></button>
