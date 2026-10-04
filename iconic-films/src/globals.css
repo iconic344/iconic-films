@@ -4199,3 +4199,152 @@ html{scrollbar-gutter:stable}
 .film-player-media--immersive>video{
   background:#000!important;
 }
+
+
+/* 2026-10-04 film spacing, scoped gallery backdrop, contact geometry, unified suction motion */
+
+/* Film viewer sits clearly below the sticky top navigation instead of visually touching it. */
+.film-dialog--immersive{
+  top:calc(50% + 28px)!important;
+  max-height:calc(100dvh - 118px)!important;
+}
+.film-dialog--immersive .film-player-media--immersive{
+  height:min(76dvh,720px)!important;
+}
+
+/* The film backdrop uses the values already editable in admin -> 작품 -> Film viewer. */
+:root[data-film-open="true"] .iconic-dialog-overlay{
+  background:rgba(0,0,0,var(--film-overlay-opacity,.62))!important;
+  -webkit-backdrop-filter:blur(var(--film-overlay-blur,20px)) saturate(.86)!important;
+  backdrop-filter:blur(var(--film-overlay-blur,20px)) saturate(.86)!important;
+}
+
+/* Contact: keep the existing visual design, only correct label geometry and add a subtle divider. */
+.contact-form{
+  position:relative!important;
+}
+.contact-form::before{
+  content:"";
+  position:absolute;
+  z-index:2;
+  top:0;
+  bottom:76px;
+  left:92px;
+  width:1px;
+  pointer-events:none;
+  background:color-mix(in srgb,var(--ink) 14%,transparent);
+}
+.contact-form>label{
+  grid-template-columns:92px minmax(0,1fr)!important;
+  column-gap:18px!important;
+  align-items:center!important;
+}
+.contact-form>label>span{
+  height:58px!important;
+  padding:0 18px 0 27px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  font-size:9px!important;
+  line-height:1!important;
+  letter-spacing:.15em!important;
+  white-space:nowrap!important;
+}
+.contact-form input{
+  height:58px!important;
+  padding:0 28px 0 0!important;
+  font-size:15px!important;
+  line-height:58px!important;
+}
+.contact-form>label.contact-message{
+  align-items:start!important;
+}
+.contact-form>label.contact-message>span{
+  height:auto!important;
+  padding-top:20px!important;
+  align-items:flex-start!important;
+}
+.contact-form textarea{
+  padding:18px 28px 28px 0!important;
+  font-size:15px!important;
+  line-height:1.62!important;
+}
+@media(max-width:640px){
+  .contact-form::before{
+    left:76px;
+    bottom:112px;
+  }
+  .contact-form>label{
+    grid-template-columns:76px minmax(0,1fr)!important;
+    column-gap:14px!important;
+  }
+  .contact-form>label>span{
+    padding-left:18px!important;
+    padding-right:12px!important;
+    font-size:8px!important;
+  }
+}
+
+/* One motion language for every opening/closing surface: smooth suction, no flashing filter layer. */
+.iconic-dialog-content{
+  transform-origin:50% 16%!important;
+  backface-visibility:hidden!important;
+  will-change:transform,opacity!important;
+  filter:none!important;
+}
+.iconic-dialog-content[data-state="open"]{
+  animation:viivii-suction-window-in .46s cubic-bezier(.16,1,.3,1) both!important;
+}
+.iconic-dialog-content[data-state="closed"]{
+  animation:viivii-suction-window-out .34s cubic-bezier(.4,0,.2,1) both!important;
+}
+.iconic-dialog-overlay[data-state="open"]{
+  animation:viivii-suction-overlay-in .38s ease-out both!important;
+}
+.iconic-dialog-overlay[data-state="closed"]{
+  animation:viivii-suction-overlay-out .30s ease-in both!important;
+}
+@keyframes viivii-suction-window-in{
+  0%{opacity:0;transform:translate(-50%,-47.7%) scale(.948) translateZ(0)}
+  62%{opacity:1;transform:translate(-50%,-50.35%) scale(1.006) translateZ(0)}
+  100%{opacity:1;transform:translate(-50%,-50%) scale(1) translateZ(0)}
+}
+@keyframes viivii-suction-window-out{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(1) translateZ(0)}
+  100%{opacity:0;transform:translate(-50%,-47.8%) scale(.952) translateZ(0)}
+}
+@keyframes viivii-suction-overlay-in{
+  from{opacity:0}
+  to{opacity:1}
+}
+@keyframes viivii-suction-overlay-out{
+  from{opacity:1}
+  to{opacity:0}
+}
+
+/* Full admin window follows the same smooth language while preserving its full-screen geometry. */
+.editor{
+  transform-origin:50% 10%!important;
+  filter:none!important;
+  animation:viivii-suction-admin-in .46s cubic-bezier(.16,1,.3,1) both!important;
+}
+.editor.is-closing{
+  animation:viivii-suction-admin-out .36s cubic-bezier(.4,0,.2,1) both!important;
+}
+@keyframes viivii-suction-admin-in{
+  0%{opacity:0;transform:translateY(16px) scale(.988) translateZ(0)}
+  65%{opacity:1;transform:translateY(-2px) scale(1.0015) translateZ(0)}
+  100%{opacity:1;transform:translateY(0) scale(1) translateZ(0)}
+}
+@keyframes viivii-suction-admin-out{
+  0%{opacity:1;transform:translateY(0) scale(1) translateZ(0)}
+  100%{opacity:0;transform:translateY(14px) scale(.988) translateZ(0)}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .iconic-dialog-content,
+  .iconic-dialog-overlay,
+  .editor{
+    animation:none!important;
+  }
+}
