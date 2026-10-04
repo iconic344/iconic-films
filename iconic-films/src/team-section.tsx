@@ -13,10 +13,14 @@ export default function TeamSection({config,onOpen}:{config:Config;onOpen:(membe
     '--team-head-y':config.teamHeadlineY+'px',
     '--team-head-size':config.teamHeadlineSize+'px',
     '--team-head-width':config.teamHeadlineWidth+'%',
-    '--team-head-align':config.teamHeadlineAlign||'left',
-    '--team-head-font':config.teamHeadlineFont||'Arial, Helvetica, sans-serif',
+    '--team-head-align':config.textStyles.teamHeadline.align||config.teamHeadlineAlign||'left',
+    '--team-head-font':config.textStyles.teamHeadline.font||config.teamHeadlineFont||'Arial, Helvetica, sans-serif',
     '--team-row-gap':config.teamRowGap+'px',
   } as CSSProperties;
+  const textCss=(key:keyof typeof config.textStyles):CSSProperties=>{
+    const s=config.textStyles[key];
+    return {fontFamily:s.font||undefined,fontSize:s.size+'px',color:s.color||undefined,textAlign:s.align,translate:s.x+'px '+s.y+'px'};
+  };
 
   const open=(event:MouseEvent<HTMLAnchorElement>,member:TeamMember)=>{
     event.preventDefault();
@@ -25,8 +29,8 @@ export default function TeamSection({config,onOpen}:{config:Config;onOpen:(membe
 
   return <section id="team" className="team-section reveal team-stack-section" style={sectionStyle}>
     <div className="team-section-head">
-      <span className="kicker">{config.teamKicker||'03 / PEOPLE'}</span>
-      <h2>{(config.teamHeadline||'People behind the image.').split('\n').map((line,i)=><span key={i}>{line}{i<(config.teamHeadline||'').split('\n').length-1&&<br/>}</span>)}</h2>
+      <span className="kicker" style={textCss('teamKicker')}>{config.teamKicker||'03 / PEOPLE'}</span>
+      <h2 style={textCss('teamHeadline')}>{(config.teamHeadline||'People behind the image.').split('\n').map((line,i)=><span key={i}>{line}{i<(config.teamHeadline||'').split('\n').length-1&&<br/>}</span>)}</h2>
     </div>
 
     <div className="team-stack-list">
@@ -47,13 +51,13 @@ export default function TeamSection({config,onOpen}:{config:Config;onOpen:(membe
           </div>
 
           <div className="team-stack-copy">
-            <span>{member.role||'CREATIVE'}</span>
-            <h3>{member.name||'Unnamed'}</h3>
-            {member.bio&&<p>{member.bio}</p>}
+            <span style={textCss('teamMemberRole')}>{member.role||'CREATIVE'}</span>
+            <h3 style={textCss('teamMemberName')}>{member.name||'Unnamed'}</h3>
+            {member.bio&&<p style={textCss('teamMemberBio')}>{member.bio}</p>}
           </div>
 
           <div className="team-stack-end">
-            <span className="team-stack-view">View profile <ArrowUpRight size={15}/></span>
+            <span className="team-stack-view" style={textCss('teamView')}>{config.teamViewLabel||'View profile'} <ArrowUpRight size={15}/></span>
           </div>
         </a>;
       })}
