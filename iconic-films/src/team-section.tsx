@@ -9,9 +9,9 @@ export default function TeamSection({config,onOpen}:{config:Config;onOpen:(membe
   if(!visible.length)return null;
 
   const sectionStyle={
-    '--team-head-x':config.teamHeadlineX+'px',
-    '--team-head-y':config.teamHeadlineY+'px',
-    '--team-head-size':config.teamHeadlineSize+'px',
+    '--team-head-x':config.textStyles.teamHeadline.x+'px',
+    '--team-head-y':config.textStyles.teamHeadline.y+'px',
+    '--team-head-size':config.textStyles.teamHeadline.size+'px',
     '--team-head-width':config.teamHeadlineWidth+'%',
     '--team-head-align':config.textStyles.teamHeadline.align||config.teamHeadlineAlign||'left',
     '--team-head-font':config.textStyles.teamHeadline.font||config.teamHeadlineFont||'Arial, Helvetica, sans-serif',
