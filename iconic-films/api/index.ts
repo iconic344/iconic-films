@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import tls from 'node:tls';
+import net from 'node:net';
 import {createClient,type SupabaseClient} from '@supabase/supabase-js';
 
 type Req=IncomingMessage & {body?:any};
@@ -178,15 +179,19 @@ async function getMailConnection():Promise<MailConnection|null>{
   return {provider:value.provider as MailProvider,email:value.email,appPassword:value.appPassword,updatedAt:typeof value.updatedAt==='string'?value.updatedAt:''};
 }
 function smtpHost(provider:MailProvider){return provider==='gmail'?'smtp.gmail.com':'smtp.naver.com';}
-function smtpPassword(connection:MailConnection){return connection.provider==='gmail'?connection.appPassword.replace(/\s+/g,''):connection.appPassword;}
+function smtpPassword(connection:MailConnection){return connection.provider==='gmail'?connection.appPassword.replace(/\s+/g,''):connection.appPassword.replace(/\s+/g,'');}
+function smtpEndpoints(provider:MailProvider){
+  return provider==='naver'
+    ?[{port:587,secure:false},{port:465,secure:true}]
+    :[{port:465,secure:true},{port:587,secure:false}];
+}
 function encodeHeader(value:string){return /[^\x20-\x7E]/.test(value)?'=?UTF-8?B?'+Buffer.from(value,'utf8').toString('base64')+'?=':value;}
 function dotStuff(value:string){return value.replace(/\r?\n/g,'\r\n').replace(/(^|\r\n)\./g,'$1..');}
-async function smtpSession(connection:MailConnection,mail?:{to:string;subject:string;text:string}){
-  const host=smtpHost(connection.provider),port=465;
-  const socket=tls.connect({host,port,servername:host,rejectUnauthorized:true});
-  socket.setTimeout(12000);
-  let buffer='';
-  const read=()=>new Promise<{code:number,text:string}>((resolve,reject)=>{
+type SmtpSocket=net.Socket|tls.TLSSocket;
+function smtpRead(socket:SmtpSocket){
+  return new Promise<{code:number;text:string}>((resolve,reject)=>{
+    let buffer='';
+    const cleanup=()=>{socket.off('data',onData);socket.off('error',onError);socket.off('timeout',onTimeout)};
     const onError=(error:Error)=>{cleanup();reject(error)};
     const onTimeout=()=>{cleanup();reject(new Error('SMTP connection timeout'))};
     const onData=(chunk:Buffer|string)=>{
@@ -194,28 +199,62 @@ async function smtpSession(connection:MailConnection,mail?:{to:string;subject:st
       const lines=buffer.split(/\r?\n/);
       for(let i=0;i<lines.length-1;i++){
         if(/^\d{3} /.test(lines[i])){
-          const consumed=lines.slice(0,i+1).join('\n');
-          buffer=lines.slice(i+1).join('\n');
-          cleanup();resolve({code:Number(lines[i].slice(0,3)),text:consumed});return;
+          const text=lines.slice(0,i+1).join('\n');
+          cleanup();resolve({code:Number(lines[i].slice(0,3)),text});return;
         }
       }
     };
-    const cleanup=()=>{socket.off('data',onData);socket.off('error',onError);socket.off('timeout',onTimeout)};
     socket.on('data',onData);socket.once('error',onError);socket.once('timeout',onTimeout);
   });
+}
+function connectPlain(host:string,port:number){
+  return new Promise<net.Socket>((resolve,reject)=>{
+    const socket=net.connect({host,port});
+    const fail=(error:Error)=>{socket.destroy();reject(error)};
+    socket.once('error',fail);
+    socket.once('connect',()=>{socket.off('error',fail);resolve(socket)});
+  });
+}
+function connectTls(host:string,port:number){
+  return new Promise<tls.TLSSocket>((resolve,reject)=>{
+    const socket=tls.connect({host,port,servername:host,rejectUnauthorized:true});
+    const fail=(error:Error)=>{socket.destroy();reject(error)};
+    socket.once('error',fail);
+    socket.once('secureConnect',()=>{socket.off('error',fail);resolve(socket)});
+  });
+}
+function upgradeStartTls(socket:net.Socket,host:string){
+  return new Promise<tls.TLSSocket>((resolve,reject)=>{
+    socket.removeAllListeners('data');
+    const secure=tls.connect({socket,servername:host,rejectUnauthorized:true});
+    const fail=(error:Error)=>{secure.destroy();reject(error)};
+    secure.once('error',fail);
+    secure.once('secureConnect',()=>{secure.off('error',fail);resolve(secure)});
+  });
+}
+async function smtpAttempt(connection:MailConnection,mail:{to:string;subject:string;text:string}|undefined,endpoint:{port:number;secure:boolean}){
+  const host=smtpHost(connection.provider);
+  let socket:SmtpSocket=endpoint.secure?await connectTls(host,endpoint.port):await connectPlain(host,endpoint.port);
+  socket.setTimeout(12000);
   const command=async(value:string|undefined,ok:number[])=>{
     if(value!==undefined)socket.write(value+'\r\n');
-    const response=await read();
+    const response=await smtpRead(socket);
     if(!ok.includes(response.code))throw new Error('SMTP '+response.code+' '+response.text.replace(/\s+/g,' ').slice(0,240));
     return response;
   };
   try{
     await command(undefined,[220]);
     await command('EHLO viivii-sara.site',[250]);
+    if(!endpoint.secure){
+      await command('STARTTLS',[220]);
+      socket=await upgradeStartTls(socket as net.Socket,host);
+      socket.setTimeout(12000);
+      await command('EHLO viivii-sara.site',[250]);
+    }
     await command('AUTH LOGIN',[334]);
     await command(Buffer.from(connection.email).toString('base64'),[334]);
     await command(Buffer.from(smtpPassword(connection)).toString('base64'),[235]);
-    if(!mail){await command('QUIT',[221]);return}
+    if(!mail){await command('QUIT',[221]).catch(()=>{});return}
     await command('MAIL FROM:<'+connection.email+'>',[250]);
     await command('RCPT TO:<'+mail.to+'>',[250,251]);
     await command('DATA',[354]);
@@ -233,13 +272,25 @@ async function smtpSession(connection:MailConnection,mail?:{to:string;subject:st
       ''
     ].join('\r\n');
     socket.write(message+'\r\n.\r\n');
-    const sent=await read();
+    const sent=await smtpRead(socket);
     if(sent.code!==250)throw new Error('SMTP '+sent.code+' '+sent.text.replace(/\s+/g,' ').slice(0,240));
     await command('QUIT',[221]).catch(()=>{});
   }finally{
     socket.end();
     socket.destroy();
   }
+}
+async function smtpSession(connection:MailConnection,mail?:{to:string;subject:string;text:string}){
+  const errors:string[]=[];
+  for(const endpoint of smtpEndpoints(connection.provider)){
+    try{return await smtpAttempt(connection,mail,endpoint)}
+    catch(error){errors.push((error as Error).message)}
+  }
+  const joined=errors.join(' | ');
+  if(/535|auth|authentication|invalid credentials|login/i.test(joined)){
+    throw new Error('SMTP authentication failed. 2-step verification, application password, and IMAP/SMTP access must be enabled.');
+  }
+  throw new Error(joined||'SMTP connection failed');
 }
 async function getMany(keys:string[]){
   const map=new Map<string,any>();
@@ -326,7 +377,7 @@ export default async function handler(req:Req,res:ServerResponse){
         if(provider==='gmail'&&!/@gmail\.com$/i.test(email))throw new HttpError(400,'Gmail 연결에는 @gmail.com 주소를 입력해 주세요.');
         if(provider==='naver'&&!/@naver\.com$/i.test(email))throw new HttpError(400,'Naver Mail 연결에는 @naver.com 주소를 입력해 주세요.');
         const connection:MailConnection={provider,email,appPassword,updatedAt:new Date().toISOString()};
-        try{await smtpSession(connection)}catch(error){console.error('MAIL CONNECT:',error);throw new HttpError(502,'메일 계정 인증에 실패했습니다. 2단계 인증과 앱 비밀번호를 확인해 주세요.');}
+        try{await smtpSession(connection)}catch(error){console.error('MAIL CONNECT:',error);throw new HttpError(502,'메일 계정 인증에 실패했습니다. 네이버 메일의 IMAP/SMTP를 사용함으로 켠 뒤, 일반 비밀번호가 아닌 새 애플리케이션 비밀번호로 다시 연결해 주세요.');}
         await putSetting('mail-connection',connection);
         json(res,{ok:true,connected:true,provider,email});return;
       }
