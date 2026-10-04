@@ -3,6 +3,7 @@ import {createHash,randomUUID,randomBytes,timingSafeEqual} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import tls from 'node:tls';
 import {createClient,type SupabaseClient} from '@supabase/supabase-js';
 
 type Req=IncomingMessage & {body?:any};
@@ -168,6 +169,78 @@ async function getContactInbox():Promise<ContactMessage[]>{
 async function putContactInbox(messages:ContactMessage[]){
   await putSetting('contact-inbox',messages.slice(0,120));
 }
+type MailProvider='gmail'|'naver';
+type MailConnection={provider:MailProvider;email:string;appPassword:string;updatedAt:string};
+const contactRate=new Map<string,{count:number;until:number}>();
+async function getMailConnection():Promise<MailConnection|null>{
+  const value=await getSetting('mail-connection').catch(()=>null) as Partial<MailConnection>|null;
+  if(!value||!['gmail','naver'].includes(String(value.provider))||typeof value.email!=='string'||typeof value.appPassword!=='string')return null;
+  return {provider:value.provider as MailProvider,email:value.email,appPassword:value.appPassword,updatedAt:typeof value.updatedAt==='string'?value.updatedAt:''};
+}
+function smtpHost(provider:MailProvider){return provider==='gmail'?'smtp.gmail.com':'smtp.naver.com';}
+function smtpPassword(connection:MailConnection){return connection.provider==='gmail'?connection.appPassword.replace(/\s+/g,''):connection.appPassword;}
+function encodeHeader(value:string){return /[^\x20-\x7E]/.test(value)?'=?UTF-8?B?'+Buffer.from(value,'utf8').toString('base64')+'?=':value;}
+function dotStuff(value:string){return value.replace(/\r?\n/g,'\r\n').replace(/(^|\r\n)\./g,'$1..');}
+async function smtpSession(connection:MailConnection,mail?:{to:string;subject:string;text:string}){
+  const host=smtpHost(connection.provider),port=465;
+  const socket=tls.connect({host,port,servername:host,rejectUnauthorized:true});
+  socket.setTimeout(12000);
+  let buffer='';
+  const read=()=>new Promise<{code:number,text:string}>((resolve,reject)=>{
+    const onError=(error:Error)=>{cleanup();reject(error)};
+    const onTimeout=()=>{cleanup();reject(new Error('SMTP connection timeout'))};
+    const onData=(chunk:Buffer|string)=>{
+      buffer+=chunk.toString();
+      const lines=buffer.split(/\r?\n/);
+      for(let i=0;i<lines.length-1;i++){
+        if(/^\d{3} /.test(lines[i])){
+          const consumed=lines.slice(0,i+1).join('\n');
+          buffer=lines.slice(i+1).join('\n');
+          cleanup();resolve({code:Number(lines[i].slice(0,3)),text:consumed});return;
+        }
+      }
+    };
+    const cleanup=()=>{socket.off('data',onData);socket.off('error',onError);socket.off('timeout',onTimeout)};
+    socket.on('data',onData);socket.once('error',onError);socket.once('timeout',onTimeout);
+  });
+  const command=async(value:string|undefined,ok:number[])=>{
+    if(value!==undefined)socket.write(value+'\r\n');
+    const response=await read();
+    if(!ok.includes(response.code))throw new Error('SMTP '+response.code+' '+response.text.replace(/\s+/g,' ').slice(0,240));
+    return response;
+  };
+  try{
+    await command(undefined,[220]);
+    await command('EHLO viivii-sara.site',[250]);
+    await command('AUTH LOGIN',[334]);
+    await command(Buffer.from(connection.email).toString('base64'),[334]);
+    await command(Buffer.from(smtpPassword(connection)).toString('base64'),[235]);
+    if(!mail){await command('QUIT',[221]);return}
+    await command('MAIL FROM:<'+connection.email+'>',[250]);
+    await command('RCPT TO:<'+mail.to+'>',[250,251]);
+    await command('DATA',[354]);
+    const message=[
+      'From: VIIVII sara <'+connection.email+'>',
+      'To: <'+mail.to+'>',
+      'Subject: '+encodeHeader(mail.subject),
+      'Date: '+new Date().toUTCString(),
+      'MIME-Version: 1.0',
+      'Content-Type: text/plain; charset=UTF-8',
+      'Content-Transfer-Encoding: 8bit',
+      'X-Mailer: VIIVII sara portfolio',
+      '',
+      dotStuff(mail.text),
+      ''
+    ].join('\r\n');
+    socket.write(message+'\r\n.\r\n');
+    const sent=await read();
+    if(sent.code!==250)throw new Error('SMTP '+sent.code+' '+sent.text.replace(/\s+/g,' ').slice(0,240));
+    await command('QUIT',[221]).catch(()=>{});
+  }finally{
+    socket.end();
+    socket.destroy();
+  }
+}
 async function getMany(keys:string[]){
   const map=new Map<string,any>();
   for(let i=0;i<keys.length;i+=80){
@@ -236,6 +309,33 @@ export default async function handler(req:Req,res:ServerResponse){
       }
     }
 
+    if(route==='/api/mail'){
+      await requireAdmin(req);
+      if(method==='GET'){
+        const connection=await getMailConnection();
+        json(res,{connected:!!connection,provider:connection?.provider||'',email:connection?.email||'',updatedAt:connection?.updatedAt||''});return;
+      }
+      if(method==='PUT'){
+        const input=await body(req);
+        const provider=input?.provider==='gmail'||input?.provider==='naver'?input.provider:null;
+        const email=typeof input?.email==='string'?input.email.trim():'';
+        const appPassword=typeof input?.appPassword==='string'?input.appPassword.trim():'';
+        if(!provider)throw new HttpError(400,'Gmail 또는 Naver Mail을 선택해 주세요.');
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>180)throw new HttpError(400,'메일 주소를 확인해 주세요.');
+        if(appPassword.length<8||appPassword.length>160)throw new HttpError(400,'앱 비밀번호를 확인해 주세요.');
+        if(provider==='gmail'&&!/@gmail\.com$/i.test(email))throw new HttpError(400,'Gmail 연결에는 @gmail.com 주소를 입력해 주세요.');
+        if(provider==='naver'&&!/@naver\.com$/i.test(email))throw new HttpError(400,'Naver Mail 연결에는 @naver.com 주소를 입력해 주세요.');
+        const connection:MailConnection={provider,email,appPassword,updatedAt:new Date().toISOString()};
+        try{await smtpSession(connection)}catch(error){console.error('MAIL CONNECT:',error);throw new HttpError(502,'메일 계정 인증에 실패했습니다. 2단계 인증과 앱 비밀번호를 확인해 주세요.');}
+        await putSetting('mail-connection',connection);
+        json(res,{ok:true,connected:true,provider,email});return;
+      }
+      if(method==='DELETE'){
+        await putSetting('mail-connection',null);
+        json(res,{ok:true,connected:false});return;
+      }
+    }
+
     if(route==='/api/contact/reply'&&method==='POST'){
       await requireAdmin(req);
       const input=await body(req);
@@ -251,6 +351,19 @@ export default async function handler(req:Req,res:ServerResponse){
       const inbox=await getContactInbox();
       const index=inbox.findIndex(item=>item.id===id);
       if(index<0)throw new HttpError(404,'문의를 찾을 수 없습니다.');
+
+      const connection=await getMailConnection();
+      if(connection){
+        try{
+          await smtpSession(connection,{to,subject,text:message});
+          inbox[index]={...inbox[index],read:true,repliedAt:new Date().toISOString()};
+          await putContactInbox(inbox);
+          json(res,{ok:true,delivered:true,provider:connection.provider,from:connection.email});return;
+        }catch(error){
+          console.error('CONTACT SMTP REPLY:',error);
+          throw new HttpError(502,'연결된 메일 계정으로 답장을 보내지 못했습니다. 메일 연결 상태를 확인해 주세요.');
+        }
+      }
 
       const bundled=resolveLegacyMedia(seed());
       const stored=await getSetting('config').catch(()=>null);
@@ -274,11 +387,11 @@ export default async function handler(req:Req,res:ServerResponse){
         if(!response.ok){
           const detail=await response.text().catch(()=>'');
           console.error('CONTACT REPLY:',response.status,detail.slice(0,500));
-          throw new HttpError(502,'사이트 내 이메일 전송에 실패했습니다. Gmail 또는 Naver Mail로 답장해 주세요.');
+          throw new HttpError(502,'사이트 내 이메일 전송에 실패했습니다. Gmail 또는 Naver Mail 연결 상태를 확인해 주세요.');
         }
         inbox[index]={...inbox[index],read:true,repliedAt:new Date().toISOString()};
         await putContactInbox(inbox);
-        json(res,{ok:true,delivered:true});return;
+        json(res,{ok:true,delivered:true,provider:'resend'});return;
       }
 
       const gmailUrl='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(to)+'&su='+encodeURIComponent(subject)+'&body='+encodeURIComponent(message);
@@ -297,65 +410,23 @@ export default async function handler(req:Req,res:ServerResponse){
         const from=typeof input?.from==='string'?input.from.trim():'';
         const subject=typeof input?.subject==='string'?input.subject.trim():'';
         const message=typeof input?.message==='string'?input.message.trim():'';
+        const website=typeof input?.website==='string'?input.website.trim():'';
+        if(website){json(res,{ok:true,stored:true});return;}
         if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(from)||from.length>180)throw new HttpError(400,'보내는 이메일 주소를 확인해 주세요.');
         if(subject.length>160)throw new HttpError(400,'제목은 160자 이하로 입력해 주세요.');
         if(!message||message.length>5000)throw new HttpError(400,'메시지는 1자 이상 5000자 이하로 입력해 주세요.');
 
         const ip=(process.env.VERCEL?header(req,'x-forwarded-for').split(',')[0].trim():req.socket.remoteAddress||'local');
-        const rateKey='contact-rate:'+hash(ip).slice(0,32);
-        const now=Date.now();
-        const rate=await getSetting(rateKey).catch(()=>null) as {count?:number;until?:number}|null;
-        if(rate&&Number(rate.until)>now&&Number(rate.count)>=5)throw new HttpError(429,'메시지 전송 횟수가 많습니다. 잠시 후 다시 시도해 주세요.');
-        await putSetting(rateKey,{count:rate&&Number(rate.until)>now?Number(rate.count||0)+1:1,until:rate&&Number(rate.until)>now?Number(rate.until):now+600000});
+        const key=hash(ip).slice(0,32),now=Date.now();
+        const rate=contactRate.get(key);
+        if(rate&&rate.until>now&&rate.count>=5)throw new HttpError(429,'메시지 전송 횟수가 많습니다. 잠시 후 다시 시도해 주세요.');
+        contactRate.set(key,{count:rate&&rate.until>now?rate.count+1:1,until:rate&&rate.until>now?rate.until:now+600000});
+        if(contactRate.size>800)for(const [entry,value] of contactRate)if(value.until<=now)contactRate.delete(entry);
 
-        const item:ContactMessage={
-          id:randomUUID(),
-          from,
-          subject:subject||'Project inquiry',
-          message,
-          createdAt:new Date().toISOString(),
-          read:false,
-          emailed:false
-        };
+        const item:ContactMessage={id:randomUUID(),from,subject:subject||'Project inquiry',message,createdAt:new Date().toISOString(),read:false,emailed:false};
         const inbox=await getContactInbox();
         await putContactInbox([item,...inbox]);
-
-        const bundled=resolveLegacyMedia(seed());
-        const stored=await getSetting('config').catch(()=>null);
-        const config=stored||bundled?fillMedia(stored||bundled,bundled):null;
-        const target=(process.env.CONTACT_TO_EMAIL?.trim()||config?.email?.trim()||'');
-        const apiKey=process.env.RESEND_API_KEY?.trim();
-        let emailDelivered=false;
-
-        if(apiKey&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)){
-          try{
-            const sender=process.env.CONTACT_FROM_EMAIL?.trim()||'VIIVII sara <onboarding@resend.dev>';
-            const response=await fetch('https://api.resend.com/emails',{
-              method:'POST',
-              headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},
-              body:JSON.stringify({
-                from:sender,
-                to:[target],
-                reply_to:from,
-                subject:'VIIVII sara · '+item.subject,
-                text:'From: '+from+'\n\n'+message
-              })
-            });
-            emailDelivered=response.ok;
-            if(!response.ok){
-              const detail=await response.text().catch(()=>'');
-              console.error('CONTACT EMAIL:',response.status,detail.slice(0,500));
-            }
-          }catch(error){
-            console.error('CONTACT EMAIL:',error);
-          }
-        }
-
-        if(emailDelivered){
-          item.emailed=true;
-          await putContactInbox([item,...inbox.filter(entry=>entry.id!==item.id)]);
-        }
-        json(res,{ok:true,stored:true,emailDelivered});return;
+        json(res,{ok:true,stored:true});return;
       }
 
       if(method==='PATCH'){
