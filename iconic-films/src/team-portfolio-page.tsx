@@ -27,7 +27,7 @@ export default function TeamPortfolioPage({config,member,onBack}:{config:Config;
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>{
       if(viewerIndex!==null){
-        if(e.key==='Escape')setViewerIndex(null);
+        if(e.key==='Escape')closeViewer();
         if(e.key==='ArrowLeft')viewerPrev();
         if(e.key==='ArrowRight')viewerNext();
         return;
