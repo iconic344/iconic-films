@@ -81,7 +81,7 @@ export default function TeamPortfolioPage({config,member,onBack}:{config:Config;
   return <div className="team-portfolio-page" style={pageStyle}>
     <header className="team-portfolio-nav">
       <button type="button" onClick={onBack} className="team-portfolio-back"><ArrowLeft size={15}/><span>Back</span></button>
-      <a href="/" className="team-portfolio-brand">{config.logo?<img src={config.logo} alt={config.name}/>:config.name}<sup>®</sup></a>
+      <a href="/" className="brand team-portfolio-brand">{config.logo?<img src={config.logo} alt={config.name}/>:config.name}<span>®</span></a>
       <div className="team-portfolio-nav-right">
         <span>{member.role||'CREATIVE'}</span>
         {member.instagram&&<a href={member.instagram} target="_blank" rel="noreferrer">Instagram <ArrowUpRight size={13}/></a>}
@@ -139,7 +139,7 @@ export default function TeamPortfolioPage({config,member,onBack}:{config:Config;
       </section>
     </main>
 
-    <footer className="team-portfolio-footer"><span>© 2026 VIIVII sara</span><button type="button" onClick={onBack}>Back to team</button></footer>
+    <footer className="team-portfolio-footer"><span>© 2026 {config.name}</span><button type="button" onClick={onBack}>Back to team</button></footer>
 
     <Dialog open={viewerIndex!==null} onOpenChange={open=>!open&&setViewerIndex(null)}>
       <DialogContent className="team-media-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}>
