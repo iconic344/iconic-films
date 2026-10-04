@@ -14,6 +14,7 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
   const members=draft.teamMembers||[];
   const patch=(id:string,key:keyof TeamMember,value:unknown)=>setDraft(d=>({...d,teamMembers:(d.teamMembers||[]).map(m=>m.id===id?{...m,[key]:value}:m)}));
   const setConfig=<K extends keyof Config>(key:K,value:Config[K])=>setDraft(d=>({...d,[key]:value}));
+  const setGlobalStyle=(key:keyof Config['textStyles'],value:TextStyle)=>setDraft(d=>({...d,textStyles:{...d.textStyles,[key]:value}}));
   const miniRange=(member:TeamMember,key:keyof TeamMember,label:string,min:number,max:number,step=1,suffix='px')=><label className="field layout-range">{label}<span className="val">{Number(member[key])}{suffix}</span><Slider value={[Number(member[key])]} min={min} max={max} step={step} onValueChange={v=>patch(member.id,key,v[0])}/></label>;
   const portfolioStyle=(member:TeamMember,prefix:'Name'|'Role'|'Bio'|'Title'|'Intro'|'Utility'):TextStyle=>({
     font:String(member[('portfolio'+prefix+'Font') as keyof TeamMember]||'Arial, Helvetica, sans-serif'),
@@ -55,13 +56,16 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
       <div><h3>Team / collaborators</h3><p>대표·사진·영상·메이크업·헤어·세트 스타일링 등 역할을 자유롭게 입력하고, 프로필과 작품에 이미지·영상·GLB/glTF 3D를 올릴 수 있습니다.</p></div>
       <button type="button" className="add" onClick={()=>setDraft(d=>({...d,teamMembers:[...(d.teamMembers||[]),blankMember(d)]}))}><Plus size={16}/> 팀원 추가</button>
     </section>
-    <section className="editor-card">
-      <h3>Team headline</h3>
-      <label className="field">큰 제목 글씨체<input value={draft.teamHeadlineFont||''} onChange={e=>setConfig('teamHeadlineFont',e.target.value)}/></label>
-      <label className="field layout-range">큰 제목 크기 <span className="val">{draft.teamHeadlineSize}px</span><Slider value={[draft.teamHeadlineSize]} min={44} max={150} step={1} onValueChange={v=>setConfig('teamHeadlineSize',v[0])}/></label>
-      <label className="field">큰 제목 정렬<div className="team-layout-choice">{(['left','center','right'] as const).map(v=><button type="button" key={v} className={draft.teamHeadlineAlign===v?'active':''} onClick={()=>setConfig('teamHeadlineAlign',v)}>{v.toUpperCase()}</button>)}</div></label>
-      <label className="field layout-range">큰 제목 가로 위치 <span className="val">{draft.teamHeadlineX}px</span><Slider value={[draft.teamHeadlineX]} min={-320} max={320} step={1} onValueChange={v=>setConfig('teamHeadlineX',v[0])}/></label>
-      <label className="field layout-range">큰 제목 세로 위치 <span className="val">{draft.teamHeadlineY}px</span><Slider value={[draft.teamHeadlineY]} min={-220} max={220} step={1} onValueChange={v=>setConfig('teamHeadlineY',v[0])}/></label>
+    <section className="editor-card typography-card">
+      <h3>Team section typography</h3>
+      <p>메인 Team 영역의 문구/색상/폰트/크기/정렬/위치를 한 번에 조절합니다.</p>
+      <TextStyleEditor label="Team 작은 제목" value={draft.textStyles.teamKicker} onChange={v=>setGlobalStyle('teamKicker',v)} text={draft.teamKicker} onTextChange={v=>setConfig('teamKicker',v)}/>
+      <TextStyleEditor label="Team 큰 제목" value={draft.textStyles.teamHeadline} onChange={v=>setGlobalStyle('teamHeadline',v)} text={draft.teamHeadline} onTextChange={v=>setConfig('teamHeadline',v)} multiline/>
+      <TextStyleEditor label="팀원 역할" value={draft.textStyles.teamMemberRole} onChange={v=>setGlobalStyle('teamMemberRole',v)}/>
+      <TextStyleEditor label="팀원 이름" value={draft.textStyles.teamMemberName} onChange={v=>setGlobalStyle('teamMemberName',v)}/>
+      <TextStyleEditor label="팀원 소개" value={draft.textStyles.teamMemberBio} onChange={v=>setGlobalStyle('teamMemberBio',v)}/>
+      <TextStyleEditor label="프로필 버튼" value={draft.textStyles.teamView} onChange={v=>setGlobalStyle('teamView',v)} text={draft.teamViewLabel} onTextChange={v=>setConfig('teamViewLabel',v)}/>
+      <label className="field layout-range">Team 제목 폭 <span className="val">{draft.teamHeadlineWidth}%</span><Slider value={[draft.teamHeadlineWidth]} min={35} max={100} step={1} onValueChange={v=>setConfig('teamHeadlineWidth',v[0])}/></label>
     </section>
     <section className="editor-card team-brand-editor">
       <h3>Shared header brand</h3>
