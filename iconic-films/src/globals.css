@@ -4453,3 +4453,16 @@ html{scrollbar-gutter:stable}
     font-size:12px!important;
   }
 }
+
+
+/* 2026-10-04 isolate team portfolio from main-site backdrop */
+.team-page-shell,
+.team-portfolio-page{
+  position:relative!important;
+  z-index:1!important;
+  min-height:100dvh!important;
+  background:var(--page)!important;
+}
+.team-page-shell{
+  overflow-x:clip;
+}
