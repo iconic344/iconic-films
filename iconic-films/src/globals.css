@@ -2737,3 +2737,149 @@ html{scrollbar-gutter:stable}
   .contact-reply-actions{justify-content:flex-start}
   .contact-reply-actions .contact-delete{margin-left:0}
 }
+
+
+/* Contact spacing + restrained universal window motion 2026-10-04 */
+
+/* Keep the existing Contact visual design. Only fix the label/input geometry. */
+.contact-form>label{
+  grid-template-columns:76px minmax(0,1fr)!important;
+  column-gap:10px!important;
+  align-items:center!important;
+}
+.contact-form>label>span{
+  height:58px!important;
+  padding:0 0 0 28px!important;
+  display:flex!important;
+  align-items:center!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+}
+.contact-form input{
+  height:58px!important;
+  padding:0 28px 0 0!important;
+  line-height:58px!important;
+}
+.contact-form>label.contact-message{
+  align-items:start!important;
+}
+.contact-form>label.contact-message>span{
+  height:auto!important;
+  padding-top:19px!important;
+  align-items:flex-start!important;
+}
+.contact-form textarea{
+  padding:17px 28px 28px 0!important;
+  line-height:1.6!important;
+}
+
+/* CANCEL / SEND: same shape and colors, only subtle pointer feedback. */
+.contact-form-foot button{
+  transform:translateY(0) scale(1);
+  transform-origin:center;
+  transition:
+    transform .38s cubic-bezier(.16,1,.3,1),
+    box-shadow .32s ease,
+    filter .32s ease,
+    opacity .25s ease!important;
+  will-change:transform;
+}
+@media(hover:hover) and (pointer:fine){
+  .contact-form-foot button:hover{
+    transform:translateY(-2px) scale(1.018)!important;
+    box-shadow:
+      0 9px 24px rgba(0,0,0,.10),
+      inset 0 1px 0 color-mix(in srgb,var(--ink) 8%,transparent)!important;
+    filter:brightness(1.04);
+  }
+  .contact-form-foot .contact-send:hover{
+    box-shadow:
+      0 10px 28px rgba(0,0,0,.16),
+      inset 0 1px 0 rgba(255,255,255,.16)!important;
+  }
+}
+.contact-form-foot button:active{
+  transform:translateY(0) scale(.975)!important;
+  transition-duration:.12s!important;
+}
+
+/* Shared modal motion. Existing Contact/Admin geometry is preserved. */
+[data-slot="dialog-overlay"][data-state="open"]{
+  animation:iconic-overlay-in .32s ease both!important;
+}
+[data-slot="dialog-overlay"][data-state="closed"]{
+  animation:iconic-overlay-out .22s ease both!important;
+}
+[data-slot="dialog-content"]:not(.contact-dialog):not(.login-dialog)[data-state="open"]{
+  animation:iconic-window-in .42s cubic-bezier(.16,1,.3,1) both!important;
+}
+[data-slot="dialog-content"]:not(.contact-dialog):not(.login-dialog)[data-state="closed"]{
+  animation:iconic-window-out .24s cubic-bezier(.4,0,.2,1) both!important;
+}
+@keyframes iconic-overlay-in{
+  from{opacity:0}
+  to{opacity:1}
+}
+@keyframes iconic-overlay-out{
+  from{opacity:1}
+  to{opacity:0}
+}
+@keyframes iconic-window-in{
+  from{opacity:0;transform:translate(-50%,-48.7%) scale(.982);filter:blur(5px)}
+  to{opacity:1;transform:translate(-50%,-50%) scale(1);filter:blur(0)}
+}
+@keyframes iconic-window-out{
+  from{opacity:1;transform:translate(-50%,-50%) scale(1);filter:blur(0)}
+  to{opacity:0;transform:translate(-50%,-49.2%) scale(.988);filter:blur(3px)}
+}
+
+/* Contact already has its own geometry; smooth it without restyling it. */
+.contact-dialog[data-state="open"]{
+  animation:contact-dialog-in .44s cubic-bezier(.16,1,.3,1)!important;
+}
+.contact-dialog[data-state="closed"]{
+  animation:contact-dialog-out .24s cubic-bezier(.4,0,.2,1)!important;
+}
+
+/* Dropdown/pop-up surfaces get the same restrained feel. */
+[data-slot="select-content"][data-state="open"]{
+  animation:iconic-float-in .28s cubic-bezier(.16,1,.3,1) both!important;
+}
+[data-slot="select-content"][data-state="closed"]{
+  animation:iconic-float-out .18s ease both!important;
+}
+@keyframes iconic-float-in{
+  from{opacity:0;scale:.985;filter:blur(3px)}
+  to{opacity:1;scale:1;filter:blur(0)}
+}
+@keyframes iconic-float-out{
+  from{opacity:1;scale:1}
+  to{opacity:0;scale:.99}
+}
+
+@media(max-width:640px){
+  .contact-form>label{
+    grid-template-columns:68px minmax(0,1fr)!important;
+    column-gap:8px!important;
+  }
+  .contact-form>label>span{
+    padding-left:20px!important;
+  }
+  .contact-form input{
+    padding-right:20px!important;
+  }
+  .contact-form textarea{
+    padding-right:20px!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .contact-form-foot button,
+  [data-slot="dialog-overlay"],
+  [data-slot="dialog-content"],
+  [data-slot="select-content"]{
+    animation:none!important;
+    transition:none!important;
+    filter:none!important;
+  }
+}
