@@ -4466,3 +4466,132 @@ html{scrollbar-gutter:stable}
 .team-page-shell{
   overflow-x:clip;
 }
+
+
+/* 2026-10-04 fast contact + admin mail connection */
+.contact-honeypot{
+  position:absolute!important;
+  left:-99999px!important;
+  width:1px!important;
+  height:1px!important;
+  overflow:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+/* Mail-account connection lives inside the existing admin visual system. */
+.contact-mail-connection{
+  padding:0!important;
+  overflow:hidden;
+}
+.contact-mail-connection-head{
+  width:100%;
+  min-height:72px!important;
+  display:grid!important;
+  grid-template-columns:36px minmax(0,1fr) auto;
+  align-items:center!important;
+  gap:12px!important;
+  padding:14px 18px!important;
+  border:0!important;
+  background:transparent!important;
+  color:var(--ink)!important;
+  text-align:left!important;
+}
+.contact-mail-connection-icon{
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:50%;
+  color:var(--soft);
+}
+.contact-mail-connection.is-connected .contact-mail-connection-icon{
+  background:var(--ink);
+  border-color:var(--ink);
+  color:var(--page);
+}
+.contact-mail-connection-head>span:nth-child(2){
+  min-width:0;
+  display:grid;
+  gap:4px;
+}
+.contact-mail-connection-head strong{
+  font-size:13px;
+  font-weight:600;
+}
+.contact-mail-connection-head small{
+  color:var(--soft);
+  font-size:11px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.contact-mail-connection-head>span:last-child{
+  color:var(--soft);
+  font-size:10px;
+}
+.contact-mail-settings{
+  display:grid;
+  gap:14px;
+  padding:18px;
+  border-top:1px solid var(--line);
+}
+.contact-mail-provider{
+  display:flex;
+  gap:8px;
+}
+.contact-mail-provider button,
+.contact-mail-actions button{
+  min-height:38px!important;
+  padding:0 14px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  border:1px solid var(--line)!important;
+  border-radius:999px!important;
+  background:transparent!important;
+  color:var(--ink)!important;
+}
+.contact-mail-provider button.active,
+.contact-mail-actions .contact-mail-connect{
+  background:var(--ink)!important;
+  color:var(--page)!important;
+  border-color:var(--ink)!important;
+}
+.contact-mail-settings>label{
+  display:grid;
+  grid-template-columns:140px minmax(0,1fr);
+  align-items:center;
+  gap:16px;
+}
+.contact-mail-settings>label>span{
+  color:var(--soft);
+  font-size:9px;
+  letter-spacing:.12em;
+}
+.contact-mail-settings input{
+  min-height:42px!important;
+  padding:0 13px!important;
+  border:1px solid var(--line)!important;
+  border-radius:12px!important;
+  background:color-mix(in srgb,var(--page) 86%,transparent)!important;
+  color:var(--ink)!important;
+}
+.contact-mail-help,
+.contact-mail-status{
+  margin:0!important;
+  font-size:11px!important;
+  line-height:1.65!important;
+  color:var(--soft)!important;
+}
+.contact-mail-status{color:var(--ink)!important}
+.contact-mail-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+@media(max-width:700px){
+  .contact-mail-settings>label{grid-template-columns:1fr;gap:7px}
+}
