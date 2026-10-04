@@ -1466,3 +1466,343 @@ button{transition:transform .35s cubic-bezier(.2,.9,.2,1.25),background .3s,box-
     flex-basis:48px!important;
   }
 }
+
+
+/* Admin + marquee reliability pass 2026-10-04 */
+
+/* Full-bleed repeated main identity: reach both viewport edges. */
+.hero>.main-logo{
+  width:100vw!important;
+  max-width:none!important;
+  margin-left:calc(50% - 50vw)!important;
+  margin-right:calc(50% - 50vw)!important;
+  overflow:hidden!important;
+}
+.hero>.main-logo .logo-pose,
+.hero>.main-logo .logo-track{
+  width:100%!important;
+}
+.hero>.main-logo.is-marquee .logo-track{
+  width:max-content!important;
+}
+
+/* Admin PIN opens from the admin button area, like the music player. */
+:root[data-admin-login="true"] [data-slot="dialog-overlay"]{
+  background:transparent!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+.login-dialog{
+  position:fixed!important;
+  top:94px!important;
+  right:28px!important;
+  bottom:auto!important;
+  left:auto!important;
+  transform:none!important;
+  transform-origin:top right!important;
+  z-index:9001!important;
+  width:min(370px,calc(100vw - 32px))!important;
+  max-height:calc(100dvh - 118px)!important;
+  padding:28px!important;
+  gap:18px!important;
+  overflow:auto!important;
+  border:1px solid color-mix(in srgb,var(--ink) 11%,transparent)!important;
+  border-radius:24px!important;
+  background:rgba(var(--surface),.72)!important;
+  color:var(--ink)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 22px 70px rgba(0,0,0,.16)!important;
+  -webkit-backdrop-filter:blur(26px) saturate(1.22)!important;
+  backdrop-filter:blur(26px) saturate(1.22)!important;
+}
+.login-dialog[data-state="open"]{
+  animation:admin-login-in .36s cubic-bezier(.16,1,.3,1)!important;
+}
+.login-dialog[data-state="closed"]{
+  animation:admin-login-out .22s ease!important;
+}
+@keyframes admin-login-in{
+  from{opacity:0;transform:translateY(-10px) scale(.965)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes admin-login-out{
+  from{opacity:1;transform:translateY(0) scale(1)}
+  to{opacity:0;transform:translateY(-7px) scale(.975)}
+}
+.login-dialog [data-slot="input-otp-group"]{
+  width:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+}
+.login-dialog [data-slot="input-otp-slot"]{
+  width:54px!important;
+  height:58px!important;
+  flex:0 0 54px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  line-height:1!important;
+  text-align:center!important;
+  font-size:13px!important;
+  letter-spacing:0!important;
+  color:var(--ink)!important;
+}
+.login-dialog [data-slot="input-otp-slot"]>div{
+  inset:0!important;
+  display:grid!important;
+  place-items:center!important;
+}
+@media(max-width:560px){
+  .login-dialog{
+    top:82px!important;
+    right:12px!important;
+    width:calc(100vw - 24px)!important;
+    max-height:calc(100dvh - 96px)!important;
+    padding:24px!important;
+  }
+  .login-dialog [data-slot="input-otp-slot"]{
+    width:50px!important;
+    height:56px!important;
+    flex-basis:50px!important;
+  }
+}
+
+/* Keep the editor mounted during preview so the exact tab and scroll position survive. */
+.editor{
+  transition:opacity .3s ease,visibility .3s ease,transform .38s cubic-bezier(.16,1,.3,1)!important;
+  animation:admin-editor-in .38s cubic-bezier(.16,1,.3,1);
+}
+.editor-preview-hidden{
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+  transform:translateY(8px) scale(.997)!important;
+}
+@keyframes admin-editor-in{
+  from{opacity:0;transform:translateY(12px) scale(.992)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* A preview action is always available for the currently edited section. */
+.editor-preview-strip{
+  position:sticky;
+  top:94px;
+  z-index:4;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin:0 0 22px;
+  padding:10px 12px 10px 16px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:rgba(var(--surface),.82);
+  color:var(--soft);
+  font-size:12px;
+  -webkit-backdrop-filter:blur(18px) saturate(1.18);
+  backdrop-filter:blur(18px) saturate(1.18);
+}
+.editor-preview-strip button{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  padding:9px 14px!important;
+  border:1px solid var(--line)!important;
+  border-radius:999px!important;
+  background:var(--ink)!important;
+  color:var(--page)!important;
+  font-size:11px!important;
+  letter-spacing:.06em!important;
+}
+
+/* Normalize every admin control against the site's theme variables.
+   This fixes white controls / invisible labels in dark mode without changing the public site. */
+.editor,
+.editor *{
+  border-color:var(--line);
+}
+.editor{
+  background:var(--page)!important;
+  color:var(--ink)!important;
+}
+.editor-header{
+  background:rgba(var(--surface),.88)!important;
+  color:var(--ink)!important;
+}
+.editor-card,
+.media-library,
+.library-detail,
+.library-list,
+.library-groups,
+.upload-progress,
+.failed-uploads{
+  background:var(--card)!important;
+  color:var(--ink)!important;
+}
+.editor h1,.editor h2,.editor h3,.editor h4,.editor label,.editor strong{
+  color:var(--ink)!important;
+}
+.editor p,.editor small,.editor .small,.editor .val,.editor .uploaded-file{
+  color:var(--soft)!important;
+}
+.editor input:not([type="color"]):not([type="file"]),
+.editor textarea,
+.editor [data-slot="select-trigger"]{
+  background:var(--page)!important;
+  color:var(--ink)!important;
+  border-color:var(--line)!important;
+  box-shadow:none!important;
+}
+.editor input::placeholder,
+.editor textarea::placeholder{
+  color:var(--soft)!important;
+  opacity:.75!important;
+}
+.editor input[type="file"]{
+  color:var(--soft)!important;
+}
+.editor input[type="file"]::file-selector-button{
+  margin-right:12px;
+  padding:8px 12px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--ink);
+  color:var(--page);
+  font:inherit;
+  font-size:11px;
+}
+.editor button:not(.save):not(.upload-button):not(.add){
+  color:var(--ink);
+}
+.editor .save,
+.editor .upload-button,
+.editor .add{
+  background:var(--ink)!important;
+  color:var(--page)!important;
+  border-color:var(--ink)!important;
+}
+.editor .secondary-button,
+.editor .file-clear,
+.editor .security>button{
+  background:transparent!important;
+  color:var(--ink)!important;
+  border-color:var(--line)!important;
+}
+
+/* Admin tabs stay readable in dark and light themes. */
+.editor-tabs>[data-slot="tabs-list"]{
+  background:transparent!important;
+  color:var(--soft)!important;
+}
+.editor-tabs>[data-slot="tabs-list"]>[data-slot="tabs-trigger"]{
+  background:transparent!important;
+  color:var(--soft)!important;
+  border:1px solid var(--line)!important;
+  box-shadow:none!important;
+  opacity:1!important;
+}
+.editor-tabs>[data-slot="tabs-list"]>[data-slot="tabs-trigger"]:hover{
+  color:var(--ink)!important;
+  background:color-mix(in srgb,var(--ink) 6%,transparent)!important;
+}
+.editor-tabs>[data-slot="tabs-list"]>[data-slot="tabs-trigger"][data-state="active"]{
+  background:var(--ink)!important;
+  color:var(--page)!important;
+  border-color:var(--ink)!important;
+}
+.editor-tabs>[data-slot="tabs-list"]>[data-slot="tabs-trigger"]::after{
+  display:none!important;
+}
+
+/* Restore all admin sliders and make them obvious in both themes. */
+.editor [data-slot="slider"]{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:20px!important;
+  color:var(--ink)!important;
+}
+.editor [data-slot="slider-track"]{
+  position:relative!important;
+  display:block!important;
+  flex:1 1 auto!important;
+  width:100%!important;
+  height:3px!important;
+  min-height:3px!important;
+  overflow:visible!important;
+  border-radius:999px!important;
+  background:color-mix(in srgb,var(--ink) 18%,transparent)!important;
+}
+.editor [data-slot="slider-range"]{
+  position:absolute!important;
+  left:0!important;
+  top:0!important;
+  height:100%!important;
+  border-radius:999px!important;
+  background:var(--ink)!important;
+}
+.editor [data-slot="slider-thumb"]{
+  display:block!important;
+  width:13px!important;
+  height:13px!important;
+  min-width:13px!important;
+  min-height:13px!important;
+  border:2px solid var(--page)!important;
+  border-radius:50%!important;
+  background:var(--ink)!important;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--ink) 38%,transparent)!important;
+}
+
+/* Switches no longer inherit a white/unreadable default. */
+.editor [data-slot="switch"]{
+  background:color-mix(in srgb,var(--ink) 16%,transparent)!important;
+  border-color:var(--line)!important;
+}
+.editor [data-slot="switch"][data-state="checked"]{
+  background:var(--ink)!important;
+}
+.editor [data-slot="switch-thumb"]{
+  background:var(--page)!important;
+}
+
+/* Media-library selections and actions remain legible. */
+.editor .library-groups>button{
+  color:var(--ink)!important;
+  background:transparent!important;
+}
+.editor .library-groups>button.selected{
+  background:var(--ink)!important;
+  color:var(--page)!important;
+}
+.editor .media-row,
+.editor .track-row{
+  color:var(--ink)!important;
+}
+.editor .selection-bar{
+  color:var(--soft)!important;
+}
+
+/* Select menus render in a portal, so theme them globally using the same variables. */
+[data-slot="select-content"]{
+  background:var(--popover)!important;
+  color:var(--popover-foreground)!important;
+  border-color:var(--line)!important;
+}
+[data-slot="select-item"]{
+  color:var(--popover-foreground)!important;
+}
+[data-slot="select-item"]:focus,
+[data-slot="select-item"][data-highlighted]{
+  background:var(--accent)!important;
+  color:var(--accent-foreground)!important;
+}
+
+@media(max-width:760px){
+  .editor-preview-strip{
+    top:82px;
+    margin-bottom:18px;
+  }
+}
