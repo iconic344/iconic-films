@@ -58,26 +58,40 @@ export default function TeamPortfolioPage({config,member,onBack}:{config:Config;
     '--portfolio-profile-size':(member.portfolioProfileSize||430)+'px',
     '--portfolio-name-font':member.portfolioNameFont||'Arial, Helvetica, sans-serif',
     '--portfolio-name-size':(member.portfolioNameSize||112)+'px',
+    '--portfolio-name-color':member.portfolioNameColor||'var(--ink)',
+    '--portfolio-name-align':member.portfolioNameAlign||'left',
     '--portfolio-name-x':(member.portfolioNameX||0)+'px',
     '--portfolio-name-y':(member.portfolioNameY||0)+'px',
     '--portfolio-role-font':member.portfolioRoleFont||'Arial, Helvetica, sans-serif',
     '--portfolio-role-size':(member.portfolioRoleSize||10)+'px',
+    '--portfolio-role-color':member.portfolioRoleColor||'var(--soft)',
+    '--portfolio-role-align':member.portfolioRoleAlign||'left',
     '--portfolio-role-x':(member.portfolioRoleX||0)+'px',
     '--portfolio-role-y':(member.portfolioRoleY||0)+'px',
     '--portfolio-bio-font':member.portfolioBioFont||'Arial, Helvetica, sans-serif',
     '--portfolio-bio-size':(member.portfolioBioSize||15)+'px',
+    '--portfolio-bio-color':member.portfolioBioColor||'var(--soft)',
+    '--portfolio-bio-align':member.portfolioBioAlign||'left',
     '--portfolio-bio-x':(member.portfolioBioX||0)+'px',
     '--portfolio-bio-y':(member.portfolioBioY||0)+'px',
     '--portfolio-title-font':member.portfolioTitleFont||'Arial, Helvetica, sans-serif',
     '--portfolio-title-size':(member.portfolioTitleSize||76)+'px',
+    '--portfolio-title-color':member.portfolioTitleColor||'var(--ink)',
+    '--portfolio-title-align':member.portfolioTitleAlign||'left',
     '--portfolio-title-x':(member.portfolioTitleX||0)+'px',
     '--portfolio-title-y':(member.portfolioTitleY||0)+'px',
     '--portfolio-intro-font':member.portfolioIntroFont||'Arial, Helvetica, sans-serif',
     '--portfolio-intro-size':(member.portfolioIntroSize||14)+'px',
+    '--portfolio-intro-color':member.portfolioIntroColor||'var(--soft)',
+    '--portfolio-intro-align':member.portfolioIntroAlign||'left',
     '--portfolio-intro-x':(member.portfolioIntroX||0)+'px',
     '--portfolio-intro-y':(member.portfolioIntroY||0)+'px',
     '--portfolio-utility-font':member.portfolioUtilityFont||'Arial, Helvetica, sans-serif',
     '--portfolio-utility-size':(member.portfolioUtilitySize||11)+'px',
+    '--portfolio-utility-color':member.portfolioUtilityColor||'var(--soft)',
+    '--portfolio-utility-align':member.portfolioUtilityAlign||'left',
+    '--portfolio-utility-x':(member.portfolioUtilityX||0)+'px',
+    '--portfolio-utility-y':(member.portfolioUtilityY||0)+'px',
     '--portfolio-return-x':(member.portfolioReturnX||0)+'px',
     '--portfolio-return-y':(member.portfolioReturnY||0)+'px',
     '--portfolio-slider-width':(member.portfolioSliderWidth||100)+'%',
@@ -151,7 +165,7 @@ export default function TeamPortfolioPage({config,member,onBack}:{config:Config;
     <Dialog open={viewerIndex!==null&&!viewerClosing} onOpenChange={open=>!open&&closeViewer()}>
       <DialogContent className="team-media-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}>
         {viewerIndex!==null&&works[viewerIndex]&&<div className="team-media-viewer" onPointerDown={e=>begin(e.clientX)} onPointerUp={e=>end(e.clientX,d=>d>0?viewerNext():viewerPrev())}>
-          <TeamMedia key={works[viewerIndex]} src={works[viewerIndex]} alt={(member.name||'Team member')+' portfolio '+(viewerIndex+1)} className="team-media-viewer-media" interactive/>
+          <TeamMedia key={works[viewerIndex]} src={works[viewerIndex]} alt={(member.name||'Team member')+' portfolio '+(viewerIndex+1)} className="team-media-viewer-media" interactive autoPlay/>
           <button type="button" className="team-media-close" aria-label="닫기" onClick={closeViewer}><X size={18}/></button>
           {works.length>1&&<>
             <button type="button" className="team-media-nav is-prev" aria-label="이전" onClick={viewerPrev}><ChevronLeft size={22}/></button>
