@@ -13,6 +13,8 @@ export default function TeamSection({config,onOpen}:{config:Config;onOpen:(membe
     '--team-head-y':config.teamHeadlineY+'px',
     '--team-head-size':config.teamHeadlineSize+'px',
     '--team-head-width':config.teamHeadlineWidth+'%',
+    '--team-head-align':config.teamHeadlineAlign||'left',
+    '--team-head-font':config.teamHeadlineFont||'Arial, Helvetica, sans-serif',
     '--team-row-gap':config.teamRowGap+'px',
   } as CSSProperties;
 
@@ -51,7 +53,6 @@ export default function TeamSection({config,onOpen}:{config:Config;onOpen:(membe
           </div>
 
           <div className="team-stack-end">
-            {member.instagram&&<span>Instagram</span>}
             <span className="team-stack-view">View profile <ArrowUpRight size={15}/></span>
           </div>
         </a>;
