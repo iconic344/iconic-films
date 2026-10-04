@@ -20,8 +20,35 @@ jobs:
           cache: npm
           cache-dependency-path: iconic-films/package-lock.json
       - run: npm ci
+      - name: Test and capture diagnostics
+        id: test
+        shell: bash
+        run: |
+          set +e
+          npm test > /tmp/iconic-test.log 2>&1
+          code=$?
+          cat /tmp/iconic-test.log
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Publish test error
+        if: steps.test.outputs.exit_code != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          {
+            echo 'Automated test diagnostic for commit `${{ github.sha }}`.'
+            echo
+            echo '~~~'
+            tail -n 220 /tmp/iconic-test.log
+            echo '~~~'
+          } > /tmp/test-issue-body.md
+          short=$(echo "$GITHUB_SHA" | cut -c1-8)
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "TEST-DIAGNOSTIC $short" --body-file /tmp/test-issue-body.md
+          exit 1
       - name: Build and capture diagnostics
         id: build
+        if: steps.test.outputs.exit_code == '0'
         shell: bash
         run: |
           set +e
@@ -31,7 +58,7 @@ jobs:
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
       - name: Publish build error
-        if: steps.build.outputs.exit_code != '0'
+        if: steps.test.outputs.exit_code == '0' && steps.build.outputs.exit_code != '0'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
