@@ -58,6 +58,8 @@ export default function Home(){
  useEffect(()=>{setPlaying(false);setTime(0);setDuration(0)},[t?.url]);
  useEffect(()=>{if(work){filmWasPlaying.current=playing;audio.current?.pause();}else if(filmWasPlaying.current){audio.current?.play().catch(()=>{});filmWasPlaying.current=false}},[work]);
  useEffect(()=>{setFilmPlaying(false);setFilmTime(0);setFilmDuration(0);setFilmMuted(false)},[work?.id]);
+ useEffect(()=>{if(!loaded)return;const id=window.setTimeout(()=>saved.works.filter(w=>w.visible&&w.video).slice(0,4).forEach(w=>warmVideo(w.video)),900);return()=>window.clearTimeout(id)},[loaded,saved.works]);
+ useEffect(()=>{const sync=()=>{const v=filmVideo.current;if(!v)return;setFilmPlaying(!v.paused);setFilmTime(v.currentTime||0);setFilmDuration(Number.isFinite(v.duration)?v.duration:0)};document.addEventListener('fullscreenchange',sync);return()=>document.removeEventListener('fullscreenchange',sync)},[]);
  useEffect(()=>{if(!note)return;const id=setTimeout(()=>setNote(''),6000);return()=>clearTimeout(id)},[note]);
  useEffect(()=>{const nodes=document.querySelectorAll('.reveal');const o=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:.12});nodes.forEach(n=>o.observe(n));return()=>o.disconnect()},[c.works,c.showAbout,c.showTeam,c.teamMembers,category]);
  useEffect(()=>{if(!loaded||startup.current)return;startup.current=true;let timer:ReturnType<typeof setTimeout>|undefined;let waiting=false;let cancelled=false;const valid=saved.tracks.map((t,i)=>({t,i})).filter(q=>q.t.url);if(!saved.showMusic||!valid.length)return;
