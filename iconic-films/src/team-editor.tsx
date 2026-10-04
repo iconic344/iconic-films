@@ -1,6 +1,6 @@
 'use client';
 import type {Dispatch,SetStateAction} from 'react';
-import {Plus,Trash2,ChevronUp,ChevronDown,Instagram} from 'lucide-react';
+import {Plus,Trash2,ChevronUp,ChevronDown} from 'lucide-react';
 import {Switch} from '@/components/ui/switch';
 import type {Config,TeamMember} from './defaults';
 import {uploadFile} from './media-upload';
@@ -45,7 +45,7 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
         <div>
           <label className="field">이름<input value={member.name} onChange={e=>patch(member.id,'name',e.target.value)}/></label>
           <label className="field">역할<input placeholder="Director / Photographer / Make-up / Hair..." value={member.role} onChange={e=>patch(member.id,'role',e.target.value)}/></label>
-          <label className="field">Instagram 주소<div className="team-instagram-input"><Instagram size={15}/><input placeholder="https://instagram.com/..." value={member.instagram} onChange={e=>patch(member.id,'instagram',e.target.value)}/></div></label>
+          <label className="field">Instagram 주소<div className="team-instagram-input"><span className="team-ig-mark" aria-hidden="true">IG</span><input placeholder="https://instagram.com/..." value={member.instagram} onChange={e=>patch(member.id,'instagram',e.target.value)}/></div></label>
           <label className="toggle">사이트에 표시<Switch checked={member.visible} onCheckedChange={v=>patch(member.id,'visible',v)}/></label>
         </div>
         <div>
