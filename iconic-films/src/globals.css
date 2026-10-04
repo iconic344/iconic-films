@@ -4053,3 +4053,149 @@ html{scrollbar-gutter:stable}
     transition:none!important;
   }
 }
+
+
+/* 2026-10-04 full typography controls + autoplay polish */
+
+/* Reusable typography controls in admin. */
+.typography-card{display:grid;gap:18px}
+.text-style-editor{
+  display:grid;
+  gap:14px;
+  padding:18px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:color-mix(in srgb,var(--page) 78%,transparent);
+}
+.text-style-editor+.text-style-editor{margin-top:2px}
+.text-style-editor-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--line);
+}
+.text-style-editor-head h4{
+  margin:0;
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:.02em;
+}
+.text-style-editor-head span{
+  font-size:11px;
+  color:var(--soft);
+}
+.text-style-editor-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+.text-color-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:10px;
+}
+.text-color-row input[type=color]{
+  width:44px!important;
+  height:36px!important;
+  min-height:36px!important;
+  padding:3px!important;
+  border:1px solid var(--line)!important;
+  border-radius:12px!important;
+  background:transparent!important;
+}
+.text-color-row button{
+  min-height:36px;
+  padding:0 13px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:transparent;
+  color:var(--soft);
+  font-size:11px;
+}
+.text-color-row button.active{
+  background:var(--ink);
+  color:var(--page);
+  border-color:var(--ink);
+}
+.team-media-layout-controls{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:0 16px;
+}
+@media(max-width:760px){
+  .text-style-editor-grid,
+  .team-media-layout-controls{grid-template-columns:1fr}
+}
+
+/* Team section typography comes from the shared text-style controls. */
+.team-stack-section .team-stack-copy>span{
+  font-family:var(--team-role-font,Arial,Helvetica,sans-serif)!important;
+  font-size:var(--team-role-size,9px)!important;
+  color:var(--team-role-color,var(--soft))!important;
+  text-align:var(--team-role-align,left)!important;
+  translate:var(--team-role-x,0px) var(--team-role-y,0px)!important;
+}
+.team-stack-section .team-stack-copy h3{
+  font-family:var(--team-name-font,Arial,Helvetica,sans-serif)!important;
+  font-size:var(--team-name-size,52px)!important;
+  color:var(--team-name-color,var(--ink))!important;
+  text-align:var(--team-name-align,left)!important;
+  translate:var(--team-name-x,0px) var(--team-name-y,0px)!important;
+}
+.team-stack-section .team-stack-copy p{
+  font-family:var(--team-bio-font,Arial,Helvetica,sans-serif)!important;
+  font-size:var(--team-bio-size,12px)!important;
+  color:var(--team-bio-color,var(--soft))!important;
+  text-align:var(--team-bio-align,left)!important;
+  translate:var(--team-bio-x,0px) var(--team-bio-y,0px)!important;
+}
+.team-stack-section .team-stack-view{
+  font-family:var(--team-view-font,Arial,Helvetica,sans-serif)!important;
+  font-size:var(--team-view-size,10px)!important;
+  color:var(--team-view-color,var(--ink))!important;
+  text-align:var(--team-view-align,left)!important;
+  translate:var(--team-view-x,0px) var(--team-view-y,0px)!important;
+}
+
+/* Dedicated member page: color/alignment/position are editable too. */
+.team-portfolio-role{
+  color:var(--portfolio-role-color,var(--soft))!important;
+  text-align:var(--portfolio-role-align,left)!important;
+}
+.team-portfolio-copy h1{
+  color:var(--portfolio-name-color,var(--ink))!important;
+  text-align:var(--portfolio-name-align,left)!important;
+}
+.team-portfolio-copy>p{
+  color:var(--portfolio-bio-color,var(--soft))!important;
+  text-align:var(--portfolio-bio-align,left)!important;
+}
+.team-portfolio-work-head h2{
+  color:var(--portfolio-title-color,var(--ink))!important;
+  text-align:var(--portfolio-title-align,left)!important;
+}
+.team-portfolio-work-head p{
+  color:var(--portfolio-intro-color,var(--soft))!important;
+  text-align:var(--portfolio-intro-align,left)!important;
+}
+.team-portfolio-nav,
+.team-portfolio-layout-label,
+.team-portfolio-footer,
+.team-portfolio-work-head .kicker,
+.team-media-count,
+.team-portfolio-links{
+  color:var(--portfolio-utility-color,var(--soft))!important;
+  text-align:var(--portfolio-utility-align,left)!important;
+  translate:var(--portfolio-utility-x,0px) var(--portfolio-utility-y,0px)!important;
+}
+
+/* The full-screen film player never flashes an old poster between click and decoded video. */
+.film-player-media--immersive{
+  background:#000!important;
+}
+.film-player-media--immersive>video{
+  background:#000!important;
+}
