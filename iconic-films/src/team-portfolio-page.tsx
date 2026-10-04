@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useMemo,useState} from 'react';
+import {useEffect,useMemo,useState,type CSSProperties} from 'react';
 import {ArrowLeft,ArrowUpRight,ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal} from 'lucide-react';
 import type {Config,TeamMember} from './defaults';
 import TeamMedia from './team-media';
@@ -29,7 +29,7 @@ export default function TeamPortfolioPage({
     '--portfolio-gap':(member.portfolioGap||14)+'px',
     '--portfolio-radius':(member.portfolioRadius??18)+'px',
     '--member-radius':(member.photoRadius??config.teamMediaRadius)+'%'
-  } as React.CSSProperties;
+  } as CSSProperties;
 
   return <div className="team-portfolio-page" style={pageStyle}>
     <header className="team-portfolio-nav">
