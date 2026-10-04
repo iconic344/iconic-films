@@ -1,5 +1,4 @@
 'use client';
-import {Instagram} from 'lucide-react';
 import type {TeamMember} from './defaults';
 
 const isVideo=(url:string)=>/\.(mp4|webm|mov)(?:$|\?)/i.test(url);
@@ -23,7 +22,7 @@ export default function TeamSection({headline,members}:{headline:string;members:
             <p>{member.role||'CREATIVE'}</p>
             <h3>{member.name||'Unnamed'}</h3>
           </div>
-          {member.instagram&&<a className="team-instagram" href={member.instagram} target="_blank" rel="noreferrer" aria-label={member.name+' Instagram'}><Instagram size={16}/><span>Instagram</span></a>}
+          {member.instagram&&<a className="team-instagram" href={member.instagram} target="_blank" rel="noreferrer" aria-label={member.name+' Instagram'}><span className="team-ig-mark" aria-hidden="true">IG</span><span>Instagram</span></a>}
         </div>
         {!!member.works?.length&&<div className="team-work-strip">
           {member.works.map((url,i)=>isVideo(url)
