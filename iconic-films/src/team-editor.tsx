@@ -3,17 +3,37 @@ import type {Dispatch,SetStateAction} from 'react';
 import {Plus,Trash2,ChevronUp,ChevronDown} from 'lucide-react';
 import {Switch} from '@/components/ui/switch';
 import {Slider} from '@/components/ui/slider';
-import type {Config,TeamMember} from './defaults';
+import type {Config,TeamMember,TextStyle} from './defaults';
+import TextStyleEditor from './text-style-editor';
 import {uploadFile} from './media-upload';
 import TeamMedia from './team-media';
 
-const blankMember=(draft:Config):TeamMember=>({id:crypto.randomUUID(),name:'',role:'',bio:'',instagram:'',photo:'',works:[],visible:true,photoRadius:draft.teamMediaRadius,photoSize:draft.teamMediaSize,portfolioSlug:'member-'+Date.now().toString(36),portfolioTitle:'Selected works',portfolioIntro:'',portfolioLayout:'grid',portfolioColumns:3,portfolioGap:14,portfolioRadius:18,portfolioReturnLabel:'VIIVII sara / Team',portfolioProfileSize:430,portfolioNameFont:'Arial, Helvetica, sans-serif',portfolioNameSize:112,portfolioNameX:0,portfolioNameY:0,portfolioRoleFont:'Arial, Helvetica, sans-serif',portfolioRoleSize:10,portfolioRoleX:0,portfolioRoleY:0,portfolioBioFont:'Arial, Helvetica, sans-serif',portfolioBioSize:15,portfolioBioX:0,portfolioBioY:0,portfolioTitleFont:'Arial, Helvetica, sans-serif',portfolioTitleSize:76,portfolioTitleX:0,portfolioTitleY:0,portfolioIntroFont:'Arial, Helvetica, sans-serif',portfolioIntroSize:14,portfolioIntroX:0,portfolioIntroY:0,portfolioUtilityFont:'Arial, Helvetica, sans-serif',portfolioUtilitySize:11,portfolioReturnX:0,portfolioReturnY:0,portfolioSliderWidth:100,portfolioSliderHeight:760,portfolioGridWidth:100});
+const blankMember=(draft:Config):TeamMember=>({id:crypto.randomUUID(),name:'',role:'',bio:'',instagram:'',photo:'',works:[],visible:true,photoRadius:draft.teamMediaRadius,photoSize:draft.teamMediaSize,portfolioSlug:'member-'+Date.now().toString(36),portfolioTitle:'Selected works',portfolioIntro:'',portfolioLayout:'grid',portfolioColumns:3,portfolioGap:14,portfolioRadius:18,portfolioReturnLabel:'VIIVII sara / Team',portfolioProfileSize:430,portfolioNameFont:'Arial, Helvetica, sans-serif',portfolioNameSize:112,portfolioNameColor:'',portfolioNameAlign:'left',portfolioNameX:0,portfolioNameY:0,portfolioRoleFont:'Arial, Helvetica, sans-serif',portfolioRoleSize:10,portfolioRoleColor:'',portfolioRoleAlign:'left',portfolioRoleX:0,portfolioRoleY:0,portfolioBioFont:'Arial, Helvetica, sans-serif',portfolioBioSize:15,portfolioBioColor:'',portfolioBioAlign:'left',portfolioBioX:0,portfolioBioY:0,portfolioTitleFont:'Arial, Helvetica, sans-serif',portfolioTitleSize:76,portfolioTitleColor:'',portfolioTitleAlign:'left',portfolioTitleX:0,portfolioTitleY:0,portfolioIntroFont:'Arial, Helvetica, sans-serif',portfolioIntroSize:14,portfolioIntroColor:'',portfolioIntroAlign:'left',portfolioIntroX:0,portfolioIntroY:0,portfolioUtilityFont:'Arial, Helvetica, sans-serif',portfolioUtilitySize:11,portfolioUtilityColor:'',portfolioUtilityAlign:'left',portfolioUtilityX:0,portfolioUtilityY:0,portfolioReturnX:0,portfolioReturnY:0,portfolioSliderWidth:100,portfolioSliderHeight:760,portfolioGridWidth:100});
 
 export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:Config;setDraft:Dispatch<SetStateAction<Config>>;busy:boolean;setBusy:(v:boolean)=>void;notify:(v:string)=>void}){
   const members=draft.teamMembers||[];
   const patch=(id:string,key:keyof TeamMember,value:unknown)=>setDraft(d=>({...d,teamMembers:(d.teamMembers||[]).map(m=>m.id===id?{...m,[key]:value}:m)}));
   const setConfig=<K extends keyof Config>(key:K,value:Config[K])=>setDraft(d=>({...d,[key]:value}));
   const miniRange=(member:TeamMember,key:keyof TeamMember,label:string,min:number,max:number,step=1,suffix='px')=><label className="field layout-range">{label}<span className="val">{Number(member[key])}{suffix}</span><Slider value={[Number(member[key])]} min={min} max={max} step={step} onValueChange={v=>patch(member.id,key,v[0])}/></label>;
+  const portfolioStyle=(member:TeamMember,prefix:'Name'|'Role'|'Bio'|'Title'|'Intro'|'Utility'):TextStyle=>({
+    font:String(member[('portfolio'+prefix+'Font') as keyof TeamMember]||'Arial, Helvetica, sans-serif'),
+    size:Number(member[('portfolio'+prefix+'Size') as keyof TeamMember]||12),
+    color:String(member[('portfolio'+prefix+'Color') as keyof TeamMember]||''),
+    align:(member[('portfolio'+prefix+'Align') as keyof TeamMember]||'left') as TextStyle['align'],
+    x:Number(member[('portfolio'+prefix+'X') as keyof TeamMember]||0),
+    y:Number(member[('portfolio'+prefix+'Y') as keyof TeamMember]||0)
+  });
+  const patchPortfolioStyle=(member:TeamMember,prefix:'Name'|'Role'|'Bio'|'Title'|'Intro'|'Utility',value:TextStyle)=>{
+    const keys:{[K in keyof TextStyle]:keyof TeamMember}={
+      font:('portfolio'+prefix+'Font') as keyof TeamMember,
+      size:('portfolio'+prefix+'Size') as keyof TeamMember,
+      color:('portfolio'+prefix+'Color') as keyof TeamMember,
+      align:('portfolio'+prefix+'Align') as keyof TeamMember,
+      x:('portfolio'+prefix+'X') as keyof TeamMember,
+      y:('portfolio'+prefix+'Y') as keyof TeamMember
+    };
+    setDraft(d=>({...d,teamMembers:(d.teamMembers||[]).map(m=>m.id===member.id?{...m,[keys.font]:value.font,[keys.size]:value.size,[keys.color]:value.color,[keys.align]:value.align,[keys.x]:value.x,[keys.y]:value.y}:m)}));
+  };
   const remove=(id:string)=>setDraft(d=>({...d,teamMembers:(d.teamMembers||[]).filter(m=>m.id!==id)}));
   const move=(index:number,dir:number)=>setDraft(d=>{const list=[...(d.teamMembers||[])],next=index+dir;if(next<0||next>=list.length)return d;[list[index],list[next]]=[list[next],list[index]];return {...d,teamMembers:list}});
   async function uploadOne(file:File|undefined,done:(url:string)=>void){
@@ -71,28 +91,12 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
           <label className="field">팀으로 돌아가기 문구<input value={member.portfolioReturnLabel||'VIIVII sara / Team'} onChange={e=>patch(member.id,'portfolioReturnLabel',e.target.value)}/></label>
           <div className="team-portfolio-type-editor">
             <h4>Portfolio typography / position</h4>
-            <label className="field">이름 글씨체<input value={member.portfolioNameFont||''} onChange={e=>patch(member.id,'portfolioNameFont',e.target.value)}/></label>
-            {miniRange(member,'portfolioNameSize','이름 크기',36,180)}
-            {miniRange(member,'portfolioNameX','이름 가로 위치',-300,300)}
-            {miniRange(member,'portfolioNameY','이름 세로 위치',-240,240)}
-            <label className="field">역할 글씨체<input value={member.portfolioRoleFont||''} onChange={e=>patch(member.id,'portfolioRoleFont',e.target.value)}/></label>
-            {miniRange(member,'portfolioRoleSize','역할 크기',8,40)}
-            {miniRange(member,'portfolioRoleX','역할 가로 위치',-300,300)}
-            {miniRange(member,'portfolioRoleY','역할 세로 위치',-240,240)}
-            <label className="field">소개 글씨체<input value={member.portfolioBioFont||''} onChange={e=>patch(member.id,'portfolioBioFont',e.target.value)}/></label>
-            {miniRange(member,'portfolioBioSize','소개 크기',10,40)}
-            {miniRange(member,'portfolioBioX','소개 가로 위치',-300,300)}
-            {miniRange(member,'portfolioBioY','소개 세로 위치',-240,240)}
-            <label className="field">작품 제목 글씨체<input value={member.portfolioTitleFont||''} onChange={e=>patch(member.id,'portfolioTitleFont',e.target.value)}/></label>
-            {miniRange(member,'portfolioTitleSize','작품 제목 크기',30,140)}
-            {miniRange(member,'portfolioTitleX','작품 제목 가로 위치',-300,300)}
-            {miniRange(member,'portfolioTitleY','작품 제목 세로 위치',-240,240)}
-            <label className="field">작품 소개 글씨체<input value={member.portfolioIntroFont||''} onChange={e=>patch(member.id,'portfolioIntroFont',e.target.value)}/></label>
-            {miniRange(member,'portfolioIntroSize','작품 소개 크기',10,36)}
-            {miniRange(member,'portfolioIntroX','작품 소개 가로 위치',-300,300)}
-            {miniRange(member,'portfolioIntroY','작품 소개 세로 위치',-240,240)}
-            <label className="field">기타 문구 글씨체<input value={member.portfolioUtilityFont||''} onChange={e=>patch(member.id,'portfolioUtilityFont',e.target.value)}/></label>
-            {miniRange(member,'portfolioUtilitySize','기타 문구 크기',8,26)}
+            <TextStyleEditor label="이름" value={portfolioStyle(member,'Name')} onChange={v=>patchPortfolioStyle(member,'Name',v)}/>
+            <TextStyleEditor label="역할" value={portfolioStyle(member,'Role')} onChange={v=>patchPortfolioStyle(member,'Role',v)}/>
+            <TextStyleEditor label="소개" value={portfolioStyle(member,'Bio')} onChange={v=>patchPortfolioStyle(member,'Bio',v)}/>
+            <TextStyleEditor label="작품 제목" value={portfolioStyle(member,'Title')} onChange={v=>patchPortfolioStyle(member,'Title',v)}/>
+            <TextStyleEditor label="작품 소개" value={portfolioStyle(member,'Intro')} onChange={v=>patchPortfolioStyle(member,'Intro',v)}/>
+            <TextStyleEditor label="기타 문구 / 헤더 / 카운트" value={portfolioStyle(member,'Utility')} onChange={v=>patchPortfolioStyle(member,'Utility',v)}/>
             {miniRange(member,'portfolioReturnX','돌아가기 문구 가로 위치',-300,300)}
             {miniRange(member,'portfolioReturnY','돌아가기 문구 세로 위치',-240,240)}
           </div>
