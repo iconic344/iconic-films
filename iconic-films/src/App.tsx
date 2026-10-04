@@ -29,7 +29,7 @@ function Btn({label,children,onClick,active=false}:{label:string;children:React.
 export default function Home(){
  const [saved,setSaved]=useState<Config>(initial),[draft,setDraft]=useState<Config>(initial),[theme,setTheme]=useState('light'),[admin,setAdmin]=useState(false),[preview,setPreview]=useState(false),[login,setLogin]=useState(false),[pin,setPin]=useState(''),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[category,setCategory]=useState('All'),[work,setWork]=useState<Work|null>(null),[music,setMusic]=useState(false),[track,setTrack]=useState(0),[playing,setPlaying]=useState(false),[shuffle,setShuffle]=useState(false),[repeat,setRepeat]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[group,setGroup]=useState('Tracks'),[filter,setFilter]=useState('All'),[volume,setVolume]=useState(60),[newPin,setNewPin]=useState(''),[loaded,setLoaded]=useState(false),[heroReady,setHeroReady]=useState(false),[scrollTarget,setScrollTarget]=useState<'top'|'bottom'>('bottom'),[filmPlaying,setFilmPlaying]=useState(false),[filmClosing,setFilmClosing]=useState(false),[filmTime,setFilmTime]=useState(0),[filmDuration,setFilmDuration]=useState(0),[filmMuted,setFilmMuted]=useState(false),[autoplayBlocked,setAutoplayBlocked]=useState(false),[animations,setAnimations]=useState<string[]>([]),[editorTab,setEditorTab]=useState('content'),[contactOpen,setContactOpen]=useState(false),[teamRoute,setTeamRoute]=useState(()=>typeof window==='undefined'?'':decodeURIComponent(window.location.pathname.match(/^\/team\/([^/]+)/)?.[1]||'')),[teamPageClosing,setTeamPageClosing]=useState(false),[adminClosing,setAdminClosing]=useState(false);
  const musicButton=useRef<HTMLButtonElement>(null),musicPanel=useRef<HTMLElement>(null);
- const startup=useRef(false),audio=useRef<HTMLAudioElement>(null),filmVideo=useRef<HTMLVideoElement>(null),filmWasPlaying=useRef(false),filmDragX=useRef<number|null>(null),filmSwiped=useRef(false),drag=useRef<{x:number;y:number}|null>(null),frame=useRef<HTMLDivElement>(null),lastScrollY=useRef(0),videoWarm=useRef(new Map<string,HTMLVideoElement>());
+ const startup=useRef(false),audio=useRef<HTMLAudioElement>(null),filmVideo=useRef<HTMLVideoElement>(null),filmAutoStarted=useRef(''),filmWasPlaying=useRef(false),filmDragX=useRef<number|null>(null),filmSwiped=useRef(false),drag=useRef<{x:number;y:number}|null>(null),frame=useRef<HTMLDivElement>(null),lastScrollY=useRef(0),videoWarm=useRef(new Map<string,HTMLVideoElement>());
  const c=preview?draft:saved, t=c.tracks[track];
  useEffect(()=>{api('/api/config').then(j=>{const v=normalizeConfig(j.config||{});setSaved(v);setDraft(v);setTheme(localStorage.getItem('iconic-theme')||v.theme);setVolume(v.volume);setLoaded(true)}).catch(e=>setNote(e.message));},[]);
  useEffect(()=>{document.documentElement.dataset.theme=theme;},[theme]);
@@ -70,12 +70,14 @@ export default function Home(){
  function jumpScroll(){window.scrollTo({top:scrollTarget==='top'?0:document.documentElement.scrollHeight,behavior:'smooth'})}
  function toggleFilm(){const v=filmVideo.current;if(!v)return;if(v.paused)v.play().catch(()=>{});else v.pause()}
  function autoStartFilm(v:HTMLVideoElement){
+  if(!work||filmAutoStarted.current===work.id)return;
+  filmAutoStarted.current=work.id;
   const attempt=v.play();
   if(attempt&&typeof attempt.catch==='function')attempt.catch(()=>{
    if(!v.muted){v.muted=true;setFilmMuted(true);v.play().catch(()=>{})}
   });
  }
- function openFilm(item:Work|null){if(!item)return;setFilmClosing(false);setWork(item)}
+ function openFilm(item:Work|null){if(!item)return;filmAutoStarted.current='';setFilmClosing(false);setWork(item)}
  function closeFilm(){
   if(!work||filmClosing)return;
   setFilmClosing(true);
@@ -94,7 +96,7 @@ export default function Home(){
   const items=filmGallery();
   if(items.length<2)return;
   const current=Math.max(0,items.findIndex(item=>item.id===work.id));
-  setWork(items[(current+direction+items.length)%items.length]);
+  filmAutoStarted.current='';setWork(items[(current+direction+items.length)%items.length]);
  }
  function beginFilmSwipe(x:number){filmDragX.current=x;filmSwiped.current=false}
  function endFilmSwipe(x:number){
