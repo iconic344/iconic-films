@@ -8,13 +8,12 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "node --import tsx scripts/migrate-legacy-media.ts && tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",
     "import:site": "node --import tsx scripts/import-site.ts",
-    "sync:storage": "node --import tsx scripts/sync-storage.ts",
-    "migrate:legacy": "node --import tsx scripts/migrate-legacy-media.ts"
+    "sync:storage": "node --import tsx scripts/sync-storage.ts"
   },
   "dependencies": {
     "react": "19.2.6",
