@@ -9,7 +9,7 @@ export const teamMediaType=(url:string)=>{
   return 'image';
 };
 
-export default function TeamMedia({src,alt='',className='',interactive=false}:{src:string;alt?:string;className?:string;interactive?:boolean}){
+export default function TeamMedia({src,alt='',className='',interactive=false,autoPlay=false}:{src:string;alt?:string;className?:string;interactive?:boolean;autoPlay?:boolean}){
   const [modelReady,setModelReady]=useState(false);
   const type=teamMediaType(src);
   useEffect(()=>{
@@ -18,7 +18,7 @@ export default function TeamMedia({src,alt='',className='',interactive=false}:{s
     import('@google/model-viewer').then(()=>{if(live)setModelReady(true)}).catch(()=>{});
     return()=>{live=false};
   },[type]);
-  if(type==='video')return <video className={className} src={src} muted loop playsInline preload="metadata" controls={interactive} onPointerEnter={e=>{if(!interactive)e.currentTarget.play().catch(()=>{})}} onPointerLeave={e=>{if(!interactive)e.currentTarget.pause()}}/>;
+  if(type==='video')return <video className={className} src={src} muted loop playsInline preload={autoPlay?'auto':'metadata'} controls={interactive} autoPlay={autoPlay} onCanPlay={e=>{if(autoPlay)e.currentTarget.play().catch(()=>{})}} onPointerEnter={e=>{if(!interactive)e.currentTarget.play().catch(()=>{})}} onPointerLeave={e=>{if(!interactive)e.currentTarget.pause()}}/>;
   if(type==='model')return modelReady?createElement('model-viewer',{
     class:className,
     src,
