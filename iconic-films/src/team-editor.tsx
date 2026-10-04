@@ -43,6 +43,13 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
       <label className="field layout-range">큰 제목 가로 위치 <span className="val">{draft.teamHeadlineX}px</span><Slider value={[draft.teamHeadlineX]} min={-320} max={320} step={1} onValueChange={v=>setConfig('teamHeadlineX',v[0])}/></label>
       <label className="field layout-range">큰 제목 세로 위치 <span className="val">{draft.teamHeadlineY}px</span><Slider value={[draft.teamHeadlineY]} min={-220} max={220} step={1} onValueChange={v=>setConfig('teamHeadlineY',v[0])}/></label>
     </section>
+    <section className="editor-card team-brand-editor">
+      <h3>Shared header brand</h3>
+      <p>메인 사이트와 팀원 전용 페이지가 같은 이름/로고를 사용합니다.</p>
+      <label className="field">공통 헤더 이름<input value={draft.name} onChange={e=>setConfig('name',e.target.value)}/></label>
+      <label className="field file-upload">공통 헤더 로고 업로드<input type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" disabled={busy} onChange={e=>uploadOne(e.target.files?.[0],url=>setConfig('logo',url))}/><span className="uploaded-file">{draft.logo?'로고 이미지 등록됨':'이미지가 없으면 위 이름 텍스트를 사용합니다.'}</span>{draft.logo&&<button type="button" className="file-clear" onClick={()=>setConfig('logo','')}>로고 이미지 제거</button>}</label>
+      <div className="team-brand-preview brand">{draft.logo?<img src={draft.logo} alt={draft.name}/>:draft.name}<span>®</span></div>
+    </section>
     {members.map((member,index)=><section className="editor-card team-editor-card" key={member.id}>
       <div className="team-editor-card-head">
         <div><span className="kicker">{String(index+1).padStart(2,'0')} / MEMBER</span><h3>{member.name||'새 팀원'}</h3></div>
