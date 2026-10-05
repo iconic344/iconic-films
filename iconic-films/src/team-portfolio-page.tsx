@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState,type CSSProperties,type PointerEvent a
 import {ArrowUpRight,ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,Moon,Sun,X} from 'lucide-react';
 import {Dialog,DialogContent,DialogTitle} from '@/components/ui/dialog';
 import type {Config,TeamMember} from './defaults';
-import TeamMedia from './team-media';
+import TeamMedia,{teamMediaType} from './team-media';
 
 export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onSelectMember,onToggleTheme,onContact,onAdmin}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onSelectMember:(member:TeamMember)=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void}){
   const [index,setIndex]=useState(0);
@@ -28,7 +28,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     memberSwitchTimer.current=window.setTimeout(()=>{
       onSelectMember(target);
       memberSwitchTimer.current=null;
-    },190);
+    },230);
   };
   const memberPrev=()=>teamMembers.length&&selectMember(teamMembers[(memberIndex-1+teamMembers.length)%teamMembers.length],-1);
   const memberNext=()=>teamMembers.length&&selectMember(teamMembers[(memberIndex+1)%teamMembers.length],1);
@@ -53,7 +53,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     if(changed){
       setMemberMotion('entering');
       if(memberSwitchTimer.current!==null)window.clearTimeout(memberSwitchTimer.current);
-      memberSwitchTimer.current=window.setTimeout(()=>{setMemberMotion('idle');memberSwitchTimer.current=null},620);
+      memberSwitchTimer.current=window.setTimeout(()=>{setMemberMotion('idle');memberSwitchTimer.current=null},680);
     }
   },[member.id]);
   useEffect(()=>()=>{if(memberSwitchTimer.current!==null)window.clearTimeout(memberSwitchTimer.current)},[]);
@@ -90,8 +90,10 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     const py=Math.max(0,Math.min(1,(e.clientY-rect.top)/Math.max(rect.height,1)));
     el.style.setProperty('--member-px',(px*100).toFixed(1)+'%');
     el.style.setProperty('--member-py',(py*100).toFixed(1)+'%');
-    el.style.setProperty('--member-rx',((.5-py)*5).toFixed(2)+'deg');
-    el.style.setProperty('--member-ry',((px-.5)*7).toFixed(2)+'deg');
+    el.style.setProperty('--member-rx',((.5-py)*2.2).toFixed(2)+'deg');
+    el.style.setProperty('--member-ry',((px-.5)*2.8).toFixed(2)+'deg');
+    el.style.setProperty('--member-tx',((px-.5)*10).toFixed(2)+'px');
+    el.style.setProperty('--member-ty',((py-.5)*10).toFixed(2)+'px');
   };
   const resetPointer=(e:ReactPointerEvent<HTMLElement>)=>{
     const el=e.currentTarget;
@@ -99,6 +101,8 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     el.style.removeProperty('--member-py');
     el.style.removeProperty('--member-rx');
     el.style.removeProperty('--member-ry');
+    el.style.removeProperty('--member-tx');
+    el.style.removeProperty('--member-ty');
     el.style.removeProperty('--member-drag-x');
   };
   const beginMemberSwipe=(e:ReactPointerEvent<HTMLElement>)=>{
@@ -280,7 +284,12 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     <Dialog open={viewerIndex!==null&&!viewerClosing} onOpenChange={open=>!open&&closeViewer()}>
       <DialogContent className="team-media-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}>
         {viewerIndex!==null&&works[viewerIndex]&&<div className="team-media-viewer" onPointerDown={e=>begin(e.clientX)} onPointerUp={e=>end(e.clientX,d=>d>0?viewerNext():viewerPrev())}>
-          <TeamMedia key={works[viewerIndex]} src={works[viewerIndex]} alt={(member.name||'Team member')+' portfolio '+(viewerIndex+1)} className="team-media-viewer-media" interactive autoPlay/>
+          <div className="team-media-backdrop" aria-hidden="true">
+            {teamMediaType(works[viewerIndex])!=='model'&&<TeamMedia key={works[viewerIndex]+'-backdrop'} src={works[viewerIndex]} alt="" className="team-media-backdrop-media" autoPlay/>}
+          </div>
+          <div className="team-media-foreground">
+            <TeamMedia key={works[viewerIndex]} src={works[viewerIndex]} alt={(member.name||'Team member')+' portfolio '+(viewerIndex+1)} className="team-media-viewer-media" interactive autoPlay/>
+          </div>
           <button type="button" className="team-media-close" aria-label="닫기" onClick={closeViewer}><X size={18}/></button>
           {works.length>1&&<>
             <button type="button" className="team-media-nav is-prev" aria-label="이전" onClick={viewerPrev}><ChevronLeft size={22}/></button>
