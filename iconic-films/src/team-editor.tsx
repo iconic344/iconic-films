@@ -56,6 +56,8 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
       <div><h3>Team / collaborators</h3><p>대표·사진·영상·메이크업·헤어·세트 스타일링 등 역할을 자유롭게 입력하고, 프로필과 작품에 이미지·영상·GLB/glTF 3D를 올릴 수 있습니다.</p></div>
       <button type="button" className="add" onClick={()=>setDraft(d=>({...d,teamMembers:[...(d.teamMembers||[]),blankMember(d)]}))}><Plus size={16}/> 팀원 추가</button>
     </section>
+    <div className="team-editor-dashboard">
+      <div className="team-editor-left-rail">
     <section className="editor-card typography-card">
       <h3>Team section typography</h3>
       <p>메인 Team 영역의 문구/색상/폰트/크기/정렬/위치를 한 번에 조절합니다.</p>
@@ -67,6 +69,8 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
       <TextStyleEditor label="프로필 버튼" value={draft.textStyles.teamView} onChange={v=>setGlobalStyle('teamView',v)} text={draft.teamViewLabel} onTextChange={v=>setConfig('teamViewLabel',v)}/>
       <label className="field layout-range">Team 제목 폭 <span className="val">{draft.teamHeadlineWidth}%</span><Slider value={[draft.teamHeadlineWidth]} min={35} max={100} step={1} onValueChange={v=>setConfig('teamHeadlineWidth',v[0])}/></label>
     </section>
+      </div>
+      <div className="team-editor-right-rail">
     <section className="editor-card team-brand-editor">
       <h3>Shared header brand</h3>
       <p>메인 사이트와 팀원 전용 페이지가 같은 이름/로고를 사용합니다.</p>
@@ -129,5 +133,7 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
       {!!member.works?.length&&<div className="team-editor-works">{member.works.map((url,i)=><div key={url+i}><TeamMedia src={url} alt="작품 미리보기" className="team-editor-work-media" interactive/><button type="button" aria-label="작품 삭제" onClick={()=>patch(member.id,'works',member.works.filter((_,j)=>j!==i))}><Trash2 size={14}/></button></div>)}</div>}
     </section>)}
     {!members.length&&<section className="editor-card team-editor-empty">아직 등록된 팀원이 없습니다. ‘팀원 추가’로 시작하세요.</section>}
+      </div>
+    </div>
   </div>
 }
