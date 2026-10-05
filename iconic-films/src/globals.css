@@ -7888,3 +7888,125 @@ body{
     bottom:calc(100% + 10px)!important;
   }
 }
+
+
+/* 2026-10-05 contact inbox direct + bulk delete */
+.contact-inbox-summary{
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.contact-inbox-summary button:disabled{
+  opacity:.34!important;
+  cursor:not-allowed!important;
+}
+.contact-inbox-summary .contact-bulk-delete,
+.contact-inbox-summary .contact-delete-all{
+  border-color:color-mix(in srgb,var(--ink) 16%,transparent)!important;
+}
+.contact-inbox-summary .contact-delete-all{
+  color:#d15b5b!important;
+}
+.contact-message-card.is-selected{
+  border-color:color-mix(in srgb,var(--ink) 42%,transparent)!important;
+  background:color-mix(in srgb,var(--ink) 6%,var(--card))!important;
+}
+.contact-message-row{
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) 42px;
+  align-items:stretch;
+  min-width:0;
+}
+.contact-message-row>.contact-message-summary{
+  min-width:0;
+  padding-left:6px!important;
+  padding-right:6px!important;
+}
+.contact-message-select,
+.contact-message-quick-delete{
+  align-self:center;
+  justify-self:center;
+  width:32px;
+  height:32px;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+  color:var(--soft)!important;
+  transition:background .24s ease,color .24s ease,transform .34s cubic-bezier(.16,1,.3,1)!important;
+}
+.contact-message-select[aria-pressed="true"]{
+  background:var(--ink)!important;
+  color:var(--page)!important;
+}
+.contact-message-quick-delete{
+  color:color-mix(in srgb,#d15b5b 76%,var(--soft))!important;
+}
+@media(hover:hover) and (pointer:fine){
+  .contact-message-select:hover{
+    background:color-mix(in srgb,var(--ink) 7%,transparent)!important;
+    color:var(--ink)!important;
+    transform:scale(1.06);
+  }
+  .contact-message-select[aria-pressed="true"]:hover{
+    background:var(--ink)!important;
+    color:var(--page)!important;
+  }
+  .contact-message-quick-delete:hover{
+    background:rgba(209,91,91,.10)!important;
+    color:#d15b5b!important;
+    transform:scale(1.06);
+  }
+}
+.contact-message-select:active,
+.contact-message-quick-delete:active{
+  transform:scale(.92)!important;
+}
+.contact-message-quick-delete:disabled{
+  opacity:.28!important;
+}
+.contact-message-card .contact-message-body{
+  padding-left:60px;
+  padding-right:60px;
+}
+@media(max-width:900px){
+  .contact-inbox-head{
+    align-items:stretch;
+  }
+  .contact-inbox-summary{
+    justify-content:flex-start;
+  }
+}
+@media(max-width:700px){
+  .contact-inbox-summary{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .contact-inbox-summary>span{
+    grid-column:1/-1;
+  }
+  .contact-inbox-summary button{
+    width:100%;
+    justify-content:center!important;
+    padding:0 10px!important;
+  }
+  .contact-message-row{
+    grid-template-columns:38px minmax(0,1fr) 38px;
+  }
+  .contact-message-select,
+  .contact-message-quick-delete{
+    width:30px;
+    height:30px;
+  }
+  .contact-message-row>.contact-message-summary{
+    grid-template-columns:30px minmax(0,1fr);
+    padding-left:2px!important;
+    padding-right:2px!important;
+  }
+  .contact-message-card .contact-message-body{
+    padding-left:50px;
+    padding-right:50px;
+  }
+}
