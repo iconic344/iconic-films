@@ -5885,3 +5885,35 @@ body[data-scroll-locked]{
 body{
   --removed-body-scroll-bar-size:0px!important;
 }
+
+
+/* 2026-10-05 team profile spacing refinement */
+/* Desktop profile pages should feel editorial, not vertically stretched.
+   Keep the profile, member index and work section visually connected. */
+@media (min-width:901px){
+  .team-portfolio-hero{
+    min-height:auto!important;
+    padding:62px 0 48px!important;
+  }
+  .team-portfolio-member-index{
+    padding:20px 0 26px!important;
+  }
+  .team-member-index-head{
+    margin-bottom:12px!important;
+  }
+  .team-portfolio-work{
+    padding:54px 0 96px!important;
+  }
+  .team-portfolio-work-head{
+    margin-bottom:38px!important;
+  }
+  .team-portfolio-member-switch{
+    padding:22px 0!important;
+  }
+}
+@media (min-width:1400px){
+  .team-portfolio-hero{
+    padding-top:70px!important;
+    padding-bottom:52px!important;
+  }
+}
