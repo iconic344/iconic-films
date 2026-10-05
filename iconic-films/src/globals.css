@@ -8010,3 +8010,98 @@ body{
     padding-right:50px;
   }
 }
+
+
+/* 2026-10-05 compact team nav collision fix + universal gallery arrows */
+/* Keep explicit previous/next controls available alongside swipe/drag on every media viewer. */
+.film-gallery-nav,
+.team-media-nav{
+  opacity:.94!important;
+  pointer-events:auto!important;
+  touch-action:manipulation!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+@media (max-width:1180px) and (any-pointer:coarse){
+  .film-gallery-nav,
+  .team-media-nav{
+    width:44px!important;
+    height:44px!important;
+  }
+  .film-gallery-nav.is-prev,
+  .team-media-nav.is-prev{
+    left:max(10px,calc(env(safe-area-inset-left) + 6px))!important;
+  }
+  .film-gallery-nav.is-next,
+  .team-media-nav.is-next{
+    right:max(10px,calc(env(safe-area-inset-right) + 6px))!important;
+  }
+
+  /* On Team pages, the global SOUND / NOTICE / SCROLL dock becomes a vertical rail.
+     This reserves the right edge for one floating-control column instead of colliding
+     with the Team Index previous/next buttons. */
+  .site .team-page-shell~.scroll-toggle,
+  .site .team-page-shell~.sound-toggle{
+    right:max(14px,calc(env(safe-area-inset-right) + 8px))!important;
+    width:46px!important;
+    height:46px!important;
+  }
+  .site .team-page-shell~.scroll-toggle,
+  .site .team-page-shell~.scroll-toggle.scroll-toggle--solo{
+    bottom:max(14px,calc(env(safe-area-inset-bottom) + 8px))!important;
+  }
+  .site .team-page-shell~.sound-toggle{
+    bottom:max(68px,calc(env(safe-area-inset-bottom) + 62px))!important;
+  }
+  .site.has-owner-notice .team-page-shell~.site-contact-notice{
+    top:auto!important;
+    right:max(14px,calc(env(safe-area-inset-right) + 8px))!important;
+    bottom:max(122px,calc(env(safe-area-inset-bottom) + 116px))!important;
+    width:46px!important;
+    height:46px!important;
+    display:block!important;
+  }
+  .site.has-owner-notice .team-page-shell~.site-contact-notice .site-contact-notice-trigger{
+    width:46px!important;
+    height:46px!important;
+  }
+  .site.has-owner-notice .team-page-shell~.site-contact-notice .site-contact-notice-panel{
+    right:0!important;
+    bottom:calc(100% + 10px)!important;
+    top:auto!important;
+  }
+
+  /* Reserve physical space for the Team Index arrows so the fixed dock can never sit on top of them. */
+  .team-page-shell .team-member-index-arrows{
+    margin-right:62px!important;
+    position:relative;
+    z-index:55;
+  }
+}
+
+/* iPad gets a little more breathing room because its floating controls are visually larger. */
+@media (min-width:761px) and (max-width:1180px) and (any-pointer:coarse){
+  .site .team-page-shell~.scroll-toggle,
+  .site .team-page-shell~.sound-toggle,
+  .site.has-owner-notice .team-page-shell~.site-contact-notice{
+    right:max(18px,calc(env(safe-area-inset-right) + 10px))!important;
+    width:48px!important;
+    height:48px!important;
+  }
+  .site .team-page-shell~.scroll-toggle,
+  .site .team-page-shell~.scroll-toggle.scroll-toggle--solo{
+    bottom:max(18px,calc(env(safe-area-inset-bottom) + 10px))!important;
+  }
+  .site .team-page-shell~.sound-toggle{
+    bottom:max(78px,calc(env(safe-area-inset-bottom) + 70px))!important;
+  }
+  .site.has-owner-notice .team-page-shell~.site-contact-notice{
+    bottom:max(138px,calc(env(safe-area-inset-bottom) + 130px))!important;
+  }
+  .site.has-owner-notice .team-page-shell~.site-contact-notice .site-contact-notice-trigger{
+    width:48px!important;
+    height:48px!important;
+  }
+  .team-page-shell .team-member-index-arrows{
+    margin-right:74px!important;
+  }
+}
