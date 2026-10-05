@@ -5961,3 +5961,69 @@ body{
   .team-editor-left-rail,
   .team-editor-right-rail{gap:18px}
 }
+
+
+/* 2026-10-05 dense team member editor */
+/* Keep the existing visual language; only redistribute controls to remove dead space. */
+.team-editor-card{
+  container-type:inline-size;
+}
+.team-editor-card .team-editor-grid{
+  grid-template-columns:1fr!important;
+  gap:18px!important;
+  align-items:start!important;
+}
+.team-editor-card .team-member-fields,
+.team-editor-card .team-member-media{
+  min-width:0;
+}
+.team-editor-card .team-member-fields{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  column-gap:18px!important;
+  row-gap:0!important;
+  align-content:start!important;
+}
+.team-editor-card .team-member-fields>label:has(textarea),
+.team-editor-card .team-member-fields>.team-portfolio-type-editor{
+  grid-column:1/-1!important;
+}
+.team-editor-card .team-member-media{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:18px!important;
+  align-content:start!important;
+}
+.team-editor-card .team-portfolio-type-editor{
+  grid-template-columns:1fr!important;
+  gap:18px!important;
+}
+.team-editor-card .team-portfolio-type-editor>h4{
+  margin:0!important;
+}
+.team-editor-card .team-portfolio-size-editor{
+  gap:18px!important;
+}
+.team-editor-card .team-return-position-pair{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+}
+.team-editor-card .text-style-editor+.text-style-editor{
+  margin-top:0!important;
+}
+@container (min-width:680px){
+  .team-editor-card .team-editor-grid{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:18px!important;
+  }
+}
+@media(max-width:720px){
+  .team-editor-card .team-member-fields,
+  .team-editor-card .team-return-position-pair{
+    grid-template-columns:1fr!important;
+  }
+  .team-editor-card .team-member-fields>*{
+    grid-column:1!important;
+  }
+}
