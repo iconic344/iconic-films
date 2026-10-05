@@ -21,7 +21,7 @@ import ContactInbox from './contact-inbox';
 import SiteContactNotifications from './site-contact-notifications';
 import LayoutEditor from './layout-editor';
 import {defaultLogo} from './logo-settings';
-import {adminHeaders,rememberAdminVisit,clearAdminVisit,getAdminVisitEpoch,revokeAdminVisit} from './admin-session';
+import {adminHeaders,rememberAdminVisit,clearAdminVisit,getAdminVisitEpoch,revokeAdminVisit,hasAdminVisit} from './admin-session';
 import {uploadFile} from './media-upload';
 const fmt=(v:number)=>`${Math.floor((v||0)/60)}:${String(Math.floor((v||0)%60)).padStart(2,'0')}`;
 import {api} from './site-api';
@@ -219,7 +219,13 @@ export default function Home(){
   const delta=x-filmDragX.current;filmDragX.current=null;
   if(Math.abs(delta)>58){filmSwiped.current=true;navigateFilm(delta<0?1:-1)}
  }
- useEffect(()=>{const reset=()=>{void revokeAdminVisit().catch(()=>{});setAdmin(false);setPreview(false);setLogin(false);setPin('');setNewPin('')};const restored=(e:PageTransitionEvent)=>{if(e.persisted)reset()};window.addEventListener('pagehide',reset);window.addEventListener('pageshow',restored);return()=>{window.removeEventListener('pagehide',reset);window.removeEventListener('pageshow',restored);clearAdminVisit()}},[]);
+ useEffect(()=>{
+  if(!hasAdminVisit())return;
+  api('/api/auth').then(result=>{
+    if(result?.authenticated)setOwnerMode(true);
+    else{clearAdminVisit();setOwnerMode(false)}
+  }).catch(()=>{clearAdminVisit();setOwnerMode(false)});
+ },[]);
  useEffect(()=>{if(!audio.current)return;audio.current.volume=volume/100;},[volume,track]);
  useEffect(()=>{setPlaying(false);setTime(0);setDuration(0)},[t?.url]);
  useEffect(()=>{if(work){filmWasPlaying.current=playing;audio.current?.pause();}else if(filmWasPlaying.current){audio.current?.play().catch(()=>{});filmWasPlaying.current=false}},[work]);
