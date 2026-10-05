@@ -27,8 +27,25 @@ function header(req:Req,key:string){const v=req.headers[key];return Array.isArra
 function isSecure(req:Req){return !!process.env.VERCEL||header(req,'x-forwarded-proto')==='https';}
 function sameOrigin(req:Req){
   const origin=header(req,'origin');if(!origin)return true;
-  const expected=(isSecure(req)?'https':'http')+'://'+header(req,'host');
-  return origin===expected;
+  let parsed:URL;
+  try{parsed=new URL(origin)}catch{return false}
+  if(parsed.protocol!=='http:'&&parsed.protocol!=='https:')return false;
+
+  // On Vercel a custom domain request can reach the Function with an internal
+  // Host header while the browser Origin remains the public custom domain.
+  // Prefer the proxy-preserved public host(s), but keep the direct Host for
+  // local/dev and vercel.app access. This retains CSRF origin checking without
+  // breaking administrator login on custom domains.
+  const hosts=[
+    header(req,'x-forwarded-host'),
+    header(req,'x-vercel-forwarded-host'),
+    header(req,'host')
+  ].flatMap(value=>value.split(',')).map(value=>value.trim().toLowerCase()).filter(Boolean);
+  if(!hosts.includes(parsed.host.toLowerCase()))return false;
+
+  const forwardedProto=header(req,'x-forwarded-proto').split(',')[0]?.trim().toLowerCase();
+  const expectedProto=process.env.VERCEL?'https':(forwardedProto||(isSecure(req)?'https':'http'));
+  return parsed.protocol===expectedProto+':';
 }
 function cookieToken(req:Req){return header(req,'cookie').match(/(?:^|;\s*)iconic_session=([a-f0-9]{64})(?:;|$)/)?.[1];}
 function visitKey(req:Req){return header(req,'x-iconic-visit');}
