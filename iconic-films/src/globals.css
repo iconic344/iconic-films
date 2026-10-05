@@ -7830,3 +7830,61 @@ body{
   .site-contact-notice-trigger{width:44px;height:44px}
   .site-contact-notice-panel{width:min(330px,calc(100vw - 24px))}
 }
+
+
+/* 2026-10-05 owner notification dock alignment */
+/* Owner alert joins the existing bottom-right control dock:
+   SOUND — CONTACT NOTICE — SCROLL, with equal gaps and matching circle sizes. */
+.site.has-owner-notice .sound-toggle{
+  right:156px!important;
+}
+.site.has-owner-notice .scroll-toggle,
+.site.has-owner-notice .scroll-toggle--solo{
+  right:28px!important;
+}
+.site.has-owner-notice .site-contact-notice{
+  top:auto!important;
+  right:92px!important;
+  bottom:max(24px,env(safe-area-inset-bottom))!important;
+  width:52px!important;
+  height:52px!important;
+  display:block!important;
+  pointer-events:none!important;
+}
+.site.has-owner-notice .site-contact-notice-trigger{
+  width:52px!important;
+  height:52px!important;
+  pointer-events:auto!important;
+}
+.site.has-owner-notice .site-contact-notice-panel{
+  position:absolute!important;
+  right:0!important;
+  bottom:calc(100% + 12px)!important;
+  top:auto!important;
+  pointer-events:auto!important;
+}
+
+/* Match the site's compact floating-control measurements on phones/tablets. */
+@media(max-width:760px){
+  .site.has-owner-notice .sound-toggle{
+    right:128px!important;
+  }
+  .site.has-owner-notice .scroll-toggle,
+  .site.has-owner-notice .scroll-toggle--solo{
+    right:16px!important;
+  }
+  .site.has-owner-notice .site-contact-notice{
+    right:72px!important;
+    bottom:max(16px,env(safe-area-inset-bottom))!important;
+    width:46px!important;
+    height:46px!important;
+  }
+  .site.has-owner-notice .site-contact-notice-trigger{
+    width:46px!important;
+    height:46px!important;
+  }
+  .site.has-owner-notice .site-contact-notice-panel{
+    right:-6px!important;
+    bottom:calc(100% + 10px)!important;
+  }
+}
