@@ -7218,3 +7218,67 @@ body{
   .team-media-video-controls>.team-media-control:nth-last-child(2){grid-column:3!important}
   .team-media-video-controls>.team-media-control:last-child{grid-column:4!important}
 }
+
+
+/* 2026-10-05 gesture-only media navigation */
+/* Keep media controls clean: navigation/close happens by gesture or tapping outside. */
+.film-player-media--immersive,
+.team-media-card{
+  cursor:grab!important;
+  touch-action:pan-y!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
+}
+.film-player-media--immersive:active,
+.team-media-card:active{
+  cursor:grabbing!important;
+}
+.film-player-media--immersive video{
+  cursor:grab!important;
+}
+.film-player-media--immersive:active video{
+  cursor:grabbing!important;
+}
+.team-media-viewer{
+  cursor:zoom-out!important;
+}
+.team-media-card{
+  cursor:grab!important;
+}
+.team-media-card *{
+  cursor:inherit;
+}
+.team-media-card button,
+.team-media-card [role="slider"],
+.team-media-card input{
+  cursor:pointer!important;
+}
+.team-media-card-gesture-hint,
+.film-gesture-hint{
+  flex:0 0 auto;
+  font-size:9px!important;
+  letter-spacing:.14em!important;
+  color:rgba(255,255,255,.50)!important;
+  white-space:nowrap;
+}
+.film-player-overlay-head{
+  align-items:center!important;
+}
+.team-media-card-head{
+  align-items:center!important;
+}
+
+/* The music button remains expressive without switching to an X glyph when open. */
+.sound-toggle.is-open .sound-wave{
+  opacity:1!important;
+  transform:none!important;
+}
+
+/* Mobile keeps gesture hints subtle and compact. */
+@media(max-width:760px){
+  .team-media-card-gesture-hint,
+  .film-gesture-hint{
+    font-size:8px!important;
+    letter-spacing:.12em!important;
+  }
+}
