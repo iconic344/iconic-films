@@ -6265,3 +6265,346 @@ body{
     transform:none!important;
   }
 }
+
+
+/* 2026-10-05 fullscreen portfolio viewer + safe iOS motion */
+/* Member switching: keep every frame inside the viewport.
+   The glass wash carries the blur; content only fades/scales so no horizontal clipping can occur. */
+.team-portfolio-page.member-motion-leaving .team-portfolio-main,
+.team-portfolio-page.member-motion-leaving .team-portfolio-member-switch,
+.team-portfolio-page.member-motion-leaving .team-portfolio-footer,
+.team-portfolio-page.member-motion-entering .team-portfolio-main,
+.team-portfolio-page.member-motion-entering .team-portfolio-member-switch,
+.team-portfolio-page.member-motion-entering .team-portfolio-footer{
+  animation:none!important;
+  filter:none!important;
+  transform:none!important;
+}
+.team-portfolio-page.member-motion-leaving .team-portfolio-hero,
+.team-portfolio-page.member-motion-leaving .team-portfolio-member-index,
+.team-portfolio-page.member-motion-leaving .team-portfolio-work,
+.team-portfolio-page.member-motion-leaving .team-portfolio-member-switch,
+.team-portfolio-page.member-motion-leaving .team-portfolio-footer{
+  animation:team-safe-content-out .23s cubic-bezier(.4,0,.2,1) both!important;
+  pointer-events:none;
+}
+.team-portfolio-page.member-motion-entering .team-portfolio-hero,
+.team-portfolio-page.member-motion-entering .team-portfolio-member-index,
+.team-portfolio-page.member-motion-entering .team-portfolio-work,
+.team-portfolio-page.member-motion-entering .team-portfolio-member-switch,
+.team-portfolio-page.member-motion-entering .team-portfolio-footer{
+  animation:team-safe-content-in .68s cubic-bezier(.16,1,.3,1) both!important;
+}
+@keyframes team-safe-content-out{
+  from{opacity:1;transform:translate3d(0,0,0) scale(1)}
+  to{opacity:.10;transform:translate3d(0,5px,0) scale(.996)}
+}
+@keyframes team-safe-content-in{
+  0%{opacity:0;transform:translate3d(0,8px,0) scale(.989)}
+  52%{opacity:.92;transform:translate3d(0,1px,0) scale(1.001)}
+  100%{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+.team-portfolio-page.member-motion-leaving::before{
+  animation:team-safe-glass-out .23s cubic-bezier(.4,0,.2,1) both!important;
+}
+.team-portfolio-page.member-motion-entering::before{
+  animation:team-safe-glass-in .68s cubic-bezier(.16,1,.3,1) both!important;
+}
+@keyframes team-safe-glass-out{
+  0%{opacity:0;-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1)}
+  100%{opacity:.40;-webkit-backdrop-filter:blur(18px) saturate(1.16);backdrop-filter:blur(18px) saturate(1.16)}
+}
+@keyframes team-safe-glass-in{
+  0%{opacity:.40;-webkit-backdrop-filter:blur(18px) saturate(1.16);backdrop-filter:blur(18px) saturate(1.16)}
+  56%{opacity:.10;-webkit-backdrop-filter:blur(5px) saturate(1.05);backdrop-filter:blur(5px) saturate(1.05)}
+  100%{opacity:0;-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1)}
+}
+
+/* Portrait reaction: iOS-like magnetic parallax rather than a hard 3D tilt. */
+.team-portfolio-avatar.member-reactive{
+  overflow:hidden!important;
+  transform:translate3d(var(--member-drag-x,0px),0,0) scale(1)!important;
+  transition:
+    transform .72s cubic-bezier(.16,1,.3,1),
+    box-shadow .72s cubic-bezier(.16,1,.3,1)!important;
+}
+.team-portfolio-avatar.member-reactive::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:3;
+  pointer-events:none;
+  border-radius:inherit;
+  opacity:0;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.15),transparent 28%,transparent 70%,rgba(255,255,255,.07)),
+    radial-gradient(240px circle at var(--member-px,50%) var(--member-py,50%),rgba(255,255,255,.15),transparent 62%);
+  transition:opacity .48s ease;
+}
+.team-portfolio-avatar.member-reactive::after{
+  opacity:0!important;
+  background:radial-gradient(220px circle at var(--member-px,50%) var(--member-py,50%),rgba(255,255,255,.24),rgba(255,255,255,.06) 30%,transparent 68%)!important;
+  transition:opacity .48s ease!important;
+}
+.team-portfolio-avatar.member-reactive .team-portfolio-avatar-media{
+  transform:translate3d(0,0,0) scale(1)!important;
+  transform-origin:center!important;
+  transition:
+    transform .82s cubic-bezier(.16,1,.3,1),
+    filter .58s ease!important;
+}
+@media(hover:hover) and (pointer:fine){
+  .team-portfolio-avatar.member-reactive:hover{
+    transform:translate3d(var(--member-drag-x,0px),-3px,0) scale(1.008)!important;
+    box-shadow:0 24px 72px rgba(0,0,0,.16)!important;
+  }
+  .team-portfolio-avatar.member-reactive:hover::before,
+  .team-portfolio-avatar.member-reactive:hover::after{opacity:1!important}
+  .team-portfolio-avatar.member-reactive:hover .team-portfolio-avatar-media{
+    transform:translate3d(var(--member-tx,0px),var(--member-ty,0px),0) scale(1.05)!important;
+    filter:contrast(1.015) saturate(1.015)!important;
+  }
+}
+.team-portfolio-avatar.member-reactive:active{
+  transform:translate3d(var(--member-drag-x,0px),0,0) scale(.988)!important;
+  transition-duration:.16s!important;
+}
+.team-portfolio-avatar.member-reactive:active .team-portfolio-avatar-media{
+  transform:translate3d(calc(var(--member-tx,0px) * .45),calc(var(--member-ty,0px) * .45),0) scale(1.025)!important;
+  transition-duration:.18s!important;
+}
+
+/* Portfolio media opens as a true viewport viewer.
+   The current image/video itself becomes a soft 38% background, so portrait media has no black side bars. */
+.team-media-dialog{
+  position:fixed!important;
+  inset:0!important;
+  top:0!important;
+  left:0!important;
+  right:0!important;
+  bottom:0!important;
+  width:100vw!important;
+  max-width:none!important;
+  height:100dvh!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  overflow:hidden!important;
+  background:transparent!important;
+  color:#fff!important;
+  box-shadow:none!important;
+  transform:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+.team-media-dialog[data-state="open"]{
+  animation:team-fullscreen-viewer-in .48s cubic-bezier(.16,1,.3,1) both!important;
+}
+.team-media-dialog[data-state="closed"]{
+  animation:team-fullscreen-viewer-out .24s cubic-bezier(.4,0,.2,1) both!important;
+}
+@keyframes team-fullscreen-viewer-in{
+  from{opacity:0;transform:scale(.992)}
+  to{opacity:1;transform:scale(1)}
+}
+@keyframes team-fullscreen-viewer-out{
+  from{opacity:1;transform:scale(1)}
+  to{opacity:0;transform:scale(.994)}
+}
+.team-media-viewer{
+  position:relative!important;
+  width:100vw!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  overflow:hidden!important;
+  background:rgba(4,4,4,.18)!important;
+  touch-action:pan-y!important;
+}
+.team-media-backdrop{
+  position:absolute;
+  inset:-7%;
+  z-index:0;
+  overflow:hidden;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 45%,rgba(255,255,255,.08),transparent 46%),
+    rgba(7,7,7,.72);
+}
+.team-media-backdrop-media,
+.team-media-backdrop>img,
+.team-media-backdrop>video{
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  object-fit:cover!important;
+  opacity:.38!important;
+  filter:blur(34px) brightness(.70) saturate(.86)!important;
+  transform:scale(1.10)!important;
+}
+.team-media-foreground{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  display:grid;
+  place-items:center;
+  padding:
+    max(14px,env(safe-area-inset-top))
+    max(14px,env(safe-area-inset-right))
+    max(14px,env(safe-area-inset-bottom))
+    max(14px,env(safe-area-inset-left));
+  overflow:hidden;
+}
+.team-media-viewer-media,
+.team-media-foreground>img,
+.team-media-foreground>video,
+.team-media-foreground>model-viewer{
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  display:block!important;
+  object-fit:contain!important;
+  background:transparent!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  animation:team-media-settle .54s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes team-media-settle{
+  from{opacity:0;transform:scale(.985)}
+  to{opacity:1;transform:scale(1)}
+}
+:root:has(.team-media-dialog[data-state="open"]) .iconic-dialog-overlay{
+  background:rgba(0,0,0,.34)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(.92)!important;
+  backdrop-filter:blur(16px) saturate(.92)!important;
+}
+
+/* Borderless liquid-glass viewer controls. */
+.team-media-close,
+.team-media-nav{
+  z-index:12!important;
+  border:0!important;
+  outline:0!important;
+  color:#fff!important;
+  background:rgba(255,255,255,.105)!important;
+  -webkit-backdrop-filter:blur(26px) saturate(1.35)!important;
+  backdrop-filter:blur(26px) saturate(1.35)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.28),
+    inset 0 -1px 0 rgba(255,255,255,.05),
+    0 10px 30px rgba(0,0,0,.16)!important;
+  transition:
+    transform .58s cubic-bezier(.16,1,.3,1),
+    background .34s ease,
+    box-shadow .58s cubic-bezier(.16,1,.3,1),
+    opacity .3s ease!important;
+}
+.team-media-close::before,
+.team-media-nav::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  background:radial-gradient(circle at 32% 22%,rgba(255,255,255,.28),transparent 46%);
+  opacity:.62;
+}
+.team-media-close{
+  top:max(18px,env(safe-area-inset-top))!important;
+  right:max(18px,env(safe-area-inset-right))!important;
+  width:46px!important;
+  height:46px!important;
+}
+.team-media-nav{
+  top:50%!important;
+  width:50px!important;
+  height:50px!important;
+  transform:translateY(-50%)!important;
+}
+.team-media-nav.is-prev{left:max(18px,env(safe-area-inset-left))!important}
+.team-media-nav.is-next{right:max(18px,env(safe-area-inset-right))!important}
+@media(hover:hover) and (pointer:fine){
+  .team-media-close:hover{
+    transform:scale(1.08)!important;
+    background:rgba(255,255,255,.17)!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.34),0 16px 38px rgba(0,0,0,.18)!important;
+  }
+  .team-media-nav:hover{
+    background:rgba(255,255,255,.17)!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.34),0 16px 38px rgba(0,0,0,.18)!important;
+  }
+  .team-media-nav.is-prev:hover{transform:translateY(-50%) translateX(-3px) scale(1.06)!important}
+  .team-media-nav.is-next:hover{transform:translateY(-50%) translateX(3px) scale(1.06)!important}
+}
+.team-media-close:active{transform:scale(.92)!important;transition-duration:.12s!important}
+.team-media-nav:active{transition-duration:.12s!important}
+.team-media-nav.is-prev:active{transform:translateY(-50%) scale(.91)!important}
+.team-media-nav.is-next:active{transform:translateY(-50%) scale(.91)!important}
+
+.team-media-count{
+  left:max(18px,env(safe-area-inset-left))!important;
+  bottom:max(18px,env(safe-area-inset-bottom))!important;
+  z-index:12!important;
+  padding:8px 11px!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.09)!important;
+  color:#fff!important;
+  -webkit-backdrop-filter:blur(22px) saturate(1.25)!important;
+  backdrop-filter:blur(22px) saturate(1.25)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18)!important;
+}
+
+/* Previous mobile dialog sizing no longer overrides fullscreen. */
+@media(max-width:640px){
+  .team-media-dialog{
+    inset:0!important;
+    width:100vw!important;
+    height:100dvh!important;
+    max-width:none!important;
+    max-height:none!important;
+    border-radius:0!important;
+    padding:0!important;
+  }
+  .team-media-viewer{
+    width:100vw!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:none!important;
+  }
+  .team-media-viewer-media{
+    max-height:100%!important;
+  }
+  .team-media-close{
+    top:max(12px,env(safe-area-inset-top))!important;
+    right:max(12px,env(safe-area-inset-right))!important;
+    width:42px!important;
+    height:42px!important;
+  }
+  .team-media-nav{
+    width:44px!important;
+    height:44px!important;
+  }
+  .team-media-nav.is-prev{left:max(10px,env(safe-area-inset-left))!important}
+  .team-media-nav.is-next{right:max(10px,env(safe-area-inset-right))!important}
+  .team-media-count{
+    left:max(12px,env(safe-area-inset-left))!important;
+    bottom:max(12px,env(safe-area-inset-bottom))!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .team-media-dialog,
+  .team-media-viewer-media,
+  .team-media-backdrop-media,
+  .team-portfolio-page.member-motion-leaving .team-portfolio-hero,
+  .team-portfolio-page.member-motion-entering .team-portfolio-hero,
+  .team-portfolio-page.member-motion-leaving .team-portfolio-member-index,
+  .team-portfolio-page.member-motion-entering .team-portfolio-member-index,
+  .team-portfolio-page.member-motion-leaving .team-portfolio-work,
+  .team-portfolio-page.member-motion-entering .team-portfolio-work{
+    animation:none!important;
+    transition:none!important;
+  }
+}
