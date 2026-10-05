@@ -5711,3 +5711,153 @@ html{scrollbar-gutter:stable}
   .contact-dialog{width:calc(100vw - 8px)!important;max-height:calc(100dvh - 8px)!important}
   .team-portfolio-main,.team-portfolio-footer{width:calc(100% - 30px)!important}
 }
+
+
+/* 2026-10-05 team member index */
+.team-portfolio-member-index{
+  width:100%;
+  padding:26px 0 34px;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+.team-member-index-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:14px;
+  color:var(--soft);
+  font-size:9px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.team-member-index-arrows{
+  display:flex;
+  gap:7px;
+}
+.team-member-index-arrows button{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:1px solid var(--line);
+  border-radius:50%;
+  background:transparent;
+  color:var(--ink);
+  transition:background .25s ease,color .25s ease,border-color .25s ease;
+}
+.team-member-index-list{
+  display:flex;
+  align-items:stretch;
+  gap:8px;
+  overflow-x:auto;
+  overscroll-behavior-x:contain;
+  scrollbar-width:none;
+  padding-bottom:2px;
+}
+.team-member-index-list::-webkit-scrollbar{display:none}
+.team-member-index-list>button{
+  position:relative;
+  flex:1 1 0;
+  min-width:142px;
+  min-height:92px;
+  padding:14px 14px 12px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  grid-template-rows:1fr auto;
+  gap:10px 14px;
+  text-align:left;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:transparent;
+  color:var(--ink);
+  overflow:hidden;
+  transition:background .35s cubic-bezier(.16,1,.3,1),color .35s ease,border-color .35s ease,transform .35s cubic-bezier(.16,1,.3,1);
+}
+.team-member-index-list>button.active{
+  background:var(--ink);
+  color:var(--page);
+  border-color:var(--ink);
+}
+.team-member-code{
+  align-self:start;
+  font-size:clamp(28px,3vw,48px);
+  font-weight:700;
+  line-height:.85;
+  letter-spacing:-.07em;
+}
+.team-member-index-name{
+  align-self:end;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:11px;
+}
+.team-member-index-number{
+  grid-column:2;
+  grid-row:1/3;
+  align-self:start;
+  font-size:8px;
+  color:var(--soft);
+  letter-spacing:.08em;
+}
+.team-member-index-list>button.active .team-member-index-number{color:color-mix(in srgb,var(--page) 58%,transparent)}
+@media(hover:hover) and (pointer:fine){
+  .team-member-index-list>button:not(.active):hover{transform:translateY(-2px);background:color-mix(in srgb,var(--ink) 5%,transparent)}
+  .team-member-index-arrows button:hover{background:var(--ink);color:var(--page);border-color:var(--ink)}
+}
+.team-portfolio-member-switch{
+  width:min(1540px,88vw);
+  margin:0 auto;
+  padding:26px 0;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  border-top:1px solid var(--line);
+}
+.team-portfolio-member-switch>button{
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:14px 16px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:transparent;
+  color:var(--ink);
+  text-align:left;
+}
+.team-portfolio-member-switch>button:last-child{
+  justify-content:flex-end;
+  text-align:right;
+}
+.team-portfolio-member-switch span{
+  display:grid;
+  gap:5px;
+  font-size:13px;
+}
+.team-portfolio-member-switch small{
+  color:var(--soft);
+  font-size:8px;
+  letter-spacing:.12em;
+}
+@media(max-width:900px){
+  .team-portfolio-member-index{padding:20px 0 28px}
+  .team-member-index-list>button{flex:0 0 min(30vw,180px);min-width:130px}
+  .team-portfolio-member-switch{width:calc(100% - 36px)}
+}
+@media(max-width:600px){
+  .team-member-index-head{margin-bottom:12px}
+  .team-member-index-list{gap:7px;margin-inline:-2px;padding-inline:2px}
+  .team-member-index-list>button{flex-basis:118px;min-width:118px;min-height:82px;padding:12px}
+  .team-member-code{font-size:32px}
+  .team-member-index-name{font-size:10px}
+  .team-portfolio-member-switch{
+    width:calc(100% - 30px);
+    grid-template-columns:1fr;
+    padding:18px 0;
+  }
+  .team-portfolio-member-switch>button{min-height:62px}
+}
