@@ -6608,3 +6608,35 @@ body{
     transition:none!important;
   }
 }
+
+
+/* 2026-10-05 team index hover breathing room */
+/* Give hover/press motion invisible breathing room without changing card sizes or layout. */
+.team-member-index-list{
+  width:calc(100% + 24px)!important;
+  margin:-12px!important;
+  padding:12px!important;
+  box-sizing:border-box!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scroll-padding-inline:12px!important;
+}
+.team-member-index-list>button{
+  min-height:92px;
+}
+@media(max-width:900px){
+  .team-member-index-list{
+    width:calc(100% + 20px)!important;
+    margin:-10px!important;
+    padding:10px!important;
+    scroll-padding-inline:10px!important;
+  }
+}
+@media(max-width:600px){
+  .team-member-index-list{
+    width:calc(100% + 16px)!important;
+    margin:-8px!important;
+    padding:8px!important;
+    scroll-padding-inline:8px!important;
+  }
+}
