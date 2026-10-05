@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
-import {RefreshCw,Trash2,Mail,MailOpen,Send,ExternalLink,Link2,Unlink,CheckCircle2} from 'lucide-react';
+import {RefreshCw,Trash2,Mail,MailOpen,Send,ExternalLink,Link2,Unlink,CheckCircle2,Check,Square} from 'lucide-react';
 import {api} from './site-api';
 
 type ContactMessage={
@@ -36,6 +36,8 @@ export default function ContactInbox(){
   const [mailEmail,setMailEmail]=useState('');
   const [mailPassword,setMailPassword]=useState('');
   const [mailStatus,setMailStatus]=useState('');
+  const [selected,setSelected]=useState<string[]>([]);
+  const [deleteBusy,setDeleteBusy]=useState(false);
 
   const unread=useMemo(()=>messages.filter(m=>!m.read).length,[messages]);
 
@@ -43,7 +45,9 @@ export default function ContactInbox(){
     try{
       setLoading(true);setError('');
       const result=await api('/api/contact');
-      setMessages(Array.isArray(result.messages)?result.messages:[]);
+      const next=Array.isArray(result.messages)?result.messages:[];
+      setMessages(next);
+      setSelected(current=>current.filter(id=>next.some((item:ContactMessage)=>item.id===id)));
     }catch(e){setError((e as Error).message)}finally{setLoading(false)}
   }
   async function loadMail(){
@@ -91,12 +95,41 @@ export default function ContactInbox(){
   }
 
   async function remove(message:ContactMessage){
-    if(!confirm('이 문의를 삭제할까요?'))return;
+    if(deleteBusy)return;
     try{
+      setDeleteBusy(true);setError('');
       await api('/api/contact','DELETE',{id:message.id});
       setMessages(list=>list.filter(item=>item.id!==message.id));
+      setSelected(list=>list.filter(id=>id!==message.id));
       if(openId===message.id)setOpenId('');
-    }catch(e){setError((e as Error).message)}
+    }catch(e){setError((e as Error).message)}finally{setDeleteBusy(false)}
+  }
+
+  function toggleSelected(id:string){
+    setSelected(list=>list.includes(id)?list.filter(value=>value!==id):[...list,id]);
+  }
+  function selectAll(){
+    setSelected(list=>list.length===messages.length?[]:messages.map(item=>item.id));
+  }
+  async function removeSelected(){
+    if(deleteBusy||!selected.length)return;
+    try{
+      setDeleteBusy(true);setError('');
+      await api('/api/contact','DELETE',{ids:selected});
+      const removeSet=new Set(selected);
+      setMessages(list=>list.filter(item=>!removeSet.has(item.id)));
+      if(openId&&removeSet.has(openId))setOpenId('');
+      setSelected([]);
+    }catch(e){setError((e as Error).message)}finally{setDeleteBusy(false)}
+  }
+  async function removeAll(){
+    if(deleteBusy||!messages.length)return;
+    if(!confirm('문의함의 모든 문의를 삭제할까요? 이 작업은 되돌릴 수 없습니다.'))return;
+    try{
+      setDeleteBusy(true);setError('');
+      await api('/api/contact','DELETE',{all:true});
+      setMessages([]);setSelected([]);setOpenId('');
+    }catch(e){setError((e as Error).message)}finally{setDeleteBusy(false)}
   }
 
   async function sendReply(item:ContactMessage){
@@ -139,7 +172,10 @@ export default function ContactInbox(){
       </div>
       <div className="contact-inbox-summary">
         <span>{unread} unread</span>
-        <button type="button" onClick={load} disabled={loading}><RefreshCw size={15}/>{loading?'불러오는 중':'새로고침'}</button>
+        <button type="button" onClick={selectAll} disabled={!messages.length||deleteBusy}>{selected.length===messages.length&&messages.length?<Check size={14}/>:<Square size={14}/>} {selected.length===messages.length&&messages.length?'선택 해제':'전체 선택'}</button>
+        <button type="button" className="contact-bulk-delete" onClick={removeSelected} disabled={!selected.length||deleteBusy}><Trash2 size={14}/>{'선택 삭제'+(selected.length?' '+selected.length:'')}</button>
+        <button type="button" className="contact-delete-all" onClick={removeAll} disabled={!messages.length||deleteBusy}><Trash2 size={14}/>전체 삭제</button>
+        <button type="button" onClick={load} disabled={loading||deleteBusy}><RefreshCw size={15}/>{loading?'불러오는 중':'새로고침'}</button>
       </div>
     </section>
 
@@ -169,18 +205,24 @@ export default function ContactInbox(){
     {!loading&&!messages.length&&<section className="editor-card contact-inbox-empty">아직 접수된 문의가 없습니다.</section>}
 
     <div className="contact-message-list">
-      {messages.map(item=><article key={item.id} className={'contact-message-card '+(!item.read?'is-unread ':'')+(openId===item.id?'is-open':'')}>
-        <button type="button" className="contact-message-summary" onClick={()=>toggle(item)}>
-          <span className="contact-message-state">{item.read?<MailOpen size={16}/>:<Mail size={16}/>}</span>
-          <span className="contact-message-main">
-            <strong>{item.subject||'Project inquiry'}</strong>
-            <small>{item.from}</small>
-          </span>
-          <span className="contact-message-meta">
-            <small>{item.repliedAt?'REPLIED':item.emailed?'EMAIL + INBOX':'INBOX'}</small>
-            <time>{when(item.createdAt)}</time>
-          </span>
-        </button>
+      {messages.map(item=><article key={item.id} className={'contact-message-card '+(!item.read?'is-unread ':'')+(openId===item.id?'is-open ':'')+(selected.includes(item.id)?'is-selected':'')}>
+        <div className="contact-message-row">
+          <button type="button" className="contact-message-select" aria-label={(selected.includes(item.id)?'선택 해제 ':'선택 ')+(item.subject||'Project inquiry')} aria-pressed={selected.includes(item.id)} onClick={()=>toggleSelected(item.id)}>
+            {selected.includes(item.id)?<Check size={15}/>:<Square size={15}/>}
+          </button>
+          <button type="button" className="contact-message-summary" onClick={()=>toggle(item)}>
+            <span className="contact-message-state">{item.read?<MailOpen size={16}/>:<Mail size={16}/>}</span>
+            <span className="contact-message-main">
+              <strong>{item.subject||'Project inquiry'}</strong>
+              <small>{item.from}</small>
+            </span>
+            <span className="contact-message-meta">
+              <small>{item.repliedAt?'REPLIED':item.emailed?'EMAIL + INBOX':'INBOX'}</small>
+              <time>{when(item.createdAt)}</time>
+            </span>
+          </button>
+          <button type="button" className="contact-message-quick-delete" aria-label={(item.subject||'Project inquiry')+' 바로 삭제'} disabled={deleteBusy} onClick={()=>remove(item)}><Trash2 size={15}/></button>
+        </div>
 
         {openId===item.id&&<div className="contact-message-body">
           <div className="contact-original-message"><p>{item.message}</p></div>
