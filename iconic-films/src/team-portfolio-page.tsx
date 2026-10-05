@@ -283,7 +283,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
 
     <Dialog open={viewerIndex!==null&&!viewerClosing} onOpenChange={open=>!open&&closeViewer()}>
       <DialogContent className="team-media-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}>
-        {viewerIndex!==null&&works[viewerIndex]&&<div className="team-media-viewer" onPointerDown={e=>begin(e.clientX)} onPointerUp={e=>end(e.clientX,d=>d>0?viewerNext():viewerPrev())}>
+        {viewerIndex!==null&&works[viewerIndex]&&<div className={'team-media-viewer team-media-type-'+teamMediaType(works[viewerIndex])} onPointerDown={e=>begin(e.clientX)} onPointerUp={e=>end(e.clientX,d=>d>0?viewerNext():viewerPrev())}>
           <div className="team-media-backdrop" aria-hidden="true">
             {teamMediaType(works[viewerIndex])!=='model'&&<TeamMedia key={works[viewerIndex]+'-backdrop'} src={works[viewerIndex]} alt="" className="team-media-backdrop-media" autoPlay/>}
           </div>
