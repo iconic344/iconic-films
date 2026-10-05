@@ -42,8 +42,11 @@ export default function Home(){
   return()=>query.removeEventListener?.('change',sync);
  },[]);
  useEffect(()=>{
-  const mobileQuery=window.matchMedia('(max-width: 820px), (max-width: 1180px) and (any-pointer: coarse)');
-  if(!mobileQuery.matches){
+  const mobileQuery=window.matchMedia('(max-width: 1180px) and (any-pointer: coarse)');
+  const ua=navigator.userAgent||'';
+  const platform=(navigator as Navigator&{platform?:string}).platform||'';
+  const isIPad=/iPad/i.test(ua)||(platform==='MacIntel'&&navigator.maxTouchPoints>1&&Math.min(screen.width,screen.height)>=700);
+  if(!mobileQuery.matches||isIPad){
    delete document.documentElement.dataset.immersive;
    return;
   }
