@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent} from 'react';
-import {ArrowUpRight,ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,Moon,Sun,X,Play,Pause,Volume2,VolumeX,Maximize2} from 'lucide-react';
+import {ArrowUpRight,ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,Moon,Sun,Play,Pause,Volume2,VolumeX,Maximize2} from 'lucide-react';
 import {Dialog,DialogContent,DialogTitle} from '@/components/ui/dialog';
 import {Slider} from '@/components/ui/slider';
 import type {Config,TeamMember} from './defaults';
@@ -8,7 +8,7 @@ import TeamMedia,{teamMediaType} from './team-media';
 
 const fmtMediaTime=(v:number)=>`${Math.floor((v||0)/60)}:${String(Math.floor((v||0)%60)).padStart(2,'0')}`;
 
-export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onSelectMember,onToggleTheme,onContact,onAdmin}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onSelectMember:(member:TeamMember)=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void}){
+export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onSelectMember,onToggleTheme,onContact,onAdmin,onVideoViewerOpen,onVideoViewerClose}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onSelectMember:(member:TeamMember)=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void;onVideoViewerOpen:()=>void;onVideoViewerClose:()=>void}){
   const [index,setIndex]=useState(0);
   const [viewerIndex,setViewerIndex]=useState<number|null>(null);
   const [viewerClosing,setViewerClosing]=useState(false);
@@ -21,6 +21,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const dragStart=useRef<number|null>(null);
   const swiped=useRef(false);
   const viewerVideoRef=useRef<HTMLVideoElement>(null);
+  const viewerMusicHeld=useRef(false);
   const memberSwitchTimer=useRef<number|null>(null);
   const previousMemberId=useRef(member.id);
   const memberSwipeStart=useRef<{x:number;y:number}|null>(null);
@@ -88,6 +89,18 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     }
   },[member.id]);
   useEffect(()=>()=>{if(memberSwitchTimer.current!==null)window.clearTimeout(memberSwitchTimer.current)},[]);
+  useEffect(()=>{
+    const current=viewerIndex===null?'':works[viewerIndex]||'';
+    const isVideo=!!current&&teamMediaType(current)==='video';
+    if(isVideo&&!viewerMusicHeld.current){
+      viewerMusicHeld.current=true;
+      onVideoViewerOpen();
+    }else if(!isVideo&&viewerMusicHeld.current){
+      viewerMusicHeld.current=false;
+      onVideoViewerClose();
+    }
+  },[viewerIndex,works,onVideoViewerOpen,onVideoViewerClose]);
+  useEffect(()=>()=>{if(viewerMusicHeld.current){viewerMusicHeld.current=false;onVideoViewerClose()}},[onVideoViewerClose]);
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>{
       if(viewerIndex!==null){
@@ -286,14 +299,14 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
 
         {!!works.length&&member.portfolioLayout==='grid'&&<div className="team-portfolio-grid">
           {works.map((url,i)=><button type="button" className="team-portfolio-grid-item" key={url+i} onClick={()=>openViewer(i)}>
-            <TeamMedia src={url} alt={(member.name||'Team member')+' portfolio '+(i+1)} className="team-portfolio-work-media"/>
+            <TeamMedia src={url} alt={(member.name||'Team member')+' portfolio '+(i+1)} className="team-portfolio-work-media" autoPlay/>
             <span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span>
           </button>)}
         </div>}
 
         {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider">
           <button type="button" className="team-portfolio-slide-stage" onPointerDown={e=>begin(e.clientX)} onPointerUp={e=>end(e.clientX,d=>d>0?next():prev())} onClick={()=>{if(swiped.current){swiped.current=false;return}openViewer(index)}}>
-            <TeamMedia key={works[index]} src={works[index]} alt={(member.name||'Team member')+' portfolio '+(index+1)} className="team-portfolio-slide-media"/>
+            <TeamMedia key={works[index]} src={works[index]} alt={(member.name||'Team member')+' portfolio '+(index+1)} className="team-portfolio-slide-media" autoPlay/>
             <span className="team-portfolio-slide-count">{String(index+1).padStart(2,'0')} / {String(works.length).padStart(2,'0')}</span>
           </button>
           <div className="team-portfolio-slider-controls">
@@ -318,7 +331,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           const src=works[viewerIndex];
           const type=teamMediaType(src);
           const label=type==='video'?'FILM':type==='image'?'IMAGE':'3D';
-          return <div className={'team-media-viewer team-media-type-'+type} onPointerDown={e=>begin(e.clientX)} onPointerUp={e=>end(e.clientX,d=>d>0?viewerNext():viewerPrev())}>
+          return <div className={'team-media-viewer team-media-type-'+type} onPointerDown={e=>begin(e.clientX)} onPointerUp={e=>end(e.clientX,d=>d>0?viewerNext():viewerPrev())} onClick={e=>{if(swiped.current){swiped.current=false;return}if(!(e.target as HTMLElement).closest('.team-media-card'))closeViewer()}}>
             <div className="team-media-backdrop" aria-hidden="true">
               {type!=='model'&&<TeamMedia key={src+'-backdrop'} src={src} alt="" className="team-media-backdrop-media" autoPlay/>}
             </div>
@@ -329,11 +342,11 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
                   <strong className="team-media-card-title">{member.name||'Team member'}</strong>
                   <span className="team-media-card-meta">{String(viewerIndex+1).padStart(2,'0')} / {String(works.length).padStart(2,'0')}</span>
                 </div>
-                <button type="button" className="team-media-close" aria-label="닫기" onClick={closeViewer}><X size={18}/></button>
+                <span className="team-media-card-gesture-hint" aria-hidden="true">DRAG / SWIPE</span>
               </div>
               <div className="team-media-foreground">
                 {type==='video'?<>
-                  <video ref={viewerVideoRef} key={src} className="team-media-viewer-media team-media-video" src={src} playsInline preload="auto" muted={viewerMuted} onLoadedMetadata={e=>setViewerDuration(e.currentTarget.duration||0)} onTimeUpdate={e=>setViewerTime(e.currentTarget.currentTime||0)} onPlay={()=>setViewerPlaying(true)} onPause={()=>setViewerPlaying(false)} onEnded={()=>setViewerPlaying(false)} onClick={e=>{e.stopPropagation();toggleViewerVideo()}}/>
+                  <video ref={viewerVideoRef} key={src} className="team-media-viewer-media team-media-video" src={src} playsInline preload="auto" autoPlay loop muted={viewerMuted} onCanPlay={e=>e.currentTarget.play().catch(()=>{})} onLoadedMetadata={e=>setViewerDuration(e.currentTarget.duration||0)} onTimeUpdate={e=>setViewerTime(e.currentTarget.currentTime||0)} onPlay={()=>setViewerPlaying(true)} onPause={()=>setViewerPlaying(false)} onEnded={()=>setViewerPlaying(false)} onClick={e=>{e.stopPropagation();toggleViewerVideo()}}/>
                   {!viewerPlaying&&<button type="button" className="team-media-center-play" aria-label="영상 재생" onClick={e=>{e.stopPropagation();toggleViewerVideo()}}><Play size={22} fill="currentColor"/></button>}
                   <div className="team-media-video-controls" onPointerDown={e=>e.stopPropagation()} onPointerUp={e=>e.stopPropagation()}>
                     <button type="button" className="team-media-control" aria-label={viewerPlaying?'일시정지':'재생'} onClick={toggleViewerVideo}>{viewerPlaying?<Pause size={17} fill="currentColor"/>:<Play size={17} fill="currentColor"/>}</button>
@@ -346,10 +359,6 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
                 </>:<TeamMedia key={src} src={src} alt={(member.name||'Team member')+' portfolio '+(viewerIndex+1)} className="team-media-viewer-media" interactive autoPlay/>}
               </div>
             </div>
-            {works.length>1&&<>
-              <button type="button" className="team-media-nav is-prev" aria-label="이전" onClick={viewerPrev}><ChevronLeft size={22}/></button>
-              <button type="button" className="team-media-nav is-next" aria-label="다음" onClick={viewerNext}><ChevronRight size={22}/></button>
-            </>}
             <span className="team-media-count">{String(viewerIndex+1).padStart(2,'0')} / {String(works.length).padStart(2,'0')}</span>
           </div>;
         })()}
