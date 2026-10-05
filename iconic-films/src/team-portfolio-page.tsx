@@ -23,6 +23,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const dragStart=useRef<number|null>(null);
   const swiped=useRef(false);
   const viewerVideoRef=useRef<HTMLVideoElement>(null);
+  const viewerVideoAutoStarted=useRef('');
   const viewerMusicHeld=useRef(false);
   const viewerTransitioning=useRef(false);
   const viewerMotionTimer=useRef<number|null>(null);
@@ -89,6 +90,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
       setViewerMotion('out');
       if(viewerMotionTimer.current!==null)window.clearTimeout(viewerMotionTimer.current);
       viewerMotionTimer.current=window.setTimeout(()=>{
+        viewerVideoAutoStarted.current='';
         setViewerPlaying(false);
         setViewerTime(0);
         setViewerDuration(0);
@@ -105,6 +107,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const viewerPrev=()=>navigateViewer(-1);
   const viewerNext=()=>navigateViewer(1);
   const openViewer=(i:number)=>{
+    viewerVideoAutoStarted.current='';
     setViewerClosing(false);
     setViewerMotion('idle');
     setViewerPlaying(false);
@@ -126,10 +129,33 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     window.setTimeout(()=>{setViewerIndex(null);setViewerClosing(false);setViewerMotion('idle')},420);
   };
 
+  const autoStartViewerVideo=(video:HTMLVideoElement,src:string)=>{
+    if(!video||viewerVideoAutoStarted.current===src&&!video.paused)return;
+    viewerVideoAutoStarted.current=src;
+    video.playsInline=true;
+    video.loop=true;
+    const tryPlay=()=>{
+      const attempt=video.play();
+      if(attempt&&typeof attempt.catch==='function'){
+        attempt.catch(()=>{
+          // iOS/Safari can reject audible autoplay after a swipe/navigation.
+          // Fall back to muted autoplay so the frame never sits black.
+          if(!video.muted){
+            video.muted=true;
+            setViewerMuted(true);
+          }
+          video.play().catch(()=>{});
+        });
+      }
+    };
+    tryPlay();
+  };
   const toggleViewerVideo=()=>{
     const video=viewerVideoRef.current;
     if(!video)return;
-    if(video.paused)video.play().catch(()=>{});
+    if(video.paused)video.play().catch(()=>{
+      if(!video.muted){video.muted=true;setViewerMuted(true);video.play().catch(()=>{})}
+    });
     else video.pause();
   };
   const seekViewerVideo=(value:number)=>{
@@ -180,6 +206,20 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     }
   },[viewerIndex,works]);
   useEffect(()=>()=>{if(viewerMusicHeld.current){viewerMusicHeld.current=false;onVideoViewerClose()}},[]);
+  useEffect(()=>{
+    if(viewerIndex===null||!works[viewerIndex]||teamMediaType(works[viewerIndex])!=='video')return;
+    const src=works[viewerIndex];
+    let cancelled=false;
+    const attempt=()=>{
+      if(cancelled)return;
+      const video=viewerVideoRef.current;
+      if(video)autoStartViewerVideo(video,src);
+    };
+    const a=window.setTimeout(attempt,0);
+    const b=window.setTimeout(attempt,120);
+    const c=window.setTimeout(attempt,360);
+    return()=>{cancelled=true;window.clearTimeout(a);window.clearTimeout(b);window.clearTimeout(c)};
+  },[viewerIndex,works]);
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>{
       if(viewerIndex!==null){
@@ -458,7 +498,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
               </div>
               <div className="team-media-foreground" onPointerDown={beginViewerSwipe} onPointerMove={moveViewerSwipe} onPointerUp={endViewerSwipe} onPointerCancel={cancelViewerSwipe}>
                 {type==='video'?<>
-                  <video ref={viewerVideoRef} key={src} className="team-media-viewer-media team-media-video" src={src} playsInline preload="auto" autoPlay loop muted={viewerMuted} onCanPlay={e=>e.currentTarget.play().catch(()=>{})} onLoadedMetadata={e=>setViewerDuration(e.currentTarget.duration||0)} onTimeUpdate={e=>setViewerTime(e.currentTarget.currentTime||0)} onPlay={()=>setViewerPlaying(true)} onPause={()=>setViewerPlaying(false)} onEnded={()=>setViewerPlaying(false)} onClick={e=>{e.stopPropagation();if(swiped.current){swiped.current=false;return}toggleViewerVideo()}}/>
+                  <video ref={viewerVideoRef} key={src} className="team-media-viewer-media team-media-video" src={src} playsInline preload="auto" autoPlay loop muted={viewerMuted} onLoadedMetadata={e=>{setViewerDuration(e.currentTarget.duration||0);autoStartViewerVideo(e.currentTarget,src)}} onLoadedData={e=>autoStartViewerVideo(e.currentTarget,src)} onCanPlay={e=>autoStartViewerVideo(e.currentTarget,src)} onTimeUpdate={e=>setViewerTime(e.currentTarget.currentTime||0)} onPlay={()=>setViewerPlaying(true)} onPause={()=>setViewerPlaying(false)} onEnded={()=>setViewerPlaying(false)} onClick={e=>{e.stopPropagation();if(swiped.current){swiped.current=false;return}toggleViewerVideo()}}/>
                   {!viewerPlaying&&<button type="button" className="team-media-center-play" aria-label="영상 재생" onClick={e=>{e.stopPropagation();toggleViewerVideo()}}><Play size={22} fill="currentColor"/></button>}
                   <div className="team-media-video-controls" onPointerDown={e=>e.stopPropagation()} onPointerUp={e=>e.stopPropagation()}>
                     <button type="button" className="team-media-control" aria-label={viewerPlaying?'일시정지':'재생'} onClick={toggleViewerVideo}>{viewerPlaying?<Pause size={17} fill="currentColor"/>:<Play size={17} fill="currentColor"/>}</button>
