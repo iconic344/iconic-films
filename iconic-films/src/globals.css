@@ -7342,7 +7342,7 @@ body{
 /* The visible media follows the finger/mouse a little, then springs back.
    Actual page changes are preloaded in JS and cross-fade instead of flashing an empty header card. */
 .team-media-card{
-  transform:translate3d(var(--viewer-drag-x,0px),0,0) rotateZ(var(--viewer-drag-tilt,0deg))!important;
+  transform:translate3d(var(--viewer-drag-x,0px),0,0) rotateZ(var(--viewer-drag-tilt,0deg));
   transition:
     transform .62s cubic-bezier(.16,1,.3,1),
     opacity .34s ease,
@@ -7440,7 +7440,7 @@ body{
   .team-media-card,
   .team-media-foreground,
   .team-media-viewer-media{
-    -webkit-transform:translateZ(0);
+    will-change:transform,opacity;
     backface-visibility:hidden;
     -webkit-backface-visibility:hidden;
   }
