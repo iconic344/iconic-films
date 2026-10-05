@@ -120,6 +120,19 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     if(Math.abs(delta)>48){swiped.current=true;move(delta<0?1:-1)}
   };
 
+  const beginViewerSwipe=(e:ReactPointerEvent<HTMLElement>)=>{
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    if((e.target as HTMLElement).closest('.team-media-video-controls,.team-media-center-play,.team-media-control,[data-slot="slider"]'))return;
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    begin(e.clientX);
+  };
+  const endViewerSwipe=(e:ReactPointerEvent<HTMLElement>)=>{
+    e.stopPropagation();
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    end(e.clientX,d=>d>0?viewerNext():viewerPrev());
+  };
+
   const reactPointer=(e:ReactPointerEvent<HTMLElement>)=>{
     const el=e.currentTarget;
     const rect=el.getBoundingClientRect();
@@ -337,9 +350,9 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
                 </div>
                 <span className="team-media-card-gesture-hint" aria-hidden="true">DRAG / SWIPE</span>
               </div>
-              <div className="team-media-foreground">
+              <div className="team-media-foreground" onPointerDown={beginViewerSwipe} onPointerUp={endViewerSwipe} onPointerCancel={e=>{dragStart.current=null;e.currentTarget.releasePointerCapture?.(e.pointerId)}}>
                 {type==='video'?<>
-                  <video ref={viewerVideoRef} key={src} className="team-media-viewer-media team-media-video" src={src} playsInline preload="auto" autoPlay loop muted={viewerMuted} onCanPlay={e=>e.currentTarget.play().catch(()=>{})} onLoadedMetadata={e=>setViewerDuration(e.currentTarget.duration||0)} onTimeUpdate={e=>setViewerTime(e.currentTarget.currentTime||0)} onPlay={()=>setViewerPlaying(true)} onPause={()=>setViewerPlaying(false)} onEnded={()=>setViewerPlaying(false)} onClick={e=>{e.stopPropagation();toggleViewerVideo()}}/>
+                  <video ref={viewerVideoRef} key={src} className="team-media-viewer-media team-media-video" src={src} playsInline preload="auto" autoPlay loop muted={viewerMuted} onCanPlay={e=>e.currentTarget.play().catch(()=>{})} onLoadedMetadata={e=>setViewerDuration(e.currentTarget.duration||0)} onTimeUpdate={e=>setViewerTime(e.currentTarget.currentTime||0)} onPlay={()=>setViewerPlaying(true)} onPause={()=>setViewerPlaying(false)} onEnded={()=>setViewerPlaying(false)} onClick={e=>{e.stopPropagation();if(swiped.current){swiped.current=false;return}toggleViewerVideo()}}/>
                   {!viewerPlaying&&<button type="button" className="team-media-center-play" aria-label="영상 재생" onClick={e=>{e.stopPropagation();toggleViewerVideo()}}><Play size={22} fill="currentColor"/></button>}
                   <div className="team-media-video-controls" onPointerDown={e=>e.stopPropagation()} onPointerUp={e=>e.stopPropagation()}>
                     <button type="button" className="team-media-control" aria-label={viewerPlaying?'일시정지':'재생'} onClick={toggleViewerVideo}>{viewerPlaying?<Pause size={17} fill="currentColor"/>:<Play size={17} fill="currentColor"/>}</button>
