@@ -104,20 +104,6 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
             <TextStyleEditor label="역할" value={portfolioStyle(member,'Role')} onChange={v=>patchPortfolioStyle(member,'Role',v)}/>
             <TextStyleEditor label="소개" value={portfolioStyle(member,'Bio')} onChange={v=>patchPortfolioStyle(member,'Bio',v)}/>
           </div>
-          <div className="team-portfolio-size-editor">
-            <h4>Portfolio media size</h4>
-            {miniRange(member,'portfolioProfileSize','프로필 미디어 크기',180,560)}
-            {miniRange(member,'portfolioSliderWidth','슬라이드 폭',45,100,1,'%')}
-            {miniRange(member,'portfolioSliderHeight','슬라이드 높이',320,1100)}
-            {miniRange(member,'portfolioGridWidth','그리드 전체 폭',45,100,1,'%')}
-          </div>
-          <label className="field">포트폴리오 보기 방식<div className="team-layout-choice"><button type="button" className={member.portfolioLayout!=='slider'?'active':''} onClick={()=>patch(member.id,'portfolioLayout','grid')}>GRID</button><button type="button" className={member.portfolioLayout==='slider'?'active':''} onClick={()=>patch(member.id,'portfolioLayout','slider')}>SLIDER</button></div></label>
-          {member.portfolioLayout!=='slider'&&<label className="field layout-range">포트폴리오 열 수 <span className="val">{member.portfolioColumns||3}</span><Slider value={[member.portfolioColumns||3]} min={1} max={4} step={1} onValueChange={v=>patch(member.id,'portfolioColumns',v[0])}/></label>}
-          <label className="field layout-range">포트폴리오 간격 <span className="val">{member.portfolioGap||14}px</span><Slider value={[member.portfolioGap||14]} min={4} max={48} step={1} onValueChange={v=>patch(member.id,'portfolioGap',v[0])}/></label>
-          <label className="field layout-range">포트폴리오 모서리 <span className="val">{member.portfolioRadius??18}px</span><Slider value={[member.portfolioRadius??18]} min={0} max={48} step={1} onValueChange={v=>patch(member.id,'portfolioRadius',v[0])}/></label>
-          <label className="toggle">사이트에 표시<Switch checked={member.visible} onCheckedChange={v=>patch(member.id,'visible',v)}/></label>
-          <label className="field layout-range">프로필 미디어 크기 <span className="val">{member.photoSize||draft.teamMediaSize}px</span><Slider value={[member.photoSize||draft.teamMediaSize]} min={150} max={420} step={1} onValueChange={v=>patch(member.id,'photoSize',v[0])}/></label>
-          <label className="field layout-range">프로필 모서리 <span className="val">{member.photoRadius??draft.teamMediaRadius}%</span><Slider value={[member.photoRadius??draft.teamMediaRadius]} min={0} max={50} step={1} onValueChange={v=>patch(member.id,'photoRadius',v[0])}/></label>
         </div>
         <div className="team-member-media">
           <label className="field file-upload">프로필 미디어 업로드<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadOne(e.target.files?.[0],url=>patch(member.id,'photo',url))}/><span className="uploaded-file">{member.photo?'프로필 미디어 등록됨':'이미지 / 영상 / GLB·glTF'}</span>{member.photo&&<button type="button" className="file-clear" onClick={()=>patch(member.id,'photo','')}>미디어 제거</button>}</label>
@@ -133,6 +119,20 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
               {miniRange(member,'portfolioReturnY','돌아가기 문구 세로 위치',-240,240)}
             </div>
           </div>
+          <div className="team-portfolio-size-editor">
+            <h4>Portfolio media size</h4>
+            {miniRange(member,'portfolioProfileSize','프로필 미디어 크기',180,560)}
+            {miniRange(member,'portfolioSliderWidth','슬라이드 폭',45,100,1,'%')}
+            {miniRange(member,'portfolioSliderHeight','슬라이드 높이',320,1100)}
+            {miniRange(member,'portfolioGridWidth','그리드 전체 폭',45,100,1,'%')}
+          </div>
+          <label className="field">포트폴리오 보기 방식<div className="team-layout-choice"><button type="button" className={member.portfolioLayout!=='slider'?'active':''} onClick={()=>patch(member.id,'portfolioLayout','grid')}>GRID</button><button type="button" className={member.portfolioLayout==='slider'?'active':''} onClick={()=>patch(member.id,'portfolioLayout','slider')}>SLIDER</button></div></label>
+          {member.portfolioLayout!=='slider'&&<label className="field layout-range">포트폴리오 열 수 <span className="val">{member.portfolioColumns||3}</span><Slider value={[member.portfolioColumns||3]} min={1} max={4} step={1} onValueChange={v=>patch(member.id,'portfolioColumns',v[0])}/></label>}
+          <label className="field layout-range">포트폴리오 간격 <span className="val">{member.portfolioGap||14}px</span><Slider value={[member.portfolioGap||14]} min={4} max={48} step={1} onValueChange={v=>patch(member.id,'portfolioGap',v[0])}/></label>
+          <label className="field layout-range">포트폴리오 모서리 <span className="val">{member.portfolioRadius??18}px</span><Slider value={[member.portfolioRadius??18]} min={0} max={48} step={1} onValueChange={v=>patch(member.id,'portfolioRadius',v[0])}/></label>
+          <label className="toggle">사이트에 표시<Switch checked={member.visible} onCheckedChange={v=>patch(member.id,'visible',v)}/></label>
+          <label className="field layout-range">프로필 미디어 크기 <span className="val">{member.photoSize||draft.teamMediaSize}px</span><Slider value={[member.photoSize||draft.teamMediaSize]} min={150} max={420} step={1} onValueChange={v=>patch(member.id,'photoSize',v[0])}/></label>
+          <label className="field layout-range">프로필 모서리 <span className="val">{member.photoRadius??draft.teamMediaRadius}%</span><Slider value={[member.photoRadius??draft.teamMediaRadius]} min={0} max={50} step={1} onValueChange={v=>patch(member.id,'photoRadius',v[0])}/></label>
         </div>
       </div>
       {!!member.works?.length&&<div className="team-editor-works">{member.works.map((url,i)=><div key={url+i}><TeamMedia src={url} alt="작품 미리보기" className="team-editor-work-media" interactive/><button type="button" aria-label="작품 삭제" onClick={()=>patch(member.id,'works',member.works.filter((_,j)=>j!==i))}><Trash2 size={14}/></button></div>)}</div>}
