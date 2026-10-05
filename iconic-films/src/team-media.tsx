@@ -46,5 +46,5 @@ export default function TeamMedia({src,alt='',className='',interactive=false,aut
     'shadow-intensity':'1',
     style:{width:'100%',height:'100%',display:'block',background:'transparent'}
   }):<div className={className+' team-model-loading'}>3D</div>;
-  return <img className={className} src={src} alt={alt} loading="lazy" draggable={false} onDragStart={e=>e.preventDefault()}/>;
+  return <img className={className} src={src} alt={alt} loading={autoPlay?'eager':'lazy'} draggable={false} onDragStart={e=>e.preventDefault()}/>;
 }
