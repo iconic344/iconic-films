@@ -88,7 +88,7 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
         </div>
       </div>
       <div className="team-editor-grid">
-        <div>
+        <div className="team-member-fields">
           <label className="field">이름<input value={member.name} onChange={e=>patch(member.id,'name',e.target.value)}/></label>
           <label className="field">CODE NAME<input placeholder="X / I / S..." maxLength={8} value={member.codeName||''} onChange={e=>patch(member.id,'codeName',e.target.value.toUpperCase().replace(/\s+/g,'').slice(0,8))}/><span className="uploaded-file">팀원 페이지의 TEAM INDEX에 표시됩니다. 비우면 이름 첫 글자를 사용합니다.</span></label>
           <label className="field">역할<input placeholder="Director / Photographer / Make-up / Hair..." value={member.role} onChange={e=>patch(member.id,'role',e.target.value)}/></label>
@@ -98,16 +98,11 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
           <label className="field">포트폴리오 제목<input value={member.portfolioTitle||'Selected works'} onChange={e=>patch(member.id,'portfolioTitle',e.target.value)}/></label>
           <label className="field">포트폴리오 소개<textarea placeholder="팀원 전용 포트폴리오 페이지 소개 문구" value={member.portfolioIntro||''} onChange={e=>patch(member.id,'portfolioIntro',e.target.value)}/></label>
           <label className="field">팀으로 돌아가기 문구<input value={member.portfolioReturnLabel||'VIIVII sara / Team'} onChange={e=>patch(member.id,'portfolioReturnLabel',e.target.value)}/></label>
-          <div className="team-portfolio-type-editor">
+          <div className="team-portfolio-type-editor team-portfolio-type-editor--primary">
             <h4>Portfolio typography / position</h4>
             <TextStyleEditor label="이름" value={portfolioStyle(member,'Name')} onChange={v=>patchPortfolioStyle(member,'Name',v)}/>
             <TextStyleEditor label="역할" value={portfolioStyle(member,'Role')} onChange={v=>patchPortfolioStyle(member,'Role',v)}/>
             <TextStyleEditor label="소개" value={portfolioStyle(member,'Bio')} onChange={v=>patchPortfolioStyle(member,'Bio',v)}/>
-            <TextStyleEditor label="작품 제목" value={portfolioStyle(member,'Title')} onChange={v=>patchPortfolioStyle(member,'Title',v)}/>
-            <TextStyleEditor label="작품 소개" value={portfolioStyle(member,'Intro')} onChange={v=>patchPortfolioStyle(member,'Intro',v)}/>
-            <TextStyleEditor label="기타 문구 / 헤더 / 카운트" value={portfolioStyle(member,'Utility')} onChange={v=>patchPortfolioStyle(member,'Utility',v)}/>
-            {miniRange(member,'portfolioReturnX','돌아가기 문구 가로 위치',-300,300)}
-            {miniRange(member,'portfolioReturnY','돌아가기 문구 세로 위치',-240,240)}
           </div>
           <div className="team-portfolio-size-editor">
             <h4>Portfolio media size</h4>
@@ -124,10 +119,20 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
           <label className="field layout-range">프로필 미디어 크기 <span className="val">{member.photoSize||draft.teamMediaSize}px</span><Slider value={[member.photoSize||draft.teamMediaSize]} min={150} max={420} step={1} onValueChange={v=>patch(member.id,'photoSize',v[0])}/></label>
           <label className="field layout-range">프로필 모서리 <span className="val">{member.photoRadius??draft.teamMediaRadius}%</span><Slider value={[member.photoRadius??draft.teamMediaRadius]} min={0} max={50} step={1} onValueChange={v=>patch(member.id,'photoRadius',v[0])}/></label>
         </div>
-        <div>
+        <div className="team-member-media">
           <label className="field file-upload">프로필 미디어 업로드<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadOne(e.target.files?.[0],url=>patch(member.id,'photo',url))}/><span className="uploaded-file">{member.photo?'프로필 미디어 등록됨':'이미지 / 영상 / GLB·glTF'}</span>{member.photo&&<button type="button" className="file-clear" onClick={()=>patch(member.id,'photo','')}>미디어 제거</button>}</label>
           {member.photo&&<div className="team-editor-photo"><TeamMedia src={member.photo} alt="프로필 미리보기" className="team-editor-photo-media" interactive/></div>}
           <label className="field file-upload">작품 미디어 업로드<input type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadWorks(member.id,e.target.files)}/><span className="uploaded-file">이미지 / 영상 / 3D 여러 개 선택 가능</span></label>
+          <div className="team-portfolio-type-editor team-portfolio-type-editor--secondary">
+            <h4>Portfolio typography / position</h4>
+            <TextStyleEditor label="작품 제목" value={portfolioStyle(member,'Title')} onChange={v=>patchPortfolioStyle(member,'Title',v)}/>
+            <TextStyleEditor label="작품 소개" value={portfolioStyle(member,'Intro')} onChange={v=>patchPortfolioStyle(member,'Intro',v)}/>
+            <TextStyleEditor label="기타 문구 / 헤더 / 카운트" value={portfolioStyle(member,'Utility')} onChange={v=>patchPortfolioStyle(member,'Utility',v)}/>
+            <div className="team-return-position-pair">
+              {miniRange(member,'portfolioReturnX','돌아가기 문구 가로 위치',-300,300)}
+              {miniRange(member,'portfolioReturnY','돌아가기 문구 세로 위치',-240,240)}
+            </div>
+          </div>
         </div>
       </div>
       {!!member.works?.length&&<div className="team-editor-works">{member.works.map((url,i)=><div key={url+i}><TeamMedia src={url} alt="작품 미리보기" className="team-editor-work-media" interactive/><button type="button" aria-label="작품 삭제" onClick={()=>patch(member.id,'works',member.works.filter((_,j)=>j!==i))}><Trash2 size={14}/></button></div>)}</div>}
