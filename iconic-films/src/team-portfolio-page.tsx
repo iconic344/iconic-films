@@ -16,12 +16,17 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const [viewerMuted,setViewerMuted]=useState(false);
   const [viewerTime,setViewerTime]=useState(0);
   const [viewerDuration,setViewerDuration]=useState(0);
+  const [viewerMotion,setViewerMotion]=useState<'idle'|'out'|'in'>('idle');
+  const [viewerDirection,setViewerDirection]=useState<1|-1>(1);
   const [memberMotion,setMemberMotion]=useState<'idle'|'leaving'|'entering'>('idle');
   const [memberDirection,setMemberDirection]=useState<1|-1>(1);
   const dragStart=useRef<number|null>(null);
   const swiped=useRef(false);
   const viewerVideoRef=useRef<HTMLVideoElement>(null);
   const viewerMusicHeld=useRef(false);
+  const viewerTransitioning=useRef(false);
+  const viewerMotionTimer=useRef<number|null>(null);
+  const viewerPreloadCache=useRef(new Map<string,Promise<void>>());
   const memberSwitchTimer=useRef<number|null>(null);
   const previousMemberId=useRef(member.id);
   const memberSwipeStart=useRef<{x:number;y:number}|null>(null);
@@ -43,13 +48,82 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const memberNext=()=>teamMembers.length&&selectMember(teamMembers[(memberIndex+1)%teamMembers.length],1);
   const prev=()=>setIndex(i=>(i-1+works.length)%works.length);
   const next=()=>setIndex(i=>(i+1)%works.length);
-  const viewerPrev=()=>setViewerIndex(i=>i===null?null:(i-1+works.length)%works.length);
-  const viewerNext=()=>setViewerIndex(i=>i===null?null:(i+1)%works.length);
-  const openViewer=(i:number)=>{setViewerClosing(false);setViewerPlaying(false);setViewerTime(0);setViewerDuration(0);setViewerIndex(i)};
+  const preloadViewerMedia=(src:string)=>{
+    if(!src)return Promise.resolve();
+    const cached=viewerPreloadCache.current.get(src);
+    if(cached)return cached;
+    const type=teamMediaType(src);
+    const task=new Promise<void>(resolve=>{
+      if(type==='image'){
+        const image=new Image();
+        const done=()=>resolve();
+        image.onload=done;
+        image.onerror=done;
+        image.src=src;
+        if(image.complete)resolve();
+      }else if(type==='video'){
+        const video=document.createElement('video');
+        let settled=false;
+        const done=()=>{if(settled)return;settled=true;video.removeAttribute('src');video.load();resolve()};
+        video.preload='auto';
+        video.muted=true;
+        video.playsInline=true;
+        video.addEventListener('loadeddata',done,{once:true});
+        video.addEventListener('canplay',done,{once:true});
+        video.addEventListener('error',done,{once:true});
+        video.src=src;
+        video.load();
+        window.setTimeout(done,1200);
+      }else resolve();
+    });
+    viewerPreloadCache.current.set(src,task);
+    return task;
+  };
+  const navigateViewer=(direction:1|-1)=>{
+    if(viewerIndex===null||works.length<2||viewerTransitioning.current)return;
+    const target=(viewerIndex+direction+works.length)%works.length;
+    const targetSrc=works[target];
+    viewerTransitioning.current=true;
+    setViewerDirection(direction);
+    void preloadViewerMedia(targetSrc).finally(()=>{
+      setViewerMotion('out');
+      if(viewerMotionTimer.current!==null)window.clearTimeout(viewerMotionTimer.current);
+      viewerMotionTimer.current=window.setTimeout(()=>{
+        setViewerPlaying(false);
+        setViewerTime(0);
+        setViewerDuration(0);
+        setViewerIndex(target);
+        setViewerMotion('in');
+        viewerMotionTimer.current=window.setTimeout(()=>{
+          setViewerMotion('idle');
+          viewerTransitioning.current=false;
+          viewerMotionTimer.current=null;
+        },460);
+      },150);
+    });
+  };
+  const viewerPrev=()=>navigateViewer(-1);
+  const viewerNext=()=>navigateViewer(1);
+  const openViewer=(i:number)=>{
+    setViewerClosing(false);
+    setViewerMotion('idle');
+    setViewerPlaying(false);
+    setViewerTime(0);
+    setViewerDuration(0);
+    setViewerIndex(i);
+    viewerTransitioning.current=false;
+    void preloadViewerMedia(works[i]||'');
+    if(works.length>1){
+      void preloadViewerMedia(works[(i-1+works.length)%works.length]||'');
+      void preloadViewerMedia(works[(i+1)%works.length]||'');
+    }
+  };
   const closeViewer=()=>{
     if(viewerIndex===null||viewerClosing)return;
     setViewerClosing(true);
-    window.setTimeout(()=>{setViewerIndex(null);setViewerClosing(false)},260);
+    viewerTransitioning.current=false;
+    if(viewerMotionTimer.current!==null){window.clearTimeout(viewerMotionTimer.current);viewerMotionTimer.current=null}
+    window.setTimeout(()=>{setViewerIndex(null);setViewerClosing(false);setViewerMotion('idle')},420);
   };
 
   const toggleViewerVideo=()=>{
@@ -74,6 +148,9 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     setViewerPlaying(false);
     setViewerTime(0);
     setViewerDuration(0);
+    setViewerMotion('idle');
+    viewerTransitioning.current=false;
+    if(viewerMotionTimer.current!==null){window.clearTimeout(viewerMotionTimer.current);viewerMotionTimer.current=null}
     window.scrollTo({top:0,behavior:'auto'});
     if(changed){
       setMemberMotion('entering');
@@ -81,7 +158,16 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
       memberSwitchTimer.current=window.setTimeout(()=>{setMemberMotion('idle');memberSwitchTimer.current=null},680);
     }
   },[member.id]);
-  useEffect(()=>()=>{if(memberSwitchTimer.current!==null)window.clearTimeout(memberSwitchTimer.current)},[]);
+  useEffect(()=>()=>{if(memberSwitchTimer.current!==null)window.clearTimeout(memberSwitchTimer.current);if(viewerMotionTimer.current!==null)window.clearTimeout(viewerMotionTimer.current)},[]);
+  useEffect(()=>{
+    if(viewerIndex!==null&&works.length){
+      void preloadViewerMedia(works[viewerIndex]||'');
+      if(works.length>1){
+        void preloadViewerMedia(works[(viewerIndex-1+works.length)%works.length]||'');
+        void preloadViewerMedia(works[(viewerIndex+1)%works.length]||'');
+      }
+    }
+  },[viewerIndex,works]);
   useEffect(()=>{
     const current=viewerIndex===null?'':works[viewerIndex]||'';
     const isVideo=!!current&&teamMediaType(current)==='video';
@@ -123,14 +209,34 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const beginViewerSwipe=(e:ReactPointerEvent<HTMLElement>)=>{
     if(e.pointerType==='mouse'&&e.button!==0)return;
     if((e.target as HTMLElement).closest('.team-media-video-controls,.team-media-center-play,.team-media-control,[data-slot="slider"]'))return;
+    if(viewerTransitioning.current)return;
     e.stopPropagation();
     e.currentTarget.setPointerCapture?.(e.pointerId);
     begin(e.clientX);
   };
+  const moveViewerSwipe=(e:ReactPointerEvent<HTMLElement>)=>{
+    if(dragStart.current===null||viewerTransitioning.current)return;
+    const dx=e.clientX-dragStart.current;
+    const card=e.currentTarget.closest('.team-media-card') as HTMLElement|null;
+    if(card){
+      card.style.setProperty('--viewer-drag-x',Math.max(-46,Math.min(46,dx*.24)).toFixed(1)+'px');
+      card.style.setProperty('--viewer-drag-tilt',(Math.max(-1,Math.min(1,dx/180))*1.15).toFixed(2)+'deg');
+    }
+  };
   const endViewerSwipe=(e:ReactPointerEvent<HTMLElement>)=>{
     e.stopPropagation();
+    const card=e.currentTarget.closest('.team-media-card') as HTMLElement|null;
+    card?.style.removeProperty('--viewer-drag-x');
+    card?.style.removeProperty('--viewer-drag-tilt');
     e.currentTarget.releasePointerCapture?.(e.pointerId);
     end(e.clientX,d=>d>0?viewerNext():viewerPrev());
+  };
+  const cancelViewerSwipe=(e:ReactPointerEvent<HTMLElement>)=>{
+    dragStart.current=null;
+    const card=e.currentTarget.closest('.team-media-card') as HTMLElement|null;
+    card?.style.removeProperty('--viewer-drag-x');
+    card?.style.removeProperty('--viewer-drag-tilt');
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
   };
 
   const reactPointer=(e:ReactPointerEvent<HTMLElement>)=>{
@@ -337,7 +443,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           const src=works[viewerIndex];
           const type=teamMediaType(src);
           const label=type==='video'?'FILM':type==='image'?'IMAGE':'3D';
-          return <div className={'team-media-viewer team-media-type-'+type} onPointerDown={e=>begin(e.clientX)} onPointerUp={e=>end(e.clientX,d=>d>0?viewerNext():viewerPrev())} onClick={e=>{if(swiped.current){swiped.current=false;return}if(!(e.target as HTMLElement).closest('.team-media-card'))closeViewer()}}>
+          return <div className={'team-media-viewer team-media-type-'+type+' viewer-motion-'+viewerMotion+' viewer-direction-'+(viewerDirection>0?'next':'prev')} onClick={e=>{if(swiped.current){swiped.current=false;return}if(!(e.target as HTMLElement).closest('.team-media-card'))closeViewer()}}>
             <div className="team-media-backdrop" aria-hidden="true">
               {type!=='model'&&<TeamMedia key={src+'-backdrop'} src={src} alt="" className="team-media-backdrop-media" autoPlay/>}
             </div>
@@ -350,7 +456,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
                 </div>
                 <span className="team-media-card-gesture-hint" aria-hidden="true">DRAG / SWIPE</span>
               </div>
-              <div className="team-media-foreground" onPointerDown={beginViewerSwipe} onPointerUp={endViewerSwipe} onPointerCancel={e=>{dragStart.current=null;e.currentTarget.releasePointerCapture?.(e.pointerId)}}>
+              <div className="team-media-foreground" onPointerDown={beginViewerSwipe} onPointerMove={moveViewerSwipe} onPointerUp={endViewerSwipe} onPointerCancel={cancelViewerSwipe}>
                 {type==='video'?<>
                   <video ref={viewerVideoRef} key={src} className="team-media-viewer-media team-media-video" src={src} playsInline preload="auto" autoPlay loop muted={viewerMuted} onCanPlay={e=>e.currentTarget.play().catch(()=>{})} onLoadedMetadata={e=>setViewerDuration(e.currentTarget.duration||0)} onTimeUpdate={e=>setViewerTime(e.currentTarget.currentTime||0)} onPlay={()=>setViewerPlaying(true)} onPause={()=>setViewerPlaying(false)} onEnded={()=>setViewerPlaying(false)} onClick={e=>{e.stopPropagation();if(swiped.current){swiped.current=false;return}toggleViewerVideo()}}/>
                   {!viewerPlaying&&<button type="button" className="team-media-center-play" aria-label="영상 재생" onClick={e=>{e.stopPropagation();toggleViewerVideo()}}><Play size={22} fill="currentColor"/></button>}
