@@ -1,7 +1,7 @@
-html{scroll-behavior:smooth}
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "../vendor/shadcn-tailwind-4.13.0.css";
+html{scroll-behavior:smooth}
 :root{--background:#fafafa;--foreground:#111;--card:#fff;--card-foreground:#111;--popover:#fff;--popover-foreground:#111;--primary:#111;--primary-foreground:#fff;--secondary:#ececec;--secondary-foreground:#111;--muted:#e5e5e5;--muted-foreground:#666;--accent:#eee;--accent-foreground:#111;--border:#dedede;--input:#ddd;--ring:#aaa;--radius:1rem;--surface:255,255,255;--line:#0002;--soft:#666;--page:#fafafa;--ink:#111}
 :root[data-theme=dark]{--background:#090909;--foreground:#f5f5f5;--card:#141414;--card-foreground:#fff;--popover:#171717;--popover-foreground:#fff;--primary:#f5f5f5;--primary-foreground:#090909;--secondary:#222;--secondary-foreground:#eee;--muted:#333;--muted-foreground:#aaa;--accent:#222;--accent-foreground:#fff;--border:#333;--input:#333;--ring:#666;--surface:24,24,24;--line:#fff3;--soft:#999;--page:#090909;--ink:#f5f5f5}
 @theme inline{--color-background:var(--background);--color-foreground:var(--foreground);--color-popover:var(--popover);--color-popover-foreground:var(--popover-foreground);--color-primary:var(--primary);--color-primary-foreground:var(--primary-foreground);--color-muted:var(--muted);--color-muted-foreground:var(--muted-foreground);--color-accent:var(--accent);--color-accent-foreground:var(--accent-foreground);--color-border:var(--border);--color-input:var(--input);--color-ring:var(--ring)}
