@@ -5,13 +5,17 @@ import {Dialog,DialogContent,DialogTitle} from '@/components/ui/dialog';
 import type {Config,TeamMember} from './defaults';
 import TeamMedia from './team-media';
 
-export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onToggleTheme,onContact,onAdmin}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void}){
+export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onSelectMember,onToggleTheme,onContact,onAdmin}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onSelectMember:(member:TeamMember)=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void}){
   const [index,setIndex]=useState(0);
   const [viewerIndex,setViewerIndex]=useState<number|null>(null);
   const [viewerClosing,setViewerClosing]=useState(false);
   const dragStart=useRef<number|null>(null);
   const swiped=useRef(false);
   const works=useMemo(()=>member.works||[],[member.works]);
+  const teamMembers=useMemo(()=>(config.teamMembers||[]).filter(item=>item.visible),[config.teamMembers]);
+  const memberIndex=Math.max(0,teamMembers.findIndex(item=>item.id===member.id));
+  const memberPrev=()=>teamMembers.length&&onSelectMember(teamMembers[(memberIndex-1+teamMembers.length)%teamMembers.length]);
+  const memberNext=()=>teamMembers.length&&onSelectMember(teamMembers[(memberIndex+1)%teamMembers.length]);
   const prev=()=>setIndex(i=>(i-1+works.length)%works.length);
   const next=()=>setIndex(i=>(i+1)%works.length);
   const viewerPrev=()=>setViewerIndex(i=>i===null?null:(i-1+works.length)%works.length);
@@ -132,6 +136,27 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
         </div>
       </section>
 
+      {teamMembers.length>1&&<section className="team-portfolio-member-index" aria-label="Team member navigation">
+        <div className="team-member-index-head">
+          <span>TEAM INDEX / {String(memberIndex+1).padStart(2,'0')} — {String(teamMembers.length).padStart(2,'0')}</span>
+          <div className="team-member-index-arrows">
+            <button type="button" aria-label="이전 팀원" onClick={memberPrev}><ChevronLeft size={17}/></button>
+            <button type="button" aria-label="다음 팀원" onClick={memberNext}><ChevronRight size={17}/></button>
+          </div>
+        </div>
+        <div className="team-member-index-list">
+          {teamMembers.map((item,i)=>{
+            const active=item.id===member.id;
+            const code=(item.codeName||item.name?.slice(0,1)||String(i+1)).toUpperCase();
+            return <button type="button" key={item.id} className={active?'active':''} aria-current={active?'page':undefined} onClick={()=>!active&&onSelectMember(item)}>
+              <span className="team-member-code">{code}</span>
+              <span className="team-member-index-name">{item.name||'Unnamed'}</span>
+              <span className="team-member-index-number">{String(i+1).padStart(2,'0')}</span>
+            </button>;
+          })}
+        </div>
+      </section>}
+
       <section className="team-portfolio-work">
         <div className="team-portfolio-work-head">
           <div>
@@ -165,7 +190,12 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
       </section>
     </main>
 
-    <footer className="team-portfolio-footer"><span>© 2026 {config.name}</span><button type="button" onClick={onBack}>Back to team</button></footer>
+    {teamMembers.length>1&&<nav className="team-portfolio-member-switch" aria-label="Previous and next team member">
+      <button type="button" onClick={memberPrev}><ChevronLeft size={17}/><span><small>PREVIOUS</small>{teamMembers[(memberIndex-1+teamMembers.length)%teamMembers.length]?.name}</span></button>
+      <button type="button" onClick={memberNext}><span><small>NEXT</small>{teamMembers[(memberIndex+1)%teamMembers.length]?.name}</span><ChevronRight size={17}/></button>
+    </nav>}
+
+        <footer className="team-portfolio-footer"><span>© 2026 {config.name}</span><button type="button" onClick={onBack}>Back to team</button></footer>
 
     <Dialog open={viewerIndex!==null&&!viewerClosing} onOpenChange={open=>!open&&closeViewer()}>
       <DialogContent className="team-media-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}>
