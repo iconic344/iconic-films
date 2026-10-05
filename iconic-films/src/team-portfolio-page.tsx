@@ -485,7 +485,8 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           const label=type==='video'?'FILM':type==='image'?'IMAGE':'3D';
           return <div className={'team-media-viewer team-media-type-'+type+' viewer-motion-'+viewerMotion+' viewer-direction-'+(viewerDirection>0?'next':'prev')} onClick={e=>{if(swiped.current){swiped.current=false;return}if(!(e.target as HTMLElement).closest('.team-media-card'))closeViewer()}}>
             <div className="team-media-backdrop" aria-hidden="true">
-              {type!=='model'&&<TeamMedia key={src+'-backdrop'} src={src} alt="" className="team-media-backdrop-media" autoPlay/>}
+              {type==='image'&&<TeamMedia key={src+'-backdrop'} src={src} alt="" className="team-media-backdrop-media" autoPlay/>}
+              {type==='video'&&<span className="team-media-video-ambient"/>}
             </div>
             <div className={'team-media-card '+(type==='video'?'team-media-card--video':'team-media-card--still')}>
               <div className="team-media-card-head">
