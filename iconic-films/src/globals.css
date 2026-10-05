@@ -5861,3 +5861,27 @@ html{scrollbar-gutter:stable}
   }
   .team-portfolio-member-switch>button{min-height:62px}
 }
+
+
+/* Keep scrolling functional while removing native scrollbar chrome everywhere.
+   This also prevents dialogs/admin overlays from making the layout jump when body scroll is locked. */
+html,body,*{
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar{
+  width:0!important;
+  height:0!important;
+  display:none!important;
+  background:transparent!important;
+}
+html{overflow-y:auto}
+body[data-scroll-locked]{
+  margin-right:0!important;
+  padding-right:0!important;
+}
+body{
+  --removed-body-scroll-bar-size:0px!important;
+}
