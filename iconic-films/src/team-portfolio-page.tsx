@@ -99,8 +99,8 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
       viewerMusicHeld.current=false;
       onVideoViewerClose();
     }
-  },[viewerIndex,works,onVideoViewerOpen,onVideoViewerClose]);
-  useEffect(()=>()=>{if(viewerMusicHeld.current){viewerMusicHeld.current=false;onVideoViewerClose()}},[onVideoViewerClose]);
+  },[viewerIndex,works]);
+  useEffect(()=>()=>{if(viewerMusicHeld.current){viewerMusicHeld.current=false;onVideoViewerClose()}},[]);
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>{
       if(viewerIndex!==null){
