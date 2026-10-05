@@ -232,7 +232,7 @@ export default function Home(){
  function closeTeamPortfolio(){leaveTeamPortfolio('team')}
  if(!loaded)return <div className="site-boot" role="status" aria-label="Loading"><span className="site-boot-progress" aria-hidden="true"><i/></span></div>;
  const routedMember=teamRoute?c.teamMembers.find(member=>(member.portfolioSlug||member.id)===teamRoute&&member.visible):null;
- const teamPage=teamRoute&&routedMember?<div className={'team-page-shell '+(teamPageClosing?'is-closing':'')}><TeamPortfolioPage config={c} member={routedMember} theme={theme} onBack={closeTeamPortfolio} onNavigate={leaveTeamPortfolio} onToggleTheme={()=>{const v=theme==='light'?'dark':'light';setTheme(v);localStorage.setItem('iconic-theme',v)}} onContact={()=>setContactOpen(true)} onAdmin={enter}/></div>:null;
+ const teamPage=teamRoute&&routedMember?<div className={'team-page-shell '+(teamPageClosing?'is-closing':'')}><TeamPortfolioPage config={c} member={routedMember} theme={theme} onBack={closeTeamPortfolio} onNavigate={leaveTeamPortfolio} onSelectMember={openTeamPortfolio} onToggleTheme={()=>{const v=theme==='light'?'dark':'light';setTheme(v);localStorage.setItem('iconic-theme',v)}} onContact={()=>setContactOpen(true)} onAdmin={enter}/></div>:null;
  const editorGroups=[
   {id:'site',label:'사이트',tabs:[['content','콘텐츠'],['layout','레이아웃'],['design','디자인'],['logo','메인 로고']]},
   {id:'visual',label:'비주얼',tabs:[['scene','이미지 & 3D'],['background','배경 & 패턴'],['motion','모션']]},
