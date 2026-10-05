@@ -5917,3 +5917,47 @@ body{
     padding-bottom:52px!important;
   }
 }
+
+
+/* 2026-10-05 team admin independent rails */
+/* Team typography stays in the left rail while brand + every current/future member
+   flow independently down the right rail, so the empty right-side space is used. */
+.team-editor-stack{
+  grid-template-columns:1fr!important;
+}
+.team-editor-dashboard{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:24px;
+  align-items:start;
+  min-width:0;
+}
+.team-editor-left-rail,
+.team-editor-right-rail{
+  display:grid;
+  gap:24px;
+  align-content:start;
+  min-width:0;
+}
+.team-editor-dashboard .team-editor-card,
+.team-editor-dashboard .team-editor-empty{
+  grid-column:auto!important;
+  min-width:0;
+}
+.team-editor-right-rail .team-editor-grid{
+  grid-template-columns:1fr!important;
+  gap:20px!important;
+}
+.team-editor-right-rail .team-editor-works{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+@media(max-width:1200px){
+  .team-editor-dashboard{grid-template-columns:1fr}
+  .team-editor-left-rail,
+  .team-editor-right-rail{width:100%}
+}
+@media(max-width:720px){
+  .team-editor-dashboard{gap:18px}
+  .team-editor-left-rail,
+  .team-editor-right-rail{gap:18px}
+}
