@@ -42,6 +42,11 @@ export default function Home(){
   return()=>query.removeEventListener?.('change',sync);
  },[]);
  useEffect(()=>{
+  const mobileQuery=window.matchMedia('(max-width: 820px), (max-width: 1180px) and (any-pointer: coarse)');
+  if(!mobileQuery.matches){
+   delete document.documentElement.dataset.immersive;
+   return;
+  }
   const root=document.documentElement as any;
   const doc=document as any;
   const canFullscreen=()=>Boolean(root.requestFullscreen||root.webkitRequestFullscreen);
@@ -61,25 +66,10 @@ export default function Home(){
     return isFullscreen();
    }catch{return false}
   };
-  const exitImmersive=async()=>{
-   try{
-    if(document.exitFullscreen)await document.exitFullscreen();
-    else if(doc.webkitExitFullscreen)await doc.webkitExitFullscreen();
-   }catch{}
-   syncImmersiveState();
-  };
   const disarmAuto=()=>{autoArmed=false;window.removeEventListener('pointerup',onFirstGesture)};
   const onFirstGesture=()=>{
    if(!autoArmed)return;
    void requestImmersive().then(ok=>{if(ok)disarmAuto()});
-  };
-  const onKeyDown=(event:KeyboardEvent)=>{
-   if(event.key!=='F11'||!canFullscreen())return;
-   event.preventDefault();
-   autoArmed=false;
-   window.removeEventListener('pointerup',onFirstGesture);
-   if(isFullscreen())void exitImmersive();
-   else void requestImmersive();
   };
   const onFullscreenChange=()=>{
    syncImmersiveState();
@@ -88,12 +78,10 @@ export default function Home(){
   syncImmersiveState();
   void requestImmersive().then(ok=>{if(ok)disarmAuto()});
   window.addEventListener('pointerup',onFirstGesture,{passive:true});
-  window.addEventListener('keydown',onKeyDown);
   document.addEventListener('fullscreenchange',onFullscreenChange);
   document.addEventListener('webkitfullscreenchange',onFullscreenChange as EventListener);
   return()=>{
    window.removeEventListener('pointerup',onFirstGesture);
-   window.removeEventListener('keydown',onKeyDown);
    document.removeEventListener('fullscreenchange',onFullscreenChange);
    document.removeEventListener('webkitfullscreenchange',onFullscreenChange as EventListener);
    delete document.documentElement.dataset.immersive;
