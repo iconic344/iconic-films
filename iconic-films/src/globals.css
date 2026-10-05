@@ -7315,3 +7315,24 @@ body{
   .team-media-seek{grid-column:2!important}
   .team-media-video-controls>.team-media-control:last-child{grid-column:3!important}
 }
+
+
+/* 2026-10-05 direct media surface swipe */
+/* The photo/video itself is the gesture surface on desktop and touch devices. */
+.team-media-foreground{
+  cursor:grab!important;
+  touch-action:pan-y!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
+}
+.team-media-foreground:active{
+  cursor:grabbing!important;
+}
+.team-media-viewer-media,
+.team-media-foreground>img,
+.team-media-foreground>video{
+  -webkit-user-drag:none!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
+  touch-action:pan-y!important;
+}
