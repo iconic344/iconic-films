@@ -7455,3 +7455,45 @@ body{
     animation:none!important;
   }
 }
+
+
+/* 2026-10-05 iOS hero video rounded-corner seam fix */
+/* iOS Safari can composite <video> outside/inside rounded parents on a separate layer,
+   leaving bright triangular corner seams. Force one shared clipped layer on phones only. */
+@media (max-width:820px) and (any-pointer:coarse){
+  .hero .film-frame{
+    position:relative!important;
+    overflow:hidden!important;
+    isolation:isolate!important;
+    contain:paint!important;
+    background:#111!important;
+    -webkit-clip-path:inset(0 round min(var(--round),22px))!important;
+    clip-path:inset(0 round min(var(--round),22px))!important;
+    -webkit-mask-image:-webkit-radial-gradient(white,black)!important;
+  }
+  .hero .film-surface{
+    inset:-1px!important;
+    overflow:hidden!important;
+    border-radius:inherit!important;
+    background:#111!important;
+    -webkit-clip-path:inset(0 round min(var(--round),22px))!important;
+    clip-path:inset(0 round min(var(--round),22px))!important;
+    -webkit-mask-image:-webkit-radial-gradient(white,black)!important;
+  }
+  .hero .film-surface>video,
+  .hero .film-surface>img{
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    border-radius:inherit!important;
+    object-fit:cover!important;
+    transform:none!important;
+    -webkit-transform:none!important;
+    -webkit-clip-path:inset(0 round min(var(--round),22px))!important;
+    clip-path:inset(0 round min(var(--round),22px))!important;
+  }
+  .hero .frame-caption{
+    overflow:hidden!important;
+    border-radius:0 0 min(var(--round),22px) min(var(--round),22px)!important;
+  }
+}
