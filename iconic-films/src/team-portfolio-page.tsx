@@ -512,6 +512,10 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
                 </>:<TeamMedia key={src} src={src} alt={(member.name||'Team member')+' portfolio '+(viewerIndex+1)} className="team-media-viewer-media" interactive autoPlay/>}
               </div>
             </div>
+            {works.length>1&&<>
+              <button type="button" className="team-media-nav is-prev" aria-label="이전 미디어" onPointerDown={e=>e.stopPropagation()} onPointerUp={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();viewerPrev()}}><ChevronLeft size={22}/></button>
+              <button type="button" className="team-media-nav is-next" aria-label="다음 미디어" onPointerDown={e=>e.stopPropagation()} onPointerUp={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();viewerNext()}}><ChevronRight size={22}/></button>
+            </>}
             <span className="team-media-count">{String(viewerIndex+1).padStart(2,'0')} / {String(works.length).padStart(2,'0')}</span>
           </div>;
         })()}
