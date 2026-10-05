@@ -511,11 +511,20 @@ export default async function handler(req:Req,res:ServerResponse){
 
       if(method==='DELETE'){
         await requireAdmin(req);
-        const input=await body(req),id=input?.id;
-        if(typeof id!=='string'||!uuid.test(id))throw new HttpError(400,'문의 ID가 올바르지 않습니다.');
+        const input=await body(req);
         const inbox=await getContactInbox();
-        await putContactInbox(inbox.filter(item=>item.id!==id));
-        json(res,{ok:true});return;
+
+        if(input?.all===true){
+          await putContactInbox([]);
+          json(res,{ok:true,deleted:inbox.length});return;
+        }
+
+        const ids=Array.isArray(input?.ids)?input.ids:(typeof input?.id==='string'?[input.id]:[]);
+        if(!ids.length||ids.length>500||ids.some((id:any)=>typeof id!=='string'||!uuid.test(id)))throw new HttpError(400,'삭제할 문의 ID가 올바르지 않습니다.');
+        const removeSet=new Set(ids);
+        const next=inbox.filter(item=>!removeSet.has(item.id));
+        await putContactInbox(next);
+        json(res,{ok:true,deleted:inbox.length-next.length});return;
       }
     }
 
