@@ -42,6 +42,64 @@ export default function Home(){
   return()=>query.removeEventListener?.('change',sync);
  },[]);
  useEffect(()=>{
+  const root=document.documentElement as any;
+  const doc=document as any;
+  const canFullscreen=()=>Boolean(root.requestFullscreen||root.webkitRequestFullscreen);
+  const isFullscreen=()=>Boolean(document.fullscreenElement||doc.webkitFullscreenElement);
+  const isStandalone=()=>window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches||Boolean((navigator as any).standalone);
+  let autoArmed=true;
+  const syncImmersiveState=()=>{
+   document.documentElement.dataset.immersive=(isFullscreen()||isStandalone())?'true':'false';
+  };
+  const requestImmersive=async()=>{
+   if(isFullscreen()||isStandalone()){syncImmersiveState();return true}
+   if(!canFullscreen())return false;
+   try{
+    if(root.requestFullscreen)await root.requestFullscreen({navigationUI:'hide'});
+    else await root.webkitRequestFullscreen();
+    syncImmersiveState();
+    return isFullscreen();
+   }catch{return false}
+  };
+  const exitImmersive=async()=>{
+   try{
+    if(document.exitFullscreen)await document.exitFullscreen();
+    else if(doc.webkitExitFullscreen)await doc.webkitExitFullscreen();
+   }catch{}
+   syncImmersiveState();
+  };
+  const disarmAuto=()=>{autoArmed=false;window.removeEventListener('pointerup',onFirstGesture)};
+  const onFirstGesture=()=>{
+   if(!autoArmed)return;
+   void requestImmersive().then(ok=>{if(ok)disarmAuto()});
+  };
+  const onKeyDown=(event:KeyboardEvent)=>{
+   if(event.key!=='F11'||!canFullscreen())return;
+   event.preventDefault();
+   autoArmed=false;
+   window.removeEventListener('pointerup',onFirstGesture);
+   if(isFullscreen())void exitImmersive();
+   else void requestImmersive();
+  };
+  const onFullscreenChange=()=>{
+   syncImmersiveState();
+   if(isFullscreen())disarmAuto();
+  };
+  syncImmersiveState();
+  void requestImmersive().then(ok=>{if(ok)disarmAuto()});
+  window.addEventListener('pointerup',onFirstGesture,{passive:true});
+  window.addEventListener('keydown',onKeyDown);
+  document.addEventListener('fullscreenchange',onFullscreenChange);
+  document.addEventListener('webkitfullscreenchange',onFullscreenChange as EventListener);
+  return()=>{
+   window.removeEventListener('pointerup',onFirstGesture);
+   window.removeEventListener('keydown',onKeyDown);
+   document.removeEventListener('fullscreenchange',onFullscreenChange);
+   document.removeEventListener('webkitfullscreenchange',onFullscreenChange as EventListener);
+   delete document.documentElement.dataset.immersive;
+  };
+ },[]);
+ useEffect(()=>{
   document.title=(c.browserTitle||'VIIVIIsara®').trim()||'VIIVIIsara®';
   let link=document.head.querySelector<HTMLLinkElement>('link[data-site-favicon="true"]');
   if(c.favicon){
