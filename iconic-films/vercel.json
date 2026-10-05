@@ -4,14 +4,57 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/index.ts": {"includeFiles": "src/site-config.json", "maxDuration": 60}
+    "api/index.ts": {
+      "includeFiles": "src/site-config.json",
+      "maxDuration": 60
+    }
   },
   "rewrites": [
-    {"source": "/api/:path*", "destination": "/api?__iconicPath=:path*"},
-    {"source": "/team/:path*", "destination": "/index.html"}
+    {
+      "source": "/api/:path*",
+      "destination": "/api?__iconicPath=:path*"
+    },
+    {
+      "source": "/team/:path*",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
-    {"source": "/api/:path*", "headers": [{"key":"Cache-Control","value":"no-store"}]},
-    {"source": "/media/:path*", "headers": [{"key":"X-Content-Type-Options","value":"nosniff"}]}
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/team/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/media/:path*",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
   ]
 }
