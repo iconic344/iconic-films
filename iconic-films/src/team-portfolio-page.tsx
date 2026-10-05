@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent} from 'react';
-import {ArrowUpRight,ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,Moon,Sun,Play,Pause,Volume2,VolumeX,Maximize2} from 'lucide-react';
+import {ArrowUpRight,ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,Moon,Sun,Play,Pause,Volume2,VolumeX} from 'lucide-react';
 import {Dialog,DialogContent,DialogTitle} from '@/components/ui/dialog';
 import {Slider} from '@/components/ui/slider';
 import type {Config,TeamMember} from './defaults';
@@ -63,13 +63,6 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     if(!video)return;
     video.currentTime=Math.max(0,Math.min(value,viewerDuration||video.duration||0));
     setViewerTime(video.currentTime||0);
-  };
-  const fullscreenViewerMedia=()=>{
-    const node=viewerVideoRef.current?.closest('.team-media-card') as HTMLElement|null;
-    if(!node)return;
-    const anyNode=node as HTMLElement&{webkitRequestFullscreen?:()=>Promise<void>|void};
-    if(node.requestFullscreen)node.requestFullscreen().catch(()=>{});
-    else anyNode.webkitRequestFullscreen?.();
   };
 
   useEffect(()=>{
@@ -354,7 +347,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
                     <Slider className="team-media-seek" aria-label="영상 위치" value={[Math.min(viewerTime,viewerDuration||0)]} min={0} max={Math.max(viewerDuration,1)} step={.1} onValueChange={v=>seekViewerVideo(v[0])}/>
                     <span className="team-media-time team-media-time-end">{fmtMediaTime(viewerDuration)}</span>
                     <button type="button" className="team-media-control" aria-label={viewerMuted?'소리 켜기':'음소거'} onClick={()=>setViewerMuted(v=>!v)}>{viewerMuted?<VolumeX size={17}/>:<Volume2 size={17}/>}</button>
-                    <button type="button" className="team-media-control" aria-label="전체 화면" onClick={fullscreenViewerMedia}><Maximize2 size={16}/></button>
+                    
                   </div>
                 </>:<TeamMedia key={src} src={src} alt={(member.name||'Team member')+' portfolio '+(viewerIndex+1)} className="team-media-viewer-media" interactive autoPlay/>}
               </div>
