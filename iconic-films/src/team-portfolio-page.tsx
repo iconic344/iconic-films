@@ -227,7 +227,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           {teamMembers.map((item,i)=>{
             const active=item.id===member.id;
             const code=(item.codeName||item.name?.slice(0,1)||String(i+1)).toUpperCase();
-            const direction:i extends never?never:1|-1=i===memberIndex?1:(i>memberIndex?1:-1);
+            const direction:1|-1=i>memberIndex?1:-1;
             return <button type="button" key={item.id} className={(active?'active ':'')+'member-reactive'} aria-current={active?'page':undefined} onPointerMove={reactPointer} onPointerLeave={resetPointer} onClick={()=>{if(memberSwipeMoved.current){memberSwipeMoved.current=false;return}if(!active)selectMember(item,direction)}}>
               <span className="team-member-code">{code}</span>
               <span className="team-member-index-name">{item.name||'Unnamed'}</span>
