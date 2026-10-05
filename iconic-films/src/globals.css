@@ -7336,3 +7336,122 @@ body{
   -webkit-user-select:none!important;
   touch-action:pan-y!important;
 }
+
+
+/* 2026-10-05 smooth mobile media paging + iPad safe header */
+/* The visible media follows the finger/mouse a little, then springs back.
+   Actual page changes are preloaded in JS and cross-fade instead of flashing an empty header card. */
+.team-media-card{
+  transform:translate3d(var(--viewer-drag-x,0px),0,0) rotateZ(var(--viewer-drag-tilt,0deg))!important;
+  transition:
+    transform .62s cubic-bezier(.16,1,.3,1),
+    opacity .34s ease,
+    filter .42s ease!important;
+  will-change:transform,opacity,filter;
+}
+.team-media-viewer.viewer-motion-out.viewer-direction-next .team-media-card{
+  animation:team-viewer-out-next .15s cubic-bezier(.4,0,.2,1) both!important;
+}
+.team-media-viewer.viewer-motion-out.viewer-direction-prev .team-media-card{
+  animation:team-viewer-out-prev .15s cubic-bezier(.4,0,.2,1) both!important;
+}
+.team-media-viewer.viewer-motion-in.viewer-direction-next .team-media-card{
+  animation:team-viewer-in-next .46s cubic-bezier(.16,1,.3,1) both!important;
+}
+.team-media-viewer.viewer-motion-in.viewer-direction-prev .team-media-card{
+  animation:team-viewer-in-prev .46s cubic-bezier(.16,1,.3,1) both!important;
+}
+.team-media-viewer.viewer-motion-out .team-media-backdrop{
+  animation:team-viewer-backdrop-out .15s ease both!important;
+}
+.team-media-viewer.viewer-motion-in .team-media-backdrop{
+  animation:team-viewer-backdrop-in .46s cubic-bezier(.16,1,.3,1) both!important;
+}
+@keyframes team-viewer-out-next{
+  from{opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1)}
+  to{opacity:0;filter:blur(7px);transform:translate3d(-22px,0,0) scale(.992)}
+}
+@keyframes team-viewer-out-prev{
+  from{opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1)}
+  to{opacity:0;filter:blur(7px);transform:translate3d(22px,0,0) scale(.992)}
+}
+@keyframes team-viewer-in-next{
+  0%{opacity:0;filter:blur(8px);transform:translate3d(24px,0,0) scale(.992)}
+  62%{opacity:1;filter:blur(1px);transform:translate3d(-1px,0,0) scale(1.001)}
+  100%{opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1)}
+}
+@keyframes team-viewer-in-prev{
+  0%{opacity:0;filter:blur(8px);transform:translate3d(-24px,0,0) scale(.992)}
+  62%{opacity:1;filter:blur(1px);transform:translate3d(1px,0,0) scale(1.001)}
+  100%{opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1)}
+}
+@keyframes team-viewer-backdrop-out{
+  from{opacity:1}
+  to{opacity:.72}
+}
+@keyframes team-viewer-backdrop-in{
+  from{opacity:.64;filter:saturate(.82)}
+  to{opacity:1;filter:saturate(1)}
+}
+
+/* Open/close feels like an iOS sheet dissolving into the page instead of abruptly disappearing. */
+.team-media-dialog[data-state="open"]{
+  animation:team-viewer-shell-open .48s cubic-bezier(.16,1,.3,1) both!important;
+}
+.team-media-dialog[data-state="closed"]{
+  animation:team-viewer-shell-close .38s cubic-bezier(.4,0,.2,1) both!important;
+}
+.team-media-dialog[data-state="closed"] .team-media-card{
+  animation:team-viewer-card-close .36s cubic-bezier(.4,0,.2,1) both!important;
+}
+.team-media-dialog[data-state="closed"] .team-media-backdrop{
+  animation:team-viewer-backdrop-close .38s ease both!important;
+}
+@keyframes team-viewer-shell-open{
+  from{opacity:0}
+  to{opacity:1}
+}
+@keyframes team-viewer-shell-close{
+  from{opacity:1}
+  to{opacity:0}
+}
+@keyframes team-viewer-card-close{
+  from{opacity:1;filter:blur(0);transform:scale(1)}
+  to{opacity:0;filter:blur(7px);transform:scale(.975)}
+}
+@keyframes team-viewer-backdrop-close{
+  from{opacity:1}
+  to{opacity:0}
+}
+
+/* iPad Safari: keep the sticky header beneath the browser/status-area chrome.
+   Phones keep their existing layout; desktop is untouched. */
+@media (min-width:821px) and (max-width:1180px) and (any-pointer:coarse){
+  html{scroll-padding-top:112px!important}
+  .nav,
+  .team-portfolio-site-nav{
+    top:max(18px,calc(env(safe-area-inset-top) + 12px))!important;
+    margin-top:max(16px,calc(env(safe-area-inset-top) + 10px))!important;
+  }
+}
+
+/* On touch screens keep the transition GPU-backed and never show native image drag ghosts. */
+@media (max-width:1180px) and (any-pointer:coarse){
+  .team-media-card,
+  .team-media-foreground,
+  .team-media-viewer-media{
+    -webkit-transform:translateZ(0);
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .team-media-viewer.viewer-motion-out .team-media-card,
+  .team-media-viewer.viewer-motion-in .team-media-card,
+  .team-media-dialog[data-state="open"],
+  .team-media-dialog[data-state="closed"],
+  .team-media-dialog[data-state="closed"] .team-media-card,
+  .team-media-dialog[data-state="closed"] .team-media-backdrop{
+    animation:none!important;
+  }
+}
