@@ -34,7 +34,7 @@ export default function TeamMedia({src,alt='',className='',interactive=false,aut
     observer.observe(video);
     return()=>observer.disconnect();
   },[type,interactive,autoPlay,src]);
-  if(type==='video')return <video ref={videoRef} className={className} src={src} muted loop playsInline preload={autoPlay?'auto':'metadata'} controls={interactive} autoPlay={autoPlay} onCanPlay={e=>{if(autoPlay)e.currentTarget.play().catch(()=>{})}} onPointerEnter={e=>{if(!interactive&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.play().catch(()=>{})}} onPointerLeave={e=>{if(!interactive&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.pause()}}/>;
+  if(type==='video')return <video ref={videoRef} className={className} src={src} draggable={false} muted loop playsInline preload={autoPlay?'auto':'metadata'} controls={interactive} autoPlay={autoPlay} onCanPlay={e=>{if(autoPlay)e.currentTarget.play().catch(()=>{})}} onPointerEnter={e=>{if(!interactive&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.play().catch(()=>{})}} onPointerLeave={e=>{if(!interactive&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.pause()}}/>;
   if(type==='model')return modelReady?createElement('model-viewer',{
     class:className,
     src,
@@ -46,5 +46,5 @@ export default function TeamMedia({src,alt='',className='',interactive=false,aut
     'shadow-intensity':'1',
     style:{width:'100%',height:'100%',display:'block',background:'transparent'}
   }):<div className={className+' team-model-loading'}>3D</div>;
-  return <img className={className} src={src} alt={alt} loading="lazy"/>;
+  return <img className={className} src={src} alt={alt} loading="lazy" draggable={false} onDragStart={e=>e.preventDefault()}/>;
 }
