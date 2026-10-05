@@ -7282,3 +7282,36 @@ body{
     letter-spacing:.12em!important;
   }
 }
+
+
+/* 2026-10-05 compact media controls after fullscreen removal */
+.film-player-controls{
+  grid-template-columns:38px 38px minmax(160px,1fr) 38px 38px!important;
+}
+.team-media-video-controls{
+  grid-template-columns:38px 38px minmax(150px,1fr) 38px 38px!important;
+}
+@media(max-width:760px){
+  .film-player-controls{
+    grid-template-columns:34px 34px minmax(84px,1fr) 34px!important;
+  }
+  .film-player-controls>.film-control:last-child{grid-column:4!important}
+  .team-media-video-controls{
+    grid-template-columns:34px 34px minmax(72px,1fr) 34px!important;
+  }
+  .team-media-video-controls>.team-media-control:last-child{grid-column:4!important}
+}
+@media(max-width:480px){
+  .film-player-controls{
+    grid-template-columns:34px minmax(74px,1fr) 34px!important;
+  }
+  .film-control-play{grid-column:1!important}
+  .film-seek{grid-column:2!important}
+  .film-player-controls>.film-control:last-child{grid-column:3!important}
+  .team-media-video-controls{
+    grid-template-columns:34px minmax(60px,1fr) 34px!important;
+  }
+  .team-media-video-controls>.team-media-control:first-child{grid-column:1!important}
+  .team-media-seek{grid-column:2!important}
+  .team-media-video-controls>.team-media-control:last-child{grid-column:3!important}
+}
