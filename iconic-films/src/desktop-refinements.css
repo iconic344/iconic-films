@@ -138,8 +138,7 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
     transform:translate(-50%,calc(-50% + 12px))!important;
     filter:drop-shadow(0 2px 12px rgba(0,0,0,.34));
   }
-  .hero-gallery .media-gallery:not(.is-modal):not(.is-fullscreen):hover .media-gallery-caption,
-  .hero-gallery .media-gallery:not(.is-modal):not(.is-fullscreen):focus-within .media-gallery-caption{
+  .hero-gallery .media-gallery:not(.is-modal):not(.is-fullscreen):hover .media-gallery-caption{
     transform:translate(-50%,-50%)!important;
   }
   .hero-gallery .media-gallery-caption span{
@@ -202,14 +201,13 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
       transform .38s cubic-bezier(.16,1,.3,1),
       visibility 0s linear .24s!important;
   }
-  .hero-gallery .media-gallery:not(.is-modal):not(.is-fullscreen):hover .media-gallery-caption,
-  .hero-gallery .media-gallery:not(.is-modal):not(.is-fullscreen):focus-within .media-gallery-caption{
+  .hero-gallery .media-gallery:not(.is-modal):not(.is-fullscreen):hover .media-gallery-caption{
     opacity:1!important;
     visibility:visible!important;
     transform:translate(-50%,-50%)!important;
     transition:
-      opacity .26s ease,
-      transform .42s cubic-bezier(.16,1,.3,1),
+      opacity .24s ease,
+      transform .38s cubic-bezier(.16,1,.3,1),
       visibility 0s!important;
   }
 }
@@ -217,4 +215,43 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
 /* No placeholder image flash: reel stays black until the first video frame paints. */
 .hero-gallery .media-gallery.has-video .media-gallery-artwork{
   background:#000!important;
+}
+
+
+/* 2026-10-07 hero scale correction: main reel only.
+   Fill the visual band under the nav while preserving the 16:9 frame. */
+@media (min-width:1025px){
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen){
+    --gallery-card:min(92vw,calc((100dvh - 210px) * 16 / 9),1680px)!important;
+    padding-top:22px!important;
+    padding-bottom:34px!important;
+  }
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
+    aspect-ratio:16/9!important;
+  }
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>video{
+    width:100%!important;
+    height:100%!important;
+    object-fit:cover!important;
+  }
+}
+
+/* Empty In Focus remains intentionally present for future admin uploads. */
+.focus-section .focus-rail.is-empty{
+  min-height:clamp(300px,32vw,520px)!important;
+  border-top:1px solid color-mix(in srgb,var(--ink) 16%,transparent);
+  border-bottom:1px solid color-mix(in srgb,var(--ink) 10%,transparent);
+}
+
+/* Hero caption must disappear when pointer leaves, even after click focus. */
+@media (min-width:1025px) and (hover:hover) and (pointer:fine){
+  .hero-gallery .media-gallery:not(.is-modal):not(.is-fullscreen):not(:hover) .media-gallery-caption{
+    opacity:0!important;
+    visibility:hidden!important;
+    transform:translate(-50%,calc(-50% + 10px))!important;
+    transition:
+      opacity .18s ease,
+      transform .28s cubic-bezier(.16,1,.3,1),
+      visibility 0s linear .18s!important;
+  }
 }
