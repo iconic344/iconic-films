@@ -11518,3 +11518,195 @@ body{
     font-size:15px!important;
   }
 }
+
+
+/* 2026-10-06 portfolio hero background media + neutral category active state */
+/* Category detail hero:
+   - no circular/profile image presentation
+   - uploaded image/video/3D becomes a full hero background
+   - title/credits move into the former left media area
+   - background softly fades into the page below */
+.team-portfolio-hero{
+  position:relative!important;
+  isolation:isolate;
+  overflow:hidden!important;
+  min-height:clamp(430px,56vw,720px)!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+}
+.team-portfolio-hero.has-hero-media{
+  background:var(--page);
+}
+.team-portfolio-hero-media{
+  position:absolute!important;
+  inset:0!important;
+  z-index:0!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  overflow:hidden!important;
+  border-radius:0!important;
+  pointer-events:none!important;
+}
+.team-portfolio-hero-media-element,
+.team-portfolio-hero-media>img,
+.team-portfolio-hero-media>video,
+.team-portfolio-hero-media>model-viewer{
+  position:absolute!important;
+  inset:0!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.team-portfolio-hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb,var(--page) 84%,transparent) 0%,
+      color-mix(in srgb,var(--page) 54%,transparent) 28%,
+      color-mix(in srgb,var(--page) 18%,transparent) 58%,
+      transparent 78%);
+}
+.team-portfolio-hero::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:0;
+  z-index:2;
+  height:46%;
+  pointer-events:none;
+  background:linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb,var(--page) 18%,transparent) 35%,
+    color-mix(in srgb,var(--page) 72%,transparent) 72%,
+    var(--page) 100%
+  );
+}
+.team-portfolio-profile{
+  position:relative!important;
+  z-index:3!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:inherit!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:flex-start!important;
+  padding:clamp(72px,8vw,116px) clamp(20px,4vw,56px) clamp(72px,7vw,108px)!important;
+}
+.team-portfolio-copy{
+  width:min(900px,78%)!important;
+  max-width:none!important;
+  padding:0!important;
+  margin:0!important;
+}
+.team-portfolio-copy h1{
+  margin:0!important;
+  max-width:100%!important;
+}
+.team-portfolio-credit-row{
+  margin-top:24px!important;
+}
+
+/* No legacy avatar geometry should ever reappear on category pages. */
+.team-portfolio-avatar{
+  display:none!important;
+}
+
+/* Remove the floating divider directly under the hero; the index keeps its own bottom rule. */
+.team-portfolio-member-index{
+  border-top:0!important;
+  margin-top:0!important;
+  padding-top:18px!important;
+}
+
+/* Active category cards stay neutral. Accent color is intentionally not used here. */
+.site .team-member-index-list>button.active,
+.site .team-member-index-list>button[aria-current="true"],
+.team-member-index-list>button.active,
+.team-member-index-list>button[aria-current="true"]{
+  background:var(--ink)!important;
+  color:var(--page)!important;
+  border-color:var(--ink)!important;
+  box-shadow:none!important;
+}
+.site .team-member-index-list>button.active .team-member-index-number,
+.site .team-member-index-list>button[aria-current="true"] .team-member-index-number{
+  color:color-mix(in srgb,var(--page) 58%,transparent)!important;
+}
+
+/* Admin/member editors: hero media is a wide background preview, never a portrait/profile card. */
+.editor .team-editor-hero-preview,
+.member-self-editor .team-editor-hero-preview{
+  width:100%!important;
+  margin:16px 0 22px!important;
+  overflow:hidden!important;
+  border:1px solid var(--lg-line)!important;
+  border-radius:18px!important;
+  background:color-mix(in srgb,var(--lg-content) 80%,transparent)!important;
+}
+.editor .team-editor-hero-preview-media,
+.editor .team-editor-hero-preview img,
+.editor .team-editor-hero-preview video,
+.editor .team-editor-hero-preview model-viewer,
+.member-self-editor .team-editor-hero-preview-media{
+  display:block!important;
+  width:100%!important;
+  height:auto!important;
+  aspect-ratio:16/7!important;
+  object-fit:cover!important;
+  border-radius:0!important;
+}
+
+/* Make the editor wording clearly about the new background slot. */
+.editor .team-member-media>.file-upload:first-child,
+.member-self-editor .member-profile-upload{
+  margin-bottom:0!important;
+}
+
+@media(max-width:900px){
+  .team-portfolio-hero{
+    min-height:clamp(460px,92vw,640px)!important;
+  }
+  .team-portfolio-profile{
+    padding:80px 18px 62px!important;
+    align-items:flex-end!important;
+  }
+  .team-portfolio-copy{
+    width:100%!important;
+  }
+  .team-portfolio-hero::before{
+    background:linear-gradient(
+      90deg,
+      color-mix(in srgb,var(--page) 72%,transparent) 0%,
+      color-mix(in srgb,var(--page) 28%,transparent) 58%,
+      transparent 100%);
+  }
+  .team-portfolio-hero::after{
+    height:52%;
+  }
+}
+@media(max-width:600px){
+  .team-portfolio-hero{
+    min-height:520px!important;
+  }
+  .team-portfolio-profile{
+    padding:74px 16px 54px!important;
+  }
+  .team-portfolio-copy h1{
+    font-size:clamp(48px,16vw,74px)!important;
+    line-height:.9!important;
+  }
+  .team-portfolio-credit-row{
+    margin-top:18px!important;
+  }
+}
