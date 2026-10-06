@@ -13,7 +13,7 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,...props}:Galle
  const scoped=scopeGallery(items,initialIndex);
  return <ScopedMediaGallery {...props} items={scoped.items} initialIndex={scoped.index} onIndexChange={index=>onIndexChange?.(scoped.sourceIndices[index])}/>;
 }
-function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,modal=false}:GalleryProps){
+function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false}:GalleryProps){
  const [index,setIndex]=useState(Math.min(initialIndex,Math.max(0,items.length-1)));
  const [playing,setPlaying]=useState(()=>!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
  const [muted,setMuted]=useState(true),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(modal),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState('');
@@ -60,11 +60,11 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,modal=fa
  const toggle=()=>setPlaying(v=>!v);
  const exitFullscreen=()=>{
   restoreTime.current=video.current?.currentTime??null;
-  if(modal){props.onExpand?.();return}
+  if(modal){onExpand?.();return}
   setExpanded(false);
  };
  const fullscreen=()=>{
-  if(modal){props.onExpand?.();return}
+  if(modal){onExpand?.();return}
   restoreTime.current=video.current?.currentTime??null;
   setExpanded(v=>!v);
  };
@@ -102,7 +102,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,modal=fa
    {(type==='image'||item.poster)&&<img src={type==='image'?item.src:item.poster} alt=""/>}
    {type==='video'&&<canvas ref={ambient} style={{opacity:readySrc===item.src?1:0}}/>}
   </div><div className="media-gallery-backdrop-glass" aria-hidden="true"/></>}
-  {isFullscreen&&<button type="button" className="media-gallery-close" aria-label={modal?'미디어 닫기':'전체 화면 종료'} onClick={()=>{if(modal)props.onExpand?.();else exitFullscreen()}}><X size={23}/></button>}
+  {isFullscreen&&<button type="button" className="media-gallery-close" aria-label={modal?'미디어 닫기':'전체 화면 종료'} onClick={()=>{if(modal)onExpand?.();else exitFullscreen()}}><X size={23}/></button>}
   <div className="media-gallery-viewport" onPointerDown={e=>{if(e.button!==0||(e.target as HTMLElement).closest('button,input,model-viewer'))return;drag.current={x:e.clientX,y:e.clientY};dragged.current=false;e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={e=>{if(!drag.current)return;const dx=e.clientX-drag.current.x,dy=e.clientY-drag.current.y;drag.current=null;if(Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)){dragged.current=true;choose(index+(dx<0?1:-1))}e.currentTarget.releasePointerCapture?.(e.pointerId)}} onPointerCancel={()=>{drag.current=null}}>
    <div className="media-gallery-track" style={{'--gallery-index':index} as CSSProperties}>
     {items.map((entry,i)=>{
