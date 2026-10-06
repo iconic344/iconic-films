@@ -246,13 +246,6 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           <TeamMedia src={member.photo} alt="" className="team-portfolio-hero-media-element" autoPlay/>
         </div>}
         {member.photo&&<div className="team-portfolio-hero-light" aria-hidden="true"/>}
-        <div className="team-portfolio-profile">
-          <div className="team-portfolio-copy">
-            <h1>{member.name||'Portfolio'}</h1>
-            {member.bio&&<p>{member.bio}</p>}
-            <div className="team-portfolio-edit-row"><button type="button" className="team-portfolio-inline-edit" onClick={()=>onMemberEdit(member)}>EDIT</button></div>
-          </div>
-        </div>
       </section>
 
       {teamMembers.length>1&&<section className="team-portfolio-member-index" aria-label="Portfolio category navigation">
@@ -286,13 +279,14 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           {['All',...subcategories].map(label=><button type="button" key={label} className={subcategory===label?'active':''} onClick={()=>{setSubcategory(label);setIndex(0);setViewerIndex(null)}}>{label}</button>)}
         </div>}
 
-        {!works.length&&<div className="team-portfolio-empty">No work in this category yet.</div>}
-
-        {!!works.length&&member.portfolioLayout==='grid'&&<div className="team-portfolio-grid">
-          {works.map((url,i)=><button type="button" className="team-portfolio-grid-item" key={url+i} onClick={()=>openViewer(i)}>
-            <TeamMedia src={url} alt={(member.name||'Portfolio')+' portfolio '+(i+1)} className="team-portfolio-work-media" autoPlay/>
-            <span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span>
-          </button>)}
+        {member.portfolioLayout==='grid'&&<div className="team-portfolio-grid">
+          {Array.from({length:Math.max(9,works.length)},(_,i)=>{
+            const url=works[i];
+            return url?<button type="button" className="team-portfolio-grid-item" key={url+i} onClick={()=>openViewer(i)}>
+              <TeamMedia src={url} alt={(member.name||'Portfolio')+' portfolio '+(i+1)} className="team-portfolio-work-media" autoPlay/>
+              <span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span>
+            </button>:<div className="team-portfolio-grid-item is-empty" key={'empty-'+i} aria-hidden="true"><span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span></div>
+          })}
         </div>}
 
         {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={()=>openViewer(index)}/></div>}
