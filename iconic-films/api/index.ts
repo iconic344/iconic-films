@@ -504,6 +504,21 @@ export default async function handler(req:Req,res:ServerResponse){
       }
     }
 
+    if(route==='/api/team-self-security'){
+      const memberId=header(req,'x-viivii-member')||'';
+      if(!memberId||memberId.length>100)throw new HttpError(400,'팀원 정보가 올바르지 않습니다.');
+      await requireMember(req,memberId);
+      if(method==='PUT'){
+        const input=await body(req);
+        const pin=typeof input?.pin==='string'?input.pin:'';
+        if(!/^\d{4}$/.test(pin))throw new HttpError(400,'숫자 4자리를 입력하세요.');
+        const {config}=await currentConfigPair();
+        if(!config?.teamMembers?.some((item:any)=>item?.id===memberId))throw new HttpError(404,'팀원을 찾을 수 없습니다.');
+        await putSetting('member-pin:'+memberId,hash('member-pin:'+memberId+':'+pin));
+        json(res,{ok:true,memberId});return;
+      }
+    }
+
     if(route==='/api/team-member'){
       const memberId=url.searchParams.get('memberId')||header(req,'x-viivii-member')||'';
       if(!memberId||memberId.length>100)throw new HttpError(400,'팀원 정보가 올바르지 않습니다.');
