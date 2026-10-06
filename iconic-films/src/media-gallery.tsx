@@ -16,16 +16,17 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,...props}:Galle
 function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false}:GalleryProps){
  const [index,setIndex]=useState(Math.min(initialIndex,Math.max(0,items.length-1)));
  const [playing,setPlaying]=useState(()=>!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
- const [muted,setMuted]=useState(true),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(modal),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState('');
+ const [muted,setMuted]=useState(()=>!modal),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(modal),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState(''),[landscape,setLandscape]=useState(false);
  const root=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),drag=useRef<{x:number;y:number}|null>(null),dragged=useRef(false),elapsed=useRef(0),ambient=useRef<HTMLCanvasElement>(null),idleTimer=useRef(0),restoreTime=useRef<number|null>(null);
  const item=items[index],type=item?teamMediaType(item.src):'image',isFullscreen=expanded,showBackdrop=modal||isFullscreen;
  useEffect(()=>{if(modal)root.current?.focus({preventScroll:true})},[modal]);
+ useEffect(()=>{if(modal)setMuted(false)},[modal,item?.id]);
  useEffect(()=>{if(isFullscreen)root.current?.focus({preventScroll:true})},[isFullscreen]);
  const choose=(n:number)=>{if(!items.length)return;const target=(n+items.length)%items.length;setIndex(target);onIndexChange?.(target)};
  const advance=()=>{if(items.length>1)choose(index+1);else if(video.current){video.current.currentTime=0;video.current.play().catch(()=>setPlaying(false))}else elapsed.current=0};
  useEffect(()=>{setIndex(Math.min(initialIndex,Math.max(0,items.length-1)))},[initialIndex,items.length]);
  useEffect(()=>{
-  elapsed.current=0;setProgress(0);setTime(0);setError(false);
+  elapsed.current=0;setProgress(0);setTime(0);setError(false);setLandscape(false);
   root.current?.querySelectorAll('video').forEach(v=>{v.pause();if(v===video.current)v.currentTime=0});
   const v=video.current;setDuration(v&&Number.isFinite(v.duration)?v.duration:0);
   // Adjacent slides may finish loading before becoming active. Reuse that
@@ -99,7 +100,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   if(e.key===' '&&!((e.target as HTMLElement).closest('button'))){e.preventDefault();toggle()}
  };
  if(!item)return null;
- const gallery=<div ref={root} className={'media-gallery '+(modal?'is-modal ':'')+(expanded?'is-expanded ':'')+(isFullscreen?'is-fullscreen ':'')+(items.length<=1?'is-single ':'')+(type==='video'?'has-video':'has-image')} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} data-cursor-idle={idle?'true':'false'} onPointerMove={wake} onPointerDown={wake} onFocusCapture={wake} onKeyDown={e=>{wake();key(e)}}>
+ const gallery=<div ref={root} className={'media-gallery '+(modal?'is-modal ':'')+(expanded?'is-expanded ':'')+(isFullscreen?'is-fullscreen ':'')+(items.length<=1?'is-single ':'')+(type==='video'?'has-video ':'has-image ')+(landscape?'is-landscape':'is-portrait')} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} data-cursor-idle={idle?'true':'false'} onPointerMove={wake} onPointerDown={wake} onFocusCapture={wake} onKeyDown={e=>{wake();key(e)}}>
   {showBackdrop&&<><div className="media-gallery-backdrop" aria-hidden="true">
    {(type==='image'||item.poster)&&<img src={type==='image'?item.src:item.poster} alt=""/>}
    {type==='video'&&<canvas ref={ambient} style={{opacity:readySrc===item.src?1:0}}/>}
@@ -111,7 +112,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
      const active=i===index,kind=teamMediaType(entry.src);
      return <article className={'media-gallery-slide '+(active?'is-active':'')} key={entry.id} aria-hidden={!active} inert={!active}>
       <div className="media-gallery-artwork" onClick={()=>{if(dragged.current){dragged.current=false;return}if(active&&onExpand&&kind!=='model'){onExpand();return}if(active&&kind==='video')toggle()}}>
-       {kind==='video'?<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-index)<=1?entry.src:undefined} poster={entry.poster} muted={active?muted:true} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setReady(n=>n+1);onReady?.();if(playing&&visible)video.current?.play().catch(()=>setPlaying(false))}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setPlaying(false);onReady?.()}}}/>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
+       {kind==='video'?<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-index)<=1?entry.src:undefined} poster={entry.poster} muted={active?muted:true} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setReady(n=>n+1);onReady?.();if(playing&&visible)video.current?.play().catch(()=>setPlaying(false))}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setLandscape((e.currentTarget.videoWidth||0)/(e.currentTarget.videoHeight||1)>=1.45);if(modal){e.currentTarget.muted=false;setMuted(false)}setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setPlaying(false);onReady?.()}}}/>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
       </div>
 
       {active&&error&&<p className="media-gallery-error" role="status">미디어를 불러오지 못했습니다. <button type="button" onClick={()=>{setError(false);video.current?.load();setPlaying(true)}}>다시 시도</button></p>}
