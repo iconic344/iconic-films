@@ -58,7 +58,7 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,onExpand,onRead
  };
  const wake=()=>{
   setIdle(false);window.clearTimeout(idleTimer.current);
-  if(isFullscreen&&type==='video')idleTimer.current=window.setTimeout(()=>{if(!root.current?.querySelector('input:focus'))setIdle(true)},2400);
+  if(isFullscreen&&type==='video')idleTimer.current=window.setTimeout(()=>setIdle(true),2400);
  };
  useEffect(()=>{
   const sync=()=>{setNativeFullscreen(document.fullscreenElement===root.current);setIdle(false)};
