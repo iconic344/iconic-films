@@ -8571,3 +8571,63 @@ body{
     animation:none!important;
   }
 }
+
+
+/* 2026-10-06 member self password controls */
+.member-self-security{
+  display:grid;
+  gap:18px;
+}
+.member-self-security-copy{
+  margin:0;
+  max-width:720px;
+  color:var(--soft);
+  font-size:11px;
+  line-height:1.7;
+}
+.member-self-security-fields{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+.member-self-security-fields input{
+  letter-spacing:.22em;
+  font-variant-numeric:tabular-nums;
+}
+.member-self-security-apply{
+  justify-self:start;
+  min-height:42px;
+  padding:0 16px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--ink);
+  color:var(--page);
+  font:inherit;
+  font-size:11px;
+  font-weight:600;
+  transition:
+    transform .28s cubic-bezier(.16,1,.3,1),
+    opacity .22s ease,
+    background .22s ease;
+}
+.member-self-security-apply:disabled{
+  opacity:.34;
+  cursor:not-allowed;
+}
+@media(hover:hover) and (pointer:fine){
+  .member-self-security-apply:not(:disabled):hover{
+    transform:translateY(-1px);
+  }
+}
+.member-self-security-apply:not(:disabled):active{
+  transform:scale(.97);
+}
+@media(max-width:760px){
+  .member-self-security-fields{
+    grid-template-columns:1fr;
+  }
+  .member-self-security-apply{
+    width:100%;
+    justify-self:stretch;
+  }
+}
