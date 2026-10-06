@@ -8833,3 +8833,113 @@ body{
     margin:16px 0 20px!important;
   }
 }
+
+
+/* 2026-10-06 member editor glass action controls */
+/* Member editor actions use the same liquid-glass language as the site.
+   Avoid flat pure-white / pure-black pills and keep labels readable even while disabled. */
+.member-self-editor .editor-header .save,
+.member-self-security-quick-fields .member-security-confirm{
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  border:1px solid color-mix(in srgb,var(--ink) 14%,transparent)!important;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb,var(--page) 78%,transparent),
+      color-mix(in srgb,var(--ink) 7%,transparent)
+    )!important;
+  color:var(--ink)!important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb,#fff 24%,transparent),
+    inset 0 -1px 0 color-mix(in srgb,var(--ink) 6%,transparent),
+    0 10px 28px rgba(0,0,0,.08)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(1.22)!important;
+  backdrop-filter:blur(22px) saturate(1.22)!important;
+}
+.member-self-editor .editor-header .save::before,
+.member-self-security-quick-fields .member-security-confirm::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    radial-gradient(80% 130% at 18% 0%,
+      color-mix(in srgb,#fff 18%,transparent),
+      transparent 58%
+    ),
+    linear-gradient(110deg,
+      transparent 0 30%,
+      color-mix(in srgb,var(--ink) 4%,transparent) 48%,
+      transparent 66%
+    );
+  opacity:.72;
+}
+.member-self-editor .editor-header .save{
+  min-height:42px;
+  border-radius:999px!important;
+}
+.member-self-security-quick-fields .member-security-confirm{
+  width:auto!important;
+  min-width:112px!important;
+  height:40px!important;
+  padding:0 14px!important;
+  border-radius:13px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:1px!important;
+  line-height:1!important;
+}
+.member-self-security-quick-fields .member-security-confirm span{
+  display:block;
+  color:var(--ink)!important;
+  font-size:10px!important;
+  font-weight:700!important;
+  letter-spacing:.08em!important;
+  line-height:1!important;
+  white-space:nowrap;
+}
+.member-self-security-quick-fields .member-security-confirm small{
+  display:block;
+  color:var(--soft)!important;
+  font-size:8px!important;
+  font-weight:500!important;
+  letter-spacing:.04em!important;
+  line-height:1!important;
+  white-space:nowrap;
+}
+.member-self-editor .editor-header .save:disabled,
+.member-self-security-quick-fields .member-security-confirm:disabled{
+  opacity:.58!important;
+  cursor:not-allowed!important;
+  filter:saturate(.72);
+}
+@media(hover:hover) and (pointer:fine){
+  .member-self-editor .editor-header .save:not(:disabled):hover,
+  .member-self-security-quick-fields .member-security-confirm:not(:disabled):hover{
+    transform:translateY(-1px);
+    border-color:color-mix(in srgb,var(--ink) 22%,transparent)!important;
+    background:
+      linear-gradient(135deg,
+        color-mix(in srgb,var(--page) 84%,transparent),
+        color-mix(in srgb,var(--ink) 10%,transparent)
+      )!important;
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb,#fff 30%,transparent),
+      0 14px 34px rgba(0,0,0,.11)!important;
+  }
+}
+.member-self-editor .editor-header .save:not(:disabled):active,
+.member-self-security-quick-fields .member-security-confirm:not(:disabled):active{
+  transform:scale(.97)!important;
+}
+@media(max-width:760px){
+  .member-self-security-quick-fields .member-security-confirm{
+    width:100%!important;
+    min-width:0!important;
+    min-height:42px!important;
+  }
+}
