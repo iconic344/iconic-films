@@ -10833,3 +10833,121 @@ body{
     min-height:23px!important;
   }
 }
+
+
+/* 2026-10-06 exact accent + adaptive VIIVII mark */
+/* The supplied VIIVII black/white mark is used as one adaptive mask:
+   black in light mode, white in dark mode. */
+.editor .editor-brand-lockup{
+  display:flex!important;
+  align-items:center!important;
+  min-width:72px!important;
+  min-height:56px!important;
+}
+.editor .editor-brand-mark{
+  display:block!important;
+  width:64px!important;
+  height:58px!important;
+  color:#111113!important;
+  background:currentColor!important;
+  -webkit-mask:url('/viivii-mark.svg') center/contain no-repeat!important;
+  mask:url('/viivii-mark.svg') center/contain no-repeat!important;
+}
+:root[data-theme=dark] .editor .editor-brand-mark{
+  color:#f7f7f9!important;
+}
+@media(max-width:760px){
+  .editor .editor-brand-lockup{
+    min-width:58px!important;
+    min-height:48px!important;
+  }
+  .editor .editor-brand-mark{
+    width:54px!important;
+    height:48px!important;
+  }
+}
+
+/* Accent means the exact configured hex, never a pink/blue color-mix approximation. */
+.editor [data-slot="slider-range"]{
+  background:var(--accent-color)!important;
+  box-shadow:none!important;
+}
+.editor [data-slot="checkbox"][data-state="checked"]{
+  border-color:var(--accent-color)!important;
+  background:var(--accent-color)!important;
+  color:var(--accent-contrast,#fff)!important;
+}
+.editor [data-slot="switch"][data-state="checked"].use-accent,
+.editor .use-accent[data-slot="switch"][data-state="checked"]{
+  background:var(--accent-color)!important;
+}
+.editor [data-slot="slider-thumb"]:focus-visible{
+  box-shadow:
+    0 0 0 4px color-mix(in srgb,var(--accent-color) 18%,transparent),
+    0 4px 12px rgba(0,0,0,.14)!important;
+}
+.editor .editor-color-control input[type="color"]{
+  outline:2px solid color-mix(in srgb,var(--accent-color) 20%,transparent);
+  outline-offset:1px;
+}
+
+/* Main public site: make the configured accent visibly meaningful, but keep it editorial. */
+.site{
+  accent-color:var(--accent-color);
+}
+.site ::selection{
+  background:var(--accent-color);
+  color:var(--accent-contrast,#fff);
+}
+.site .filters button.selected,
+.site .group-chips button.selected{
+  background:var(--accent-color)!important;
+  border-color:var(--accent-color)!important;
+  color:var(--accent-contrast,#fff)!important;
+}
+.site .filters button,
+.site .group-chips button{
+  transition:
+    color .22s ease,
+    border-color .22s ease,
+    background .22s ease,
+    transform .28s cubic-bezier(.16,1,.3,1)!important;
+}
+@media(hover:hover) and (pointer:fine){
+  .site .filters button:not(.selected):hover,
+  .site .group-chips button:not(.selected):hover{
+    border-color:var(--accent-color)!important;
+    color:var(--accent-color)!important;
+    transform:translateY(-1px);
+  }
+  .site .work-image:hover .work-play{
+    background:var(--accent-color)!important;
+    border-color:var(--accent-color)!important;
+    color:var(--accent-contrast,#fff)!important;
+  }
+  .site .contact-link:hover{
+    color:var(--accent-color)!important;
+    border-color:var(--accent-color)!important;
+  }
+}
+.site .track-list .current{
+  color:var(--accent-color)!important;
+}
+.site .icon.active{
+  color:var(--accent-color)!important;
+}
+.site button:focus-visible,
+.site a:focus-visible{
+  outline-color:var(--accent-color)!important;
+}
+.site .model-stage model-viewer{
+  --progress-bar-color:var(--accent-color)!important;
+}
+
+/* Accent also appears on the selected Team index card edge without recoloring the content. */
+.site .team-member-index-list>button.active,
+.site .team-member-index-list>button[aria-current="true"]{
+  box-shadow:
+    inset 0 0 0 1px var(--accent-color),
+    0 8px 24px color-mix(in srgb,var(--accent-color) 10%,transparent)!important;
+}
