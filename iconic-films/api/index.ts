@@ -365,7 +365,7 @@ function normalizeUpload(name:string,type:string,size:number){
 }
 
 const memberStringFields=[
-  'codeName','name','role','bio','instagram','photo','portfolioTitle','portfolioIntro','portfolioCredits','portfolioTeamIndexLabel','portfolioReturnLabel',
+  'name','role','bio','instagram','photo','portfolioTitle','portfolioIntro','portfolioCredits','portfolioTeamIndexLabel','portfolioReturnLabel',
   'portfolioNameFont','portfolioNameColor','portfolioRoleFont','portfolioRoleColor','portfolioBioFont','portfolioBioColor',
   'portfolioTitleFont','portfolioTitleColor','portfolioIntroFont','portfolioIntroColor','portfolioUtilityFont','portfolioUtilityColor'
 ] as const;
