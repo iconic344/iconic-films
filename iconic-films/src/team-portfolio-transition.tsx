@@ -11,17 +11,21 @@ const SLIDE_MS=900;
 // the settled page with the same React key, so completion never remounts media.
 export default function TeamPortfolioTransition(props:Props){
  const [displayed,setDisplayed]=useState(props.member),[transition,setTransition]=useState<Transition|null>(null);
+ const decoded=useRef(new Map<string,Promise<void>>());
  const active=useRef<Transition|null>(null),settled=useRef(displayed),sequence=useRef(0),frame=useRef(0),timer=useRef(0),queued=useRef<{member:TeamMember;direction:1|-1}|null>(null),completed=useRef(0);
  active.current=transition;settled.current=displayed;
  const prepare=(member:TeamMember)=>{
   if(!member.photo||teamMediaType(member.photo)!=='image')return Promise.resolve();
+  const cached=decoded.current.get(member.photo);if(cached)return cached;
   const image=new Image();image.src=member.photo;
   // Decode before starting the compositor animation, with a bounded network wait.
-  return new Promise<void>(resolve=>{
+  const ready=new Promise<void>(resolve=>{
    const timeout=window.setTimeout(resolve,1400);
    image.decode().catch(()=>{}).finally(()=>{window.clearTimeout(timeout);resolve()});
   });
+  decoded.current.set(member.photo,ready);return ready;
  };
+ useEffect(()=>{props.config.teamMembers.filter(m=>m.visible).forEach(m=>{void prepare(m)})},[props.config.teamMembers]);
  const start=(from:TeamMember,to:TeamMember,direction:1|-1,notify=true)=>{
   if(from.id===to.id)return;
   const id=++sequence.current;
