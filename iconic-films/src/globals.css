@@ -11086,3 +11086,51 @@ body{
   justify-self:end!important;
   margin-right:0!important;
 }
+
+
+/* 2026-10-06 switch radix translate conflict fix */
+/* Radix/Tailwind applies the modern CSS `translate` longhand on the Thumb.
+   That was stacking with our transform and pushing checked thumbs out of the pill.
+   Neutralize it and use one positioning system only. */
+.editor [data-slot="switch-thumb"]{
+  translate:none!important;
+  inset-inline-start:2px!important;
+  inset-inline-end:auto!important;
+  left:2px!important;
+  right:auto!important;
+  top:2px!important;
+  width:22px!important;
+  height:22px!important;
+  min-width:22px!important;
+  min-height:22px!important;
+  max-width:22px!important;
+  max-height:22px!important;
+  transform:translate3d(0,0,0)!important;
+}
+.editor [data-slot="switch"][data-state="unchecked"] [data-slot="switch-thumb"]{
+  translate:none!important;
+  transform:translate3d(0,0,0)!important;
+}
+.editor [data-slot="switch"][data-state="checked"] [data-slot="switch-thumb"]{
+  translate:none!important;
+  transform:translate3d(18px,0,0)!important;
+}
+.editor [data-slot="switch"]:active [data-slot="switch-thumb"]{
+  translate:none!important;
+  transform:translate3d(0,0,0) scale(.96)!important;
+}
+.editor [data-slot="switch"][data-state="checked"]:active [data-slot="switch-thumb"]{
+  translate:none!important;
+  transform:translate3d(18px,0,0) scale(.96)!important;
+}
+
+/* Reassert the binary state colors after generic glass-button styling. */
+.editor [data-slot="switch"][data-state="unchecked"]{
+  background:rgba(120,120,128,.32)!important;
+}
+:root:not([data-theme=dark]) .editor [data-slot="switch"][data-state="unchecked"]{
+  background:rgba(120,120,128,.24)!important;
+}
+.editor [data-slot="switch"][data-state="checked"]{
+  background:#34C759!important;
+}
