@@ -112,7 +112,6 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
       <div className="team-editor-grid">
         <div className="team-member-fields">
           <label className="field">대분류 이름<input placeholder="Fashion / Commercial / Events" value={member.name} onChange={e=>patch(member.id,'name',e.target.value)}/></label>
-          <label className="field">INDEX CODE<input placeholder="F / C / E" maxLength={8} value={member.codeName||''} onChange={e=>patch(member.id,'codeName',e.target.value.toUpperCase().replace(/\s+/g,'').slice(0,8))}/><span className="uploaded-file">카테고리 인덱스 카드에 표시되는 코드입니다.</span></label>
           <label className="field">INDEX 문구<input maxLength={40} placeholder="CATEGORY INDEX" value={member.portfolioTeamIndexLabel||'CATEGORY INDEX'} onChange={e=>patch(member.id,'portfolioTeamIndexLabel',e.target.value.slice(0,40))}/></label>
           <label className="field">세부 카테고리<textarea placeholder={"Fashion Show\nLookbook\nCampaign\nEditorial"} value={(member.portfolioSubcategories||[]).join('\n')} onChange={e=>setSubcategories(member.id,e.target.value)}/><span className="uploaded-file">줄바꿈 또는 쉼표로 구분합니다. 포트폴리오 페이지 상단 필터로 표시됩니다.</span></label>
           <label className="field">참여자 / 제작 크레딧<textarea placeholder={"DIRECTOR / xnives\nDOP / name\nSTYLING / name"} value={member.portfolioCredits||''} onChange={e=>patch(member.id,'portfolioCredits',e.target.value)}/><span className="uploaded-file">해당 대분류 페이지의 공통 크레딧으로 표시됩니다.</span></label>
