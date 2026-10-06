@@ -31,7 +31,6 @@ export default function FocusRail({items,onOpen}:{items:GalleryItem[];onOpen:(in
  },[items.length]);
  const move=(dir:number)=>rail.current?.scrollBy({left:dir*(rail.current.clientWidth*.75),behavior:'smooth'});
 
- if(!items.length)return null;
 
  return <section className="focus-section" aria-label="In focus"><div className="focus-section-head"><span className="kicker">IN FOCUS</span><h2>장면을 만드는 시선.</h2></div><div ref={rail} className={"focus-rail"+(!items.length?" is-empty":"")} tabIndex={items.length?0:undefined} aria-label="가로 미디어 카드" onKeyDown={e=>{if((e.target as HTMLElement).closest('button'))return;if(e.key==='ArrowLeft'){e.preventDefault();move(-1)}if(e.key==='ArrowRight'){e.preventDefault();move(1)}}} onPointerDown={e=>{if(e.pointerType!=='mouse'||e.button!==0)return;drag.current={x:e.clientX,left:e.currentTarget.scrollLeft};moved.current=false}} onPointerMove={e=>{if(!drag.current)return;const dx=e.clientX-drag.current.x;if(Math.abs(dx)>8){moved.current=true;e.currentTarget.setPointerCapture(e.pointerId);e.currentTarget.scrollLeft=drag.current.left-dx}}} onPointerUp={e=>{drag.current=null;if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId)}} onPointerCancel={()=>{drag.current=null}} onClickCapture={e=>{if(moved.current){e.preventDefault();e.stopPropagation();moved.current=false}}}>
   {items.map((item,i)=><FocusCard key={item.id} item={item} onOpen={()=>onOpen(i)}/>)}
