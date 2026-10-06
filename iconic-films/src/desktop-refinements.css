@@ -613,3 +613,78 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
     bottom:var(--reel-vertical-gap)!important;
   }
 }
+
+
+/* 2026-10-07 corrected reel fade + true visual spacing.
+   The fade uses the live page color, so dark -> black and light -> white. */
+@media (min-width:1025px){
+  .hero{
+    --reel-vertical-gap:clamp(52px,3.7vw,68px);
+  }
+
+  .hero-gallery{
+    margin:var(--reel-vertical-gap) 0!important;
+  }
+
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen){
+    padding-top:0!important;
+    padding-bottom:0!important;
+  }
+
+  .hero>.main-logo{
+    margin-top:0!important;
+  }
+
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork{
+    background:var(--page)!important;
+  }
+
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>video{
+    -webkit-mask-image:none!important;
+    mask-image:none!important;
+  }
+
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork::before,
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork::after{
+    content:""!important;
+    display:block!important;
+    position:absolute!important;
+    left:0!important;
+    right:0!important;
+    height:24%!important;
+    z-index:4!important;
+    pointer-events:none!important;
+  }
+
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork::before{
+    top:0!important;
+    background:linear-gradient(
+      to bottom,
+      var(--page) 0%,
+      color-mix(in srgb,var(--page) 88%,transparent) 14%,
+      color-mix(in srgb,var(--page) 62%,transparent) 34%,
+      color-mix(in srgb,var(--page) 32%,transparent) 57%,
+      color-mix(in srgb,var(--page) 10%,transparent) 78%,
+      transparent 100%
+    )!important;
+  }
+
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork::after{
+    bottom:0!important;
+    background:linear-gradient(
+      to top,
+      var(--page) 0%,
+      color-mix(in srgb,var(--page) 88%,transparent) 14%,
+      color-mix(in srgb,var(--page) 62%,transparent) 34%,
+      color-mix(in srgb,var(--page) 32%,transparent) 57%,
+      color-mix(in srgb,var(--page) 10%,transparent) 78%,
+      transparent 100%
+    )!important;
+  }
+
+  /* Caption is centered against the video box, not against the old padded wrapper. */
+  .hero-gallery .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-caption{
+    top:0!important;
+    bottom:0!important;
+  }
+}
