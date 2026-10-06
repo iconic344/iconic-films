@@ -439,11 +439,9 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
         <div className="team-member-index-list">
           {teamMembers.map((item,i)=>{
             const active=item.id===member.id;
-            const code=(item.codeName||item.name?.slice(0,1)||String(i+1)).toUpperCase();
             const direction:1|-1=i>memberIndex?1:-1;
             return <button type="button" key={item.id} className={(active?'active ':'')+'member-reactive'} aria-current={active?'page':undefined} onPointerMove={reactPointer} onPointerLeave={resetPointer} onClick={()=>{if(memberSwipeMoved.current){memberSwipeMoved.current=false;return}if(!active)selectMember(item,direction)}}>
-              <span className="team-member-code">{code}</span>
-              <span className="team-member-index-name">{item.name||'Unnamed'}</span>
+              <span className="team-member-index-name">{item.name||'Portfolio'}</span>
               <span className="team-member-index-number">{String(i+1).padStart(2,'0')}</span>
             </button>;
           })}
@@ -453,7 +451,6 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
       <section className="team-portfolio-work">
         <div className="team-portfolio-work-head">
           <div>
-            <span className="kicker">ARCHIVE / {String(works.length).padStart(2,'0')}</span>
             <h2>Selected works</h2>
           </div>
           <span className="team-portfolio-layout-label">{member.portfolioLayout==='slider'?<GalleryHorizontal size={15}/>:<Grid2X2 size={15}/>} {member.portfolioLayout}</span>
