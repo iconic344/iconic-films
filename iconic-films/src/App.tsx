@@ -1,6 +1,6 @@
 'use client';
 import {Fragment,useState,useEffect,useRef,CSSProperties} from 'react';
-import {Sun,Moon,Play,Pause,SkipBack,SkipForward,Shuffle,Repeat,Repeat1,Volume2,VolumeX,Music2,X,Plus,Trash2,Eye,Save,Check,ChevronUp,ChevronDown,ChevronLeft,ChevronRight,MoveUpRight,SlidersHorizontal,Disc3} from 'lucide-react';
+import {Sun,Moon,Play,Pause,SkipBack,SkipForward,Shuffle,Repeat,Repeat1,Volume2,VolumeX,Music2,X,Plus,Trash2,Eye,Save,Check,ChevronUp,ChevronDown,ChevronLeft,ChevronRight,MoveUpRight,SlidersHorizontal,Disc3,Settings2} from 'lucide-react';
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
 import {InputOTP,InputOTPGroup,InputOTPSlot} from '@/components/ui/input-otp';
 import {Slider} from '@/components/ui/slider';
