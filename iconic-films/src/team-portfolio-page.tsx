@@ -245,14 +245,12 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           <TeamMedia src={member.photo} alt="" className="team-portfolio-hero-media-element" autoPlay/>
         </div>}
         {member.photo&&<div className="team-portfolio-hero-light" aria-hidden="true"/>}
+        {member.portfolioCreditsVisible!==false&&!!member.portfolioCredits?.trim()&&<aside className="team-portfolio-hero-credits" aria-label="Credits">{member.portfolioCredits.split(/\r?\n/).map(line=>line.trim()).filter(Boolean).map((line,i)=><span key={i}>{line}</span>)}</aside>}
         <div className="team-portfolio-profile">
           <div className="team-portfolio-copy">
             <h1>{member.name||'Portfolio'}</h1>
             {member.bio&&<p>{member.bio}</p>}
-            <div className="team-portfolio-credit-row">
-              {!!member.portfolioCredits?.trim()&&<div className="team-portfolio-credits" aria-label="Credits">{member.portfolioCredits.split(/\r?\n/).map(line=>line.trim()).filter(Boolean).map((line,i)=><span key={i}>{line}</span>)}</div>}
-              <button type="button" className="team-portfolio-inline-edit" onClick={()=>onMemberEdit(member)}>EDIT</button>
-            </div>
+            <div className="team-portfolio-edit-row"><button type="button" className="team-portfolio-inline-edit" onClick={()=>onMemberEdit(member)}>EDIT</button></div>
           </div>
         </div>
       </section>
