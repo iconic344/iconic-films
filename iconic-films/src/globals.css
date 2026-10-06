@@ -8631,3 +8631,205 @@ body{
     justify-self:stretch;
   }
 }
+
+
+/* 2026-10-06 member editor top security + spacing cleanup */
+/* Put password controls at the top, immediately under the sticky editor header. */
+.member-self-topbar{
+  width:min(1780px,90vw);
+  margin:16px auto 0;
+  display:grid;
+  grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);
+  gap:16px;
+  align-items:stretch;
+}
+.member-self-security-quick,
+.member-self-topbar .member-self-editor-note{
+  min-width:0;
+  margin:0!important;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:color-mix(in srgb,var(--card) 82%,transparent);
+}
+.member-self-security-quick{
+  min-height:94px;
+  padding:14px 16px;
+  display:grid;
+  grid-template-columns:minmax(190px,.72fr) minmax(0,1.28fr);
+  gap:18px;
+  align-items:center;
+}
+.member-self-security-quick-copy{
+  min-width:0;
+  display:grid;
+  gap:4px;
+}
+.member-self-security-quick-copy .kicker{
+  margin:0!important;
+  font-size:9px!important;
+  letter-spacing:.14em;
+  color:var(--soft);
+}
+.member-self-security-quick-copy strong{
+  font-size:17px;
+  line-height:1.1;
+  letter-spacing:-.025em;
+  font-weight:600;
+}
+.member-self-security-quick-copy small{
+  color:var(--soft);
+  font-size:10px;
+  line-height:1.45;
+}
+.member-self-security-quick-fields{
+  min-width:0;
+  display:grid;
+  grid-template-columns:minmax(110px,1fr) minmax(110px,1fr) auto;
+  gap:8px;
+  align-items:end;
+}
+.member-self-security-quick-fields label{
+  min-width:0;
+  display:grid;
+  gap:6px;
+  color:var(--ink);
+  font-size:10px;
+  font-weight:600;
+}
+.member-self-security-quick-fields input{
+  width:100%;
+  height:40px;
+  min-width:0;
+  padding:0 12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--page);
+  color:var(--ink);
+  letter-spacing:.18em;
+  font-variant-numeric:tabular-nums;
+}
+.member-self-security-quick-fields button{
+  height:40px;
+  padding:0 15px;
+  border:1px solid var(--ink);
+  border-radius:12px;
+  background:var(--ink);
+  color:var(--page);
+  font:inherit;
+  font-size:10px;
+  font-weight:600;
+  white-space:nowrap;
+  transition:transform .25s cubic-bezier(.16,1,.3,1),opacity .2s ease;
+}
+.member-self-security-quick-fields button:disabled{
+  opacity:.32;
+  cursor:not-allowed;
+}
+@media(hover:hover) and (pointer:fine){
+  .member-self-security-quick-fields button:not(:disabled):hover{transform:translateY(-1px)}
+}
+.member-self-security-quick-fields button:not(:disabled):active{transform:scale(.97)}
+
+.member-self-topbar .member-self-editor-note{
+  width:auto!important;
+  min-height:94px;
+  padding:14px 16px!important;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:7px;
+}
+.member-self-topbar .member-self-editor-note strong{
+  font-size:13px;
+}
+.member-self-topbar .member-self-editor-note span{
+  text-align:left!important;
+  font-size:10px;
+  line-height:1.55;
+}
+
+/* Pull the two editing rails up and keep them dense, with no artificial vertical holes. */
+.member-self-editor-dashboard{
+  margin-top:16px!important;
+  gap:18px!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+}
+.member-self-editor-dashboard .team-editor-left-rail,
+.member-self-editor-dashboard .team-editor-right-rail{
+  gap:18px!important;
+  align-content:start!important;
+}
+
+/* Fix the media stack collision shown in the editor:
+   profile preview and the next upload box always keep a real gap. */
+.member-self-editor .member-profile-upload{
+  margin-bottom:0!important;
+}
+.member-self-editor .member-profile-preview{
+  width:min(100%,360px)!important;
+  margin:18px 0 24px!important;
+  border-radius:18px!important;
+  overflow:hidden!important;
+}
+.member-self-editor .member-work-upload{
+  margin-top:0!important;
+  clear:both;
+}
+.member-self-editor .member-work-upload + .team-editor-works,
+.member-self-editor .team-editor-works{
+  margin-top:18px!important;
+}
+.member-self-editor .team-editor-card{
+  overflow:visible!important;
+}
+
+/* The old lower security card is no longer part of the member editor. */
+.member-self-editor .member-self-security{
+  display:none!important;
+}
+
+@media(max-width:1100px){
+  .member-self-topbar{
+    grid-template-columns:1fr;
+  }
+  .member-self-security-quick{
+    grid-template-columns:minmax(180px,.65fr) minmax(0,1.35fr);
+  }
+}
+@media(max-width:760px){
+  .member-self-topbar{
+    width:calc(100% - 24px);
+    margin-top:12px;
+    gap:12px;
+  }
+  .member-self-security-quick{
+    min-height:0;
+    padding:14px;
+    grid-template-columns:1fr;
+    gap:13px;
+  }
+  .member-self-security-quick-fields{
+    grid-template-columns:1fr 1fr;
+  }
+  .member-self-security-quick-fields button{
+    grid-column:1/-1;
+    width:100%;
+  }
+  .member-self-topbar .member-self-editor-note{
+    min-height:0;
+    padding:13px 14px!important;
+  }
+  .member-self-editor-dashboard{
+    margin-top:12px!important;
+    gap:14px!important;
+  }
+  .member-self-editor-dashboard .team-editor-left-rail,
+  .member-self-editor-dashboard .team-editor-right-rail{
+    gap:14px!important;
+  }
+  .member-self-editor .member-profile-preview{
+    width:100%!important;
+    margin:16px 0 20px!important;
+  }
+}
