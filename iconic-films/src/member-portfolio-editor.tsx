@@ -121,6 +121,7 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
           <div className="team-member-fields">
             <label className="field">이름<input value={member.name} onChange={e=>patch('name',e.target.value)}/></label>
             <label className="field">CODE NAME<input maxLength={8} value={member.codeName||''} onChange={e=>patch('codeName',e.target.value.toUpperCase().replace(/\s+/g,'').slice(0,8))}/></label>
+            <label className="field">TEAM INDEX 문구<input maxLength={40} placeholder="TEAM INDEX" value={member.portfolioTeamIndexLabel||'TEAM INDEX'} onChange={e=>patch('portfolioTeamIndexLabel',e.target.value.slice(0,40))}/></label>
             
             <label className="field">촬영자 / 참여자 크레딧<textarea placeholder={"PHOTO / xnives\nMODEL / name\nSTYLING / name"} value={member.portfolioCredits||''} onChange={e=>patch('portfolioCredits',e.target.value)}/></label>
             
