@@ -38,12 +38,12 @@ const accentContrast=(hex:string)=>{
 };
 import {api} from './site-api';
 const SITE_CONFIG_CACHE_KEY='viivii-site-config-v1';
-function cachedConfig(){
+function readCachedConfig(){
  try{
-  if(typeof window==='undefined')return initial;
+  if(typeof window==='undefined')return null;
   const raw=localStorage.getItem(SITE_CONFIG_CACHE_KEY);
-  return raw?normalizeConfig(JSON.parse(raw)):initial;
- }catch{return initial}
+  return raw?normalizeConfig(JSON.parse(raw)):null;
+ }catch{return null}
 }
 function cachedTheme(fallback:string){
  try{return typeof window!=='undefined'?(localStorage.getItem('iconic-theme')||fallback):fallback}catch{return fallback}
@@ -51,9 +51,10 @@ function cachedTheme(fallback:string){
 function Choice({value,options,onChange}:{value:string;options:string[];onChange:(x:string)=>void}){return <Select value={value} onValueChange={onChange}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{options.map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select>}
 function Btn({label,children,onClick,active=false}:{label:string;children:React.ReactNode;onClick:()=>void;active?:boolean}){return <button title={label} aria-label={label} aria-pressed={active} className={'icon '+(active?'active':'')} onClick={onClick}>{children}</button>}
 export default function Home(){
- const cached=useRef<Config|null>(null);
- if(cached.current===null)cached.current=cachedConfig();
- const bootConfig=cached.current;
+ const cached=useRef<Config|null|undefined>(undefined);
+ if(cached.current===undefined)cached.current=readCachedConfig();
+ const bootConfig=cached.current||initial;
+ const [hasBootConfig]=useState(()=>!!cached.current);
  const [saved,setSaved]=useState<Config>(bootConfig),[draft,setDraft]=useState<Config>(bootConfig),[theme,setTheme]=useState(()=>cachedTheme(bootConfig.theme)),[admin,setAdmin]=useState(false),[preview,setPreview]=useState(false),[login,setLogin]=useState(false),[pin,setPin]=useState(''),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[category,setCategory]=useState('All'),[work,setWork]=useState<Work|null>(null),[music,setMusic]=useState(false),[track,setTrack]=useState(0),[playing,setPlaying]=useState(false),[shuffle,setShuffle]=useState(bootConfig.musicShuffle),[repeat,setRepeat]=useState(bootConfig.musicRepeatMode==='one'?1:bootConfig.musicRepeatMode==='all'?2:0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[group,setGroup]=useState('Tracks'),[filter,setFilter]=useState('All'),[volume,setVolume]=useState(bootConfig.volume),[newPin,setNewPin]=useState(''),[loaded,setLoaded]=useState(false),[scrollTarget,setScrollTarget]=useState<'top'|'bottom'>('bottom'),[autoplayBlocked,setAutoplayBlocked]=useState(false),[animations,setAnimations]=useState<string[]>([]),[editorTab,setEditorTab]=useState('content'),[contactOpen,setContactOpen]=useState(false),[teamRoute,setTeamRoute]=useState(()=>typeof window==='undefined'?'':decodeURIComponent(window.location.pathname.match(/^\/team\/([^/]+)/)?.[1]||'')),[teamPageClosing,setTeamPageClosing]=useState(false),[adminClosing,setAdminClosing]=useState(false),[ownerMode,setOwnerMode]=useState(false),[memberLogin,setMemberLogin]=useState<TeamMember|null>(null),[memberPin,setMemberPin]=useState(''),[memberEditor,setMemberEditor]=useState<TeamMember|null>(null),[memberDraft,setMemberDraft]=useState<TeamMember|null>(null),[memberBusy,setMemberBusy]=useState(false),[teamPins,setTeamPins]=useState<Record<string,string>>({});
  const [focusIndex,setFocusIndex]=useState<number|null>(null);
  const musicButton=useRef<HTMLButtonElement>(null),musicPanel=useRef<HTMLElement>(null);
@@ -313,7 +314,7 @@ export default function Home(){
  };
  const activeAccent=admin?draft.accent:c.accent;
  const style={'--accent-color':activeAccent,'--accent-contrast':accentContrast(activeAccent),'--nav-alpha':c.navOpacity/100,'--section-space':c.spacing+'px','--round':c.radius+'px','--glass-blur':c.blur+'px','--glass-alpha':c.glass/100,'--motion':c.motion+'s','--hero-offset-y':c.heroOffsetY+'px','--logo-offset-y':c.logoOffsetY+'px','--work-offset-x':c.workOffsetX+'px','--work-offset-y':c.workOffsetY+'px','--about-offset-x':c.aboutOffsetX+'px','--about-offset-y':c.aboutOffsetY+'px','--team-offset-x':c.teamOffsetX+'px','--team-offset-y':c.teamOffsetY+'px','--film-overlay-opacity':String((c.filmBackdropOpacity??62)/100),'--film-overlay-blur':(c.filmBackdropBlur??20)+'px',fontFamily:c.font,fontSize:c.fontSize+'px'} as CSSProperties;
- return <div id="top" style={style} className={'site '+(ownerMode&&!admin&&!login?'has-owner-notice':'')}>
+ return <div id="top" style={style} className={'site '+(!hasBootConfig&&!loaded?'is-config-syncing ':'')+(ownerMode&&!admin&&!login?'has-owner-notice':'')}>
  <ScrollReveal enabled={!admin||preview}/>
  <PointerExperience enabled={(!admin||preview)&&!login&&c.motion>0}/>
  {!teamPage&&<div className="site-backdrop" aria-hidden="true">{c.backgroundType==='image'&&c.backgroundImage&&<img src={c.backgroundImage} alt="" style={{opacity:c.backgroundOpacity/100}}/>}{c.backgroundType==='video'&&c.backgroundVideo&&<video key={c.backgroundVideo} src={c.backgroundVideo} data-site-autoplay="true" autoPlay muted loop playsInline preload="auto" onLoadedMetadata={e=>keepMutedLoopPlaying(e.currentTarget)} onCanPlay={e=>keepMutedLoopPlaying(e.currentTarget)} style={{opacity:c.backgroundOpacity/100}}/>}{c.backgroundType!=='none'&&<div className="backdrop-dim" style={{background:'var(--page)',opacity:c.backgroundDim/100}}/>}<div className="site-pattern" style={{backgroundImage:patternImages[c.pattern]||'none',backgroundSize:`${c.patternSize}px ${c.patternSize}px`,opacity:c.patternOpacity/100}}/></div>}
