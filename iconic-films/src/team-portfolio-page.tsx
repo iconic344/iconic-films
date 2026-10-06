@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent} from 'react';
-import {ArrowUpRight,ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,Moon,Sun,Play,Pause,Volume2,VolumeX} from 'lucide-react';
+import {ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,Moon,Sun,Play,Pause,Volume2,VolumeX} from 'lucide-react';
 import {Dialog,DialogContent,DialogTitle} from '@/components/ui/dialog';
 import {Slider} from '@/components/ui/slider';
 import type {Config,TeamMember} from './defaults';
@@ -410,12 +410,10 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
             {member.photo?<TeamMedia src={member.photo} alt={member.name||member.role} className="team-portfolio-avatar-media" interactive/>:<span>{(member.name||'V').slice(0,1)}</span>}
           </div>
           <div className="team-portfolio-copy">
-            <span className="kicker team-portfolio-role">{member.role||'CREATIVE'}</span>
             <h1>{member.name||'Unnamed'}</h1>
             {member.bio&&<p>{member.bio}</p>}
-            <div className="team-portfolio-links">
-              {member.instagram&&<a href={member.instagram} target="_blank" rel="noreferrer">Instagram <ArrowUpRight size={14}/></a>}
-              <button type="button" onClick={onBack}>{member.portfolioReturnLabel||'VIIVII sara / Team'}</button>
+            <div className="team-portfolio-credit-row">
+              {!!member.portfolioCredits?.trim()&&<div className="team-portfolio-credits" aria-label="Credits">{member.portfolioCredits.split(/\r?\n/).map(line=>line.trim()).filter(Boolean).map((line,i)=><span key={i}>{line}</span>)}</div>}
               <button type="button" className="team-portfolio-inline-edit" onClick={()=>onMemberEdit(member)}>EDIT</button>
             </div>
           </div>
