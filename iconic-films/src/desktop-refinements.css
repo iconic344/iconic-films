@@ -218,21 +218,69 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
 }
 
 
-/* 2026-10-07 hero scale correction: main reel only.
-   Fill the visual band under the nav while preserving the 16:9 frame. */
+/* 2026-10-07 hero viewport band: match the marked desktop frame.
+   Main reel only — wide, tall, edge-filled, and intentionally below the nav. */
 @media (min-width:1025px){
+  .hero{
+    padding-left:0!important;
+    padding-right:0!important;
+  }
+  .hero-gallery{
+    width:100vw!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
+  }
   .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen){
-    --gallery-card:min(92vw,calc((100dvh - 210px) * 16 / 9),1680px)!important;
-    padding-top:22px!important;
-    padding-bottom:34px!important;
+    --gallery-card:calc(100vw - 32px)!important;
+    width:100vw!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:66px 0 34px!important;
+  }
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-viewport{
+    width:100vw!important;
+    max-width:none!important;
+    overflow:hidden!important;
+  }
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-track{
+    gap:0!important;
   }
   .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
-    aspect-ratio:16/9!important;
+    flex:0 0 calc(100vw - 32px)!important;
+    width:calc(100vw - 32px)!important;
+    min-width:calc(100vw - 32px)!important;
+    max-width:calc(100vw - 32px)!important;
+    height:70dvh!important;
+    min-height:560px!important;
+    max-height:720px!important;
+    aspect-ratio:auto!important;
+    margin:0 16px!important;
+    border-radius:26px!important;
+    overflow:hidden!important;
+    background:#000!important;
   }
-  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>video{
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork{
+    position:absolute!important;
+    inset:0!important;
     width:100%!important;
     height:100%!important;
+  }
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>video{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    min-width:100%!important;
+    max-width:none!important;
+    height:100%!important;
+    min-height:100%!important;
+    max-height:none!important;
     object-fit:cover!important;
+    object-position:center center!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    transform:none!important;
   }
 }
 
