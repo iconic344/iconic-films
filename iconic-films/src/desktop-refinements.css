@@ -552,3 +552,64 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
   bottom:0;
   background:linear-gradient(to top,rgba(0,0,0,.22),rgba(0,0,0,.07) 46%,rgba(0,0,0,0));
 }
+
+
+/* 2026-10-07 final reel spacing + true edge fade.
+   One shared gap controls both sides; the following logo adds no hidden extra gap. */
+@media (min-width:1025px){
+  .hero{
+    --reel-vertical-gap:56px;
+  }
+
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen){
+    padding-top:var(--reel-vertical-gap)!important;
+    padding-bottom:var(--reel-vertical-gap)!important;
+  }
+
+  .hero>.main-logo{
+    margin-top:0!important;
+  }
+
+  /* Video itself dissolves into the page at the top/bottom like the reference.
+     No dark vignette is painted across the picture. */
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork::before,
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork::after{
+    display:none!important;
+    content:none!important;
+  }
+
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork{
+    background:#000!important;
+  }
+
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>video{
+    -webkit-mask-image:linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(0,0,0,.28) 4%,
+      rgba(0,0,0,.76) 10%,
+      #000 17%,
+      #000 83%,
+      rgba(0,0,0,.76) 90%,
+      rgba(0,0,0,.28) 96%,
+      transparent 100%
+    )!important;
+    mask-image:linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(0,0,0,.28) 4%,
+      rgba(0,0,0,.76) 10%,
+      #000 17%,
+      #000 83%,
+      rgba(0,0,0,.76) 90%,
+      rgba(0,0,0,.28) 96%,
+      transparent 100%
+    )!important;
+  }
+
+  /* Caption centering uses the same visible reel box after the spacing correction. */
+  .hero-gallery .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-caption{
+    top:var(--reel-vertical-gap)!important;
+    bottom:var(--reel-vertical-gap)!important;
+  }
+}
