@@ -89,3 +89,14 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
     transform:none!important;
   }
 }
+
+
+/* 3D surfaces must show only the site cursor. */
+@media (hover:hover) and (pointer:fine){
+  body.iconic-pointer model-viewer,
+  body.iconic-pointer .model-stage,
+  body.iconic-pointer [data-cursor="3d"],
+  body.iconic-pointer .team-model-loading{
+    cursor:none!important;
+  }
+}
