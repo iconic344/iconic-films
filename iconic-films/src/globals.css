@@ -11465,3 +11465,56 @@ body{
     gap:10px!important;
   }
 }
+
+
+/* 2026-10-06 remove portfolio counters + category initials */
+/* The main portfolio category rows no longer show image sequence badges or portfolio counts. */
+.team-stack-number{display:none!important}
+.team-stack-copy--portfolio>span:first-child{display:none!important}
+
+/* Category switch cards use the full category name where the old one-letter initial lived. */
+.team-portfolio-member-index .team-member-index-list>button{
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:1fr!important;
+  align-items:center!important;
+  min-height:92px;
+}
+.team-portfolio-member-index .team-member-code{
+  display:none!important;
+}
+.team-portfolio-member-index .team-member-index-name{
+  grid-column:1!important;
+  grid-row:1!important;
+  align-self:center!important;
+  justify-self:start!important;
+  max-width:100%;
+  font-size:clamp(16px,1.25vw,20px)!important;
+  font-weight:600!important;
+  line-height:1.08!important;
+  letter-spacing:-.025em!important;
+  color:currentColor!important;
+}
+.team-portfolio-member-index .team-member-index-number{
+  grid-column:2!important;
+  grid-row:1!important;
+  align-self:start!important;
+  justify-self:end!important;
+}
+
+/* The removed ARCHIVE/count kicker must not leave artificial vertical space. */
+.team-portfolio-work-head>div{
+  display:flex;
+  align-items:flex-end;
+}
+.team-portfolio-work-head h2{
+  margin-top:0!important;
+}
+
+@media(max-width:600px){
+  .team-portfolio-member-index .team-member-index-list>button{
+    min-height:82px;
+  }
+  .team-portfolio-member-index .team-member-index-name{
+    font-size:15px!important;
+  }
+}
