@@ -30,6 +30,10 @@
 .cursor-optics-label{position:absolute;top:0;left:0;display:block;transform:translate(-50%,-50%);font:600 10.5px/1 Arial,Helvetica,sans-serif;letter-spacing:.06em;color:#fff;mix-blend-mode:normal;opacity:1;white-space:nowrap;pointer-events:none}
 .iconic-cursor-caption{position:fixed;left:0;top:0;width:0;height:0;z-index:2147483647;pointer-events:none;opacity:0;mix-blend-mode:difference;transition:opacity .35s cubic-bezier(.22,1,.36,1);transform-origin:0 0}
 .iconic-cursor-caption[data-visible="true"][data-hovered="true"]{opacity:var(--cursor-label-opacity,0)}
+.cursor-optics-label{perspective:180px}
+.cursor-label-text{display:block;transform-style:preserve-3d}
+.iconic-cursor-caption[data-kind="3d"] .cursor-label-text{animation:cursor-model-turn 2.8s linear infinite;font-size:12px;letter-spacing:.02em}
+@keyframes cursor-model-turn{from{transform:rotateY(0deg)}to{transform:rotateY(360deg)}}
 
 /* One paired translation for the entire page: no dissolves, stagger or remount. */
 .team-slide-viewport{position:relative;overflow:clip;overflow-clip-margin:0;isolation:isolate;width:100%;min-width:0}
