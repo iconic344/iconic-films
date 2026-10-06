@@ -17,9 +17,10 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const subcategories=useMemo(()=>member.portfolioSubcategories||[],[member.portfolioSubcategories]);
   const galleryItems=useMemo(()=>(member.works||[]).map((src,i)=>({
     id:member.id+'-'+i,src,title:member.name||'Portfolio',
+    description:member.portfolioCreditsVisible!==false?(member.portfolioCredits||''): '',
     category:member.portfolioWorkCategories?.[i]||subcategories[0]||'All',
     kicker:member.portfolioWorkCategories?.[i]||subcategories[0]||'All'
-  })).filter(item=>subcategory==='All'||item.category===subcategory),[member.id,member.name,member.works,member.portfolioWorkCategories,subcategories,subcategory]);
+  })).filter(item=>subcategory==='All'||item.category===subcategory),[member.id,member.name,member.works,member.portfolioWorkCategories,member.portfolioCredits,member.portfolioCreditsVisible,subcategories,subcategory]);
   const works=useMemo(()=>galleryItems.map(item=>item.src),[galleryItems]);
   const teamMembers=useMemo(()=>(config.teamMembers||[]).filter(item=>item.visible),[config.teamMembers]);
   const memberIndex=Math.max(0,teamMembers.findIndex(item=>item.id===member.id));
@@ -245,7 +246,6 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           <TeamMedia src={member.photo} alt="" className="team-portfolio-hero-media-element" autoPlay/>
         </div>}
         {member.photo&&<div className="team-portfolio-hero-light" aria-hidden="true"/>}
-        {member.portfolioCreditsVisible!==false&&!!member.portfolioCredits?.trim()&&<aside className="team-portfolio-hero-credits" aria-label="Credits">{member.portfolioCredits.split(/\r?\n/).map(line=>line.trim()).filter(Boolean).map((line,i)=><span key={i}>{line}</span>)}</aside>}
         <div className="team-portfolio-profile">
           <div className="team-portfolio-copy">
             <h1>{member.name||'Portfolio'}</h1>
