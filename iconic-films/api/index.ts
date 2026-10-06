@@ -407,6 +407,14 @@ function cleanMemberUpdate(current:any,input:any){
     if(!Array.isArray(input.works)||input.works.length>240||input.works.some((url:any)=>typeof url!=='string'||url.length>2048||!/^(https?:\/\/|\/)/i.test(url)))throw new HttpError(400,'포트폴리오 미디어 목록이 올바르지 않습니다.');
     next.works=[...input.works];
   }
+  if(input.portfolioSubcategories!==undefined){
+    if(!Array.isArray(input.portfolioSubcategories)||input.portfolioSubcategories.length>16||input.portfolioSubcategories.some((v:any)=>typeof v!=='string'||!v.trim()||v.length>40))throw new HttpError(400,'세부 카테고리 목록이 올바르지 않습니다.');
+    next.portfolioSubcategories=Array.from(new Set(input.portfolioSubcategories.map((v:string)=>v.trim())));
+  }
+  if(input.portfolioWorkCategories!==undefined){
+    if(!Array.isArray(input.portfolioWorkCategories)||input.portfolioWorkCategories.length>240||input.portfolioWorkCategories.some((v:any)=>typeof v!=='string'||v.length>40))throw new HttpError(400,'작품 세부 카테고리 정보가 올바르지 않습니다.');
+    next.portfolioWorkCategories=[...input.portfolioWorkCategories];
+  }
   // Member editors can never change routing, ownership, or public visibility.
   next.id=current.id;
   next.portfolioSlug=current.portfolioSlug;
