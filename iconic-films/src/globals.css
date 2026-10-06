@@ -10150,3 +10150,145 @@ body{
     padding:0 13px!important;
   }
 }
+
+
+/* 2026-10-06 admin editor viewport structure fix */
+/* The admin editor is a fixed three-row viewport:
+   header / scrollable content / bottom preview dock.
+   This prevents the preview dock and nav from drifting into the content area. */
+.admin-editor{
+  position:fixed!important;
+  inset:0!important;
+  z-index:45!important;
+  display:grid!important;
+  grid-template-rows:auto minmax(0,1fr) auto!important;
+  overflow:hidden!important;
+  transform:none!important;
+  animation:admin-editor-opacity-in .20s ease both!important;
+  background:var(--lg-page,var(--page))!important;
+}
+.admin-editor.is-closing{
+  animation:admin-editor-opacity-out .18s ease both!important;
+}
+@keyframes admin-editor-opacity-in{from{opacity:0}to{opacity:1}}
+@keyframes admin-editor-opacity-out{from{opacity:1}to{opacity:0}}
+
+.admin-editor>.editor-header{
+  position:relative!important;
+  top:auto!important;
+  z-index:3!important;
+  width:calc(100% - 16px)!important;
+  margin:8px auto 0!important;
+  flex:0 0 auto!important;
+}
+
+.admin-editor-scroll{
+  min-width:0!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain!important;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.admin-editor-scroll::-webkit-scrollbar{display:none!important}
+
+.admin-editor .editor-tabs{
+  padding:16px 5% 28px!important;
+  min-height:100%!important;
+}
+
+/* The menu is sticky only within the scroll pane and keeps its natural content width. */
+.admin-editor .editor-nav-shell{
+  position:sticky!important;
+  top:8px!important;
+  z-index:8!important;
+  display:inline-grid!important;
+  width:max-content!important;
+  max-width:100%!important;
+  margin:0 0 18px!important;
+  padding:6px!important;
+  gap:5px!important;
+  border-radius:21px!important;
+}
+.admin-editor .editor-group-tabs,
+.admin-editor .editor-subtabs{
+  width:max-content!important;
+  max-width:calc(100vw - 12vw)!important;
+}
+
+/* Bottom accessory dock participates in the viewport grid; no fixed-position ambiguity. */
+.admin-editor>.editor-preview-dock{
+  position:relative!important;
+  inset:auto!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  z-index:4!important;
+  width:100%!important;
+  min-height:64px!important;
+  margin:0!important;
+  padding:
+    10px max(5vw,20px)
+    max(10px,env(safe-area-inset-bottom))
+    max(5vw,20px)!important;
+  border-radius:0!important;
+  flex:0 0 auto!important;
+}
+.admin-editor .editor-bottom{
+  padding:20px 20px 18px!important;
+}
+
+/* Old transform-based hidden state must never distort the grid geometry. */
+.admin-editor.editor-preview-hidden{
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+  transform:none!important;
+}
+
+@media(max-width:1180px){
+  .admin-editor>.editor-header{
+    width:calc(100% - 14px)!important;
+    margin:7px auto 0!important;
+  }
+  .admin-editor .editor-nav-shell{
+    top:7px!important;
+    max-width:100%!important;
+  }
+  .admin-editor .editor-group-tabs,
+  .admin-editor .editor-subtabs{
+    max-width:calc(100vw - 12vw)!important;
+  }
+}
+@media(max-width:760px){
+  .admin-editor{
+    grid-template-rows:auto minmax(0,1fr) auto!important;
+  }
+  .admin-editor>.editor-header{
+    width:calc(100% - 12px)!important;
+    margin:6px auto 0!important;
+  }
+  .admin-editor .editor-tabs{
+    padding:12px 12px 20px!important;
+  }
+  .admin-editor .editor-nav-shell{
+    top:6px!important;
+    display:grid!important;
+    width:100%!important;
+    max-width:100%!important;
+  }
+  .admin-editor .editor-group-tabs,
+  .admin-editor .editor-subtabs{
+    width:100%!important;
+    max-width:100%!important;
+  }
+  .admin-editor>.editor-preview-dock{
+    min-height:62px!important;
+    padding:
+      9px 14px
+      max(9px,env(safe-area-inset-bottom))
+      14px!important;
+  }
+}
