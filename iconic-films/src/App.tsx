@@ -56,55 +56,6 @@ export default function Home(){
   return()=>query.removeEventListener?.('change',sync);
  },[]);
  useEffect(()=>{
-  const mobileQuery=window.matchMedia('(max-width: 1180px) and (any-pointer: coarse)');
-  const ua=navigator.userAgent||'';
-  const platform=(navigator as Navigator&{platform?:string}).platform||'';
-  const isIPad=/iPad/i.test(ua)||(platform==='MacIntel'&&navigator.maxTouchPoints>1&&Math.min(screen.width,screen.height)>=700);
-  if(!mobileQuery.matches||isIPad){
-   delete document.documentElement.dataset.immersive;
-   return;
-  }
-  const root=document.documentElement as any;
-  const doc=document as any;
-  const canFullscreen=()=>Boolean(root.requestFullscreen||root.webkitRequestFullscreen);
-  const isFullscreen=()=>Boolean(document.fullscreenElement||doc.webkitFullscreenElement);
-  const isStandalone=()=>window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches||Boolean((navigator as any).standalone);
-  let autoArmed=true;
-  const syncImmersiveState=()=>{
-   document.documentElement.dataset.immersive=(isFullscreen()||isStandalone())?'true':'false';
-  };
-  const requestImmersive=async()=>{
-   if(isFullscreen()||isStandalone()){syncImmersiveState();return true}
-   if(!canFullscreen())return false;
-   try{
-    if(root.requestFullscreen)await root.requestFullscreen({navigationUI:'hide'});
-    else await root.webkitRequestFullscreen();
-    syncImmersiveState();
-    return isFullscreen();
-   }catch{return false}
-  };
-  const disarmAuto=()=>{autoArmed=false;window.removeEventListener('pointerup',onFirstGesture)};
-  const onFirstGesture=()=>{
-   if(!autoArmed)return;
-   void requestImmersive().then(ok=>{if(ok)disarmAuto()});
-  };
-  const onFullscreenChange=()=>{
-   syncImmersiveState();
-   if(isFullscreen())disarmAuto();
-  };
-  syncImmersiveState();
-  void requestImmersive().then(ok=>{if(ok)disarmAuto()});
-  window.addEventListener('pointerup',onFirstGesture,{passive:true});
-  document.addEventListener('fullscreenchange',onFullscreenChange);
-  document.addEventListener('webkitfullscreenchange',onFullscreenChange as EventListener);
-  return()=>{
-   window.removeEventListener('pointerup',onFirstGesture);
-   document.removeEventListener('fullscreenchange',onFullscreenChange);
-   document.removeEventListener('webkitfullscreenchange',onFullscreenChange as EventListener);
-   delete document.documentElement.dataset.immersive;
-  };
- },[]);
- useEffect(()=>{
   document.title=(c.browserTitle||'VIIVIIsara®').trim()||'VIIVIIsara®';
   let link=document.head.querySelector<HTMLLinkElement>('link[data-site-favicon="true"]');
   if(c.favicon){
@@ -201,7 +152,9 @@ export default function Home(){
   const reel:Work={id:'reel',title:'Director’s cut',category:'Showreel',year:'2026',role:'Direction / Cinematography / Edit',description:'',poster:c.heroPoster,video:c.heroVideo,visible:true};
   if(!current||current.id==='reel')return (reel.video||reel.poster)?[reel]:[];
   const works=c.works.filter(item=>item.visible&&(item.video||item.poster));
-  return works.filter(item=>item.category===current.category);
+  const categoryKey=(value:string|undefined)=>(value||'').trim().toLocaleLowerCase();
+  const selectedCategory=categoryKey(current.category);
+  return works.filter(item=>categoryKey(item.category)===selectedCategory);
  }
  useEffect(()=>{
   if(!hasAdminVisit())return;
