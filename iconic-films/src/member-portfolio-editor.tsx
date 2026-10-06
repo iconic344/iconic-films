@@ -120,7 +120,7 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
           <div className="team-editor-card-head"><div><span className="kicker">PROFILE</span><h3>Identity / copy</h3></div></div>
           <div className="team-member-fields">
             <label className="field">이름<input value={member.name} onChange={e=>patch('name',e.target.value)}/></label>
-            <label className="field">CODE NAME<input maxLength={8} value={member.codeName||''} onChange={e=>patch('codeName',e.target.value.toUpperCase().replace(/\s+/g,'').slice(0,8))}/></label><label className="field">MEMBER 라벨<input maxLength={24} placeholder="MEMBER / CREW / ARTIST..." value={member.memberLabel||'MEMBER'} onChange={e=>patch('memberLabel',e.target.value.slice(0,24))}/></label>
+            <label className="field">CODE NAME<input maxLength={8} value={member.codeName||''} onChange={e=>patch('codeName',e.target.value.toUpperCase().replace(/\s+/g,'').slice(0,8))}/></label>
             <label className="field">역할<input value={member.role} onChange={e=>patch('role',e.target.value)}/></label>
             <label className="field">촬영자 / 참여자 크레딧<textarea placeholder={"PHOTO / xnives\nMODEL / name\nSTYLING / name"} value={member.portfolioCredits||''} onChange={e=>patch('portfolioCredits',e.target.value)}/></label>
             <label className="field">소개<textarea value={member.bio||''} onChange={e=>patch('bio',e.target.value)}/></label>
