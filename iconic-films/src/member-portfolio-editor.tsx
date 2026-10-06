@@ -165,8 +165,8 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
       <div className="team-editor-right-rail">
         <section className="editor-card team-editor-card">
           <div className="team-editor-card-head"><div><span className="kicker">MEDIA</span><h3>Cover / portfolio</h3></div></div>
-          <label className="field file-upload member-profile-upload">카테고리 커버 미디어<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadOne(e.target.files?.[0],'photo')}/><span className="uploaded-file">{member.photo?'커버 미디어 등록됨':'이미지 / 영상 / GLB·glTF'}</span>{member.photo&&<button type="button" className="file-clear" onClick={()=>patch('photo','')}>미디어 제거</button>}</label>
-          {member.photo&&<div className="team-editor-photo member-profile-preview"><TeamMedia src={member.photo} alt="카테고리 커버 미리보기" className="team-editor-photo-media" interactive/></div>}
+          <label className="field file-upload member-profile-upload">히어로 배경 미디어<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadOne(e.target.files?.[0],'photo')}/><span className="uploaded-file">{member.photo?'히어로 배경 등록됨':'이미지 / 영상 / GLB·glTF'}</span>{member.photo&&<button type="button" className="file-clear" onClick={()=>patch('photo','')}>배경 제거</button>}</label>
+          {member.photo&&<div className="team-editor-hero-preview"><TeamMedia src={member.photo} alt="히어로 배경 미리보기" className="team-editor-hero-preview-media" interactive/></div>}
           <label className="field file-upload member-work-upload">포트폴리오 미디어 업로드<input type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadWorks(e.target.files)}/><span className="uploaded-file">이미지 / 영상 / 3D 여러 개 선택 가능</span></label>
           {!!member.works?.length&&<div className="team-editor-works team-editor-works--categorized">{member.works.map((url,i)=><div key={url+i} className="team-editor-work-card"><TeamMedia src={url} alt={'작품 '+(i+1)} className="team-editor-work-media" interactive/><div className="team-editor-work-meta"><span>{String(i+1).padStart(2,'0')}</span><select aria-label="세부 카테고리" value={(member.portfolioWorkCategories||[])[i]||(member.portfolioSubcategories||[])[0]||'All'} onChange={e=>setWorkCategory(i,e.target.value)}>{(member.portfolioSubcategories||[]).map(label=><option key={label} value={label}>{label}</option>)}{!(member.portfolioSubcategories||[]).length&&<option value="All">All</option>}</select></div><button type="button" aria-label="작품 삭제" onClick={()=>removeWork(i)}><Trash2 size={14}/></button></div>)}</div>}
         </section>
@@ -174,9 +174,6 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
         <section className="editor-card team-editor-card">
           <div className="team-editor-card-head"><div><span className="kicker">LAYOUT</span><h3>Media / grid</h3></div></div>
           <div className="team-portfolio-size-editor">
-            {miniRange('portfolioProfileSize','프로필 미디어 크기',180,560)}
-            {miniRange('photoSize','프로필 미디어 기본 크기',150,420)}
-            {miniRange('photoRadius','프로필 모서리',0,50,1,'%')}
             {miniRange('portfolioSliderWidth','슬라이드 폭',45,100,1,'%')}
             {miniRange('portfolioSliderHeight','슬라이드 높이',320,1100)}
             {miniRange('portfolioGridWidth','그리드 전체 폭',45,100,1,'%')}
