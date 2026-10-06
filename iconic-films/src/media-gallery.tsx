@@ -116,7 +116,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
       {active&&kind==='video'&&<div className="media-gallery-tools">
        <button type="button" aria-label={playing?'일시정지':'재생'} onClick={toggle}>{playing?<Pause size={18} fill="currentColor"/>:<Play size={18} fill="currentColor"/>}</button><span>{formatTime(time)}</span><input type="range" aria-label="영상 재생 위치" min={0} max={duration||1} step={.1} value={Math.min(time,duration||0)} onChange={e=>{if(video.current)video.current.currentTime=Number(e.target.value)}}/><span>{formatTime(duration)}</span>
        <button type="button" aria-label={muted?'소리 켜기':'음소거'} onClick={()=>setMuted(v=>!v)}>{muted?<VolumeX size={18}/>:<Volume2 size={18}/>}</button>
-       <button type="button" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}>{isFullscreen?<Minimize size={17}/>:<Maximize size={17}/>}</button>
+       {!modal&&<button type="button" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}>{isFullscreen?<Minimize size={17}/>:<Maximize size={17}/>}</button>}
       </div>}
       {active&&kind!=='video'&&<button type="button" className="media-gallery-expand" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}><Maximize size={18}/></button>}
      </article>;
@@ -126,7 +126,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   </div>
   {items.length>1&&<div className="media-gallery-arrows" role="group" aria-label="미디어 넘기기"><button type="button" className="media-gallery-arrow is-prev" aria-label="이전 미디어" onClick={()=>choose(index-1)}><ChevronLeft size={23}/></button><button type="button" className="media-gallery-arrow is-next" aria-label="다음 미디어" onClick={()=>choose(index+1)}><ChevronRight size={23}/></button></div>}
   <div className="media-gallery-caption">{item.kicker&&<span>{item.kicker}</span>}<h3>{item.title}</h3>{item.description&&<p>{item.description}</p>}</div>
-  <div className="media-gallery-navigation"><div className="media-gallery-indicators" role="group" aria-label="미디어 선택">{items.map((entry,i)=><button type="button" key={entry.id} aria-label={`${i+1}번 미디어: ${entry.title}`} aria-current={i===index?'true':undefined} className={i===index?'is-active':''} onClick={()=>choose(i)}><span style={{'--gallery-progress':i===index?progress:0} as CSSProperties}/></button>)}</div><button type="button" className="media-gallery-toggle" aria-label={playing?'일시정지':'재생'} onClick={toggle}>{playing?<Pause size={20} fill="currentColor"/>:<Play size={20} fill="currentColor"/>}</button></div>
+  {items.length>1&&<div className="media-gallery-navigation"><div className="media-gallery-indicators" role="group" aria-label="미디어 선택">{items.map((entry,i)=><button type="button" key={entry.id} aria-label={`${i+1}번 미디어: ${entry.title}`} aria-current={i===index?'true':undefined} className={i===index?'is-active':''} onClick={()=>choose(i)}><span style={{'--gallery-progress':i===index?progress:0} as CSSProperties}/></button>)}</div>{type!=='video'&&<button type="button" className="media-gallery-toggle" aria-label={playing?'일시정지':'재생'} onClick={toggle}>{playing?<Pause size={20} fill="currentColor"/>:<Play size={20} fill="currentColor"/>}</button>}</div>}
   <span className="sr-only" aria-live="polite">{index+1} / {items.length}: {item.title}</span>
  </div>;
  // Native fullscreen retains the DOM. Unsupported browsers get a body portal
