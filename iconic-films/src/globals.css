@@ -11134,3 +11134,91 @@ body{
 .editor [data-slot="switch"][data-state="checked"]{
   background:#34C759!important;
 }
+
+
+/* 2026-10-06 switch hard reset: position-only thumb */
+/* Hard reset: the Switch component no longer carries any translate classes.
+   Thumb motion uses only left-position, eliminating all transform/translate stacking. */
+.editor [data-slot="switch"]{
+  position:relative!important;
+  display:inline-block!important;
+  width:44px!important;
+  min-width:44px!important;
+  max-width:44px!important;
+  height:26px!important;
+  min-height:26px!important;
+  max-height:26px!important;
+  padding:0!important;
+  margin:0!important;
+  overflow:hidden!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:rgba(120,120,128,.32)!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(235,235,245,.08),
+    inset 0 1px 2px rgba(0,0,0,.16)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+:root:not([data-theme=dark]) .editor [data-slot="switch"]{
+  background:rgba(120,120,128,.24)!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(60,60,67,.08),
+    inset 0 1px 2px rgba(0,0,0,.06)!important;
+}
+.editor [data-slot="switch"][data-state="checked"]{
+  background:#34C759!important;
+}
+.editor [data-slot="switch"][data-state="unchecked"]{
+  background:rgba(120,120,128,.32)!important;
+}
+:root:not([data-theme=dark]) .editor [data-slot="switch"][data-state="unchecked"]{
+  background:rgba(120,120,128,.24)!important;
+}
+.editor [data-slot="switch-thumb"]{
+  position:absolute!important;
+  top:2px!important;
+  left:2px!important;
+  right:auto!important;
+  bottom:auto!important;
+  width:22px!important;
+  min-width:22px!important;
+  max-width:22px!important;
+  height:22px!important;
+  min-height:22px!important;
+  max-height:22px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:#fff!important;
+  translate:none!important;
+  transform:none!important;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.20),
+    0 2px 7px rgba(0,0,0,.14)!important;
+  transition:
+    left .24s cubic-bezier(.22,1,.36,1),
+    box-shadow .20s ease!important;
+  will-change:left!important;
+}
+.editor [data-slot="switch"][data-state="unchecked"] [data-slot="switch-thumb"]{
+  left:2px!important;
+  translate:none!important;
+  transform:none!important;
+}
+.editor [data-slot="switch"][data-state="checked"] [data-slot="switch-thumb"]{
+  left:20px!important;
+  translate:none!important;
+  transform:none!important;
+}
+.editor [data-slot="switch"]:active [data-slot="switch-thumb"],
+.editor [data-slot="switch"][data-state="checked"]:active [data-slot="switch-thumb"]{
+  translate:none!important;
+  transform:none!important;
+}
+.editor .music-settings .toggle>[data-slot="switch"]{
+  justify-self:end!important;
+  align-self:center!important;
+  flex:0 0 44px!important;
+}
