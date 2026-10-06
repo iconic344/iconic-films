@@ -1,7 +1,7 @@
 'use client';
 import {useState,type Dispatch,type SetStateAction} from 'react';
 import {Slider} from '@/components/ui/slider';
-import {GripVertical} from 'lucide-react';
+import {GripVertical,Plus,Trash2} from 'lucide-react';
 import type {Config,SiteTextStyles,TextStyle,NavItemKey} from './defaults';
 import TextStyleEditor from './text-style-editor';
 
@@ -19,6 +19,10 @@ export default function LayoutEditor({draft,setDraft}:{draft:Config;setDraft:Dis
     next.splice(fromIndex,1);next.splice(toIndex,0,from);
     return {...d,navOrder:next};
   });
+  const deleteMenu=(item:NavItemKey)=>setDraft(d=>({...d,navOrder:d.navOrder.filter(key=>key!==item)}));
+  const restoreMenu=(item:NavItemKey)=>setDraft(d=>d.navOrder.includes(item)?d:{...d,navOrder:[...d.navOrder,item]});
+  const allMenus:NavItemKey[]=['work','about','team','contact'];
+  const removedMenus=allMenus.filter(item=>!draft.navOrder.includes(item));
   return <div className="editor-grid layout-editor">
     <section className="editor-card">
       <h3>Public copy</h3>
@@ -28,7 +32,12 @@ export default function LayoutEditor({draft,setDraft}:{draft:Config;setDraft:Dis
           <button type="button" className="menu-drag-handle" draggable aria-label={menuName[item]+' 순서 이동'} onDragStart={e=>{setDragging(item);e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',item)}} onDragEnd={()=>setDragging(null)}><GripVertical size={18}/></button>
           <label className="field">메뉴 · {menuName[item]}<input value={draft[labelKey[item]]} onChange={e=>set(labelKey[item],e.target.value)}/></label>
           <span className="menu-order-index">{String(index+1).padStart(2,'0')}</span>
+          <button type="button" className="menu-delete-button" aria-label={menuName[item]+' 메뉴 삭제'} title={menuName[item]+' 메뉴 삭제'} onClick={()=>deleteMenu(item)}><Trash2 size={16}/></button>
         </div>)}
+        {removedMenus.length>0&&<div className="menu-restore-panel">
+          <span>삭제된 메뉴</span>
+          <div>{removedMenus.map(item=><button type="button" key={item} onClick={()=>restoreMenu(item)}><Plus size={14}/>{menuName[item]} 복원</button>)}</div>
+        </div>}
       </div>
       <label className="field">메인 영상 캡션<input value={draft.heroCaption} onChange={e=>set('heroCaption',e.target.value)}/></label>
       <label className="field">메인 영상 버튼<input value={draft.heroButtonLabel} onChange={e=>set('heroButtonLabel',e.target.value)}/></label>

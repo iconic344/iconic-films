@@ -11981,3 +11981,66 @@ body{
   .menu-order-row{grid-template-columns:40px minmax(0,1fr) 28px;padding:8px}
   .menu-drag-handle{width:40px;height:40px}
 }
+
+
+/* Navigation menu delete / restore controls */
+.menu-order-row{
+  grid-template-columns:42px minmax(0,1fr) 34px 40px!important;
+}
+.menu-delete-button{
+  width:40px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:transparent;
+  color:var(--soft);
+  transition:background .2s ease,color .2s ease,border-color .2s ease,transform .2s ease;
+}
+.menu-delete-button:hover,
+.menu-delete-button:focus-visible{
+  color:#ff6b6b;
+  border-color:color-mix(in srgb,#ff6b6b 40%,var(--line));
+  background:color-mix(in srgb,#ff6b6b 10%,transparent);
+  transform:translateY(-1px);
+}
+.menu-restore-panel{
+  margin-top:8px;
+  padding:12px;
+  display:grid;
+  gap:10px;
+  border:1px dashed var(--line);
+  border-radius:14px;
+  background:color-mix(in srgb,var(--card) 62%,transparent);
+}
+.menu-restore-panel>span{
+  color:var(--soft);
+  font-size:10px;
+  letter-spacing:.06em;
+}
+.menu-restore-panel>div{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.menu-restore-panel button{
+  min-height:34px;
+  padding:0 11px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:transparent;
+  color:var(--ink);
+  font-size:11px;
+}
+.menu-restore-panel button:hover,
+.menu-restore-panel button:focus-visible{
+  background:color-mix(in srgb,var(--ink) 8%,transparent);
+}
+@media(max-width:640px){
+  .menu-order-row{grid-template-columns:40px minmax(0,1fr) 26px 38px!important}
+  .menu-delete-button{width:38px;height:40px}
+}

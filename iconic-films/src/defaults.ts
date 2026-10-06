@@ -106,8 +106,9 @@ export function normalizeConfig(value:unknown={}){
   };
 }):[];
  const navKeys:NavItemKey[]=['work','about','team','contact'];
- const storedNavOrder=Array.isArray((stored as any).navOrder)?(stored as any).navOrder.filter((key:any):key is NavItemKey=>navKeys.includes(key)):[];
- const navOrder=[...new Set<NavItemKey>(storedNavOrder),...navKeys.filter(key=>!storedNavOrder.includes(key))];
+ const hasStoredNavOrder=Array.isArray((stored as any).navOrder);
+ const storedNavOrder=hasStoredNavOrder?(stored as any).navOrder.filter((key:any):key is NavItemKey=>navKeys.includes(key)):[];
+ const navOrder=hasStoredNavOrder?[...new Set<NavItemKey>(storedNavOrder)]:[...navKeys];
  const storedText=(stored.textStyles||{}) as Partial<SiteTextStyles>;
  const textStyles=Object.fromEntries(Object.entries(defaultTextStyles).map(([key,value])=>[key,{...value,...((storedText as any)[key]||{})}])) as SiteTextStyles;
  const hasNewPlaybackDefaults=typeof stored.musicShuffle==='boolean'||stored.musicRepeatMode==='none'||stored.musicRepeatMode==='all'||stored.musicRepeatMode==='one';
