@@ -48,6 +48,9 @@ export default function LayoutEditor({draft,setDraft}:{draft:Config;setDraft:Dis
     <section className="editor-card">
       <h3>Section position</h3>
       <p>각 공개 영역 전체를 X/Y 방향으로 이동합니다. 세부 글씨 위치는 아래 Typography에서 따로 조절할 수 있습니다.</p>
+      {range('navOffsetX','상단 메뉴 가로 위치',-260,260)}
+      {range('navOffsetY','상단 메뉴 세로 위치',-160,220)}
+      {range('navScale','상단 메뉴 크기',.75,1.25,.01,'×')}
       {range('heroOffsetX','메인 영상 가로 위치',-260,260)}
       {range('heroOffsetY','메인 영상 세로 위치',-260,260)}
       {range('heroScale','메인 영역 크기',.7,1.35,.01,'×')}

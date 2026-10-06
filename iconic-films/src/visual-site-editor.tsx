@@ -1,10 +1,11 @@
 'use client';
-import {useEffect,useMemo,useRef,useState,type Dispatch,type PointerEvent,type SetStateAction} from 'react';
-import {ArrowDown,ArrowUp,Copy,Grip,Maximize2,Plus,RotateCcw,Save,Settings2,Trash2,X} from 'lucide-react';
+import {useEffect,useRef,useState,type Dispatch,type PointerEvent,type SetStateAction} from 'react';
+import {ArrowDown,ArrowUp,Copy,Eye,EyeOff,Grip,Layers3,Maximize2,PanelLeft,PanelRight,Plus,RotateCcw,Save,Settings2,SlidersHorizontal,Trash2,Type,X} from 'lucide-react';
 import type {Config,NavItemKey,Work} from './defaults';
 import {uploadFile} from './media-upload';
 
 type SectionKey='nav'|'hero'|'work'|'about'|'team'|'footer';
+type PanelTab='layers'|'content'|'layout'|'style';
 export type VisualSelection=SectionKey|`work:${string}`;
 
 const clamp=(n:number,min:number,max:number)=>Math.min(max,Math.max(min,n));
@@ -13,52 +14,34 @@ const sections:{key:SectionKey;label:string}[]=[
  {key:'about',label:'About'},{key:'team',label:'Team'},{key:'footer',label:'Footer'}
 ];
 const navLabels:Record<NavItemKey,string>={work:'Work',about:'About',team:'Team',contact:'Contact'};
+const labelKeys:Record<NavItemKey,'navWorkLabel'|'navAboutLabel'|'navTeamLabel'|'navContactLabel'>={work:'navWorkLabel',about:'navAboutLabel',team:'navTeamLabel',contact:'navContactLabel'};
 
 export default function VisualSiteEditor({
  config,setConfig,selection,setSelection,onSave,onCancel,onOpenAdmin,busy
 }:{
- config:Config;
- setConfig:Dispatch<SetStateAction<Config>>;
- selection:VisualSelection;
- setSelection:(value:VisualSelection)=>void;
- onSave:()=>void|Promise<void>;
- onCancel:()=>void;
- onOpenAdmin:()=>void;
- busy:boolean;
+ config:Config;setConfig:Dispatch<SetStateAction<Config>>;selection:VisualSelection;setSelection:(value:VisualSelection)=>void;
+ onSave:()=>void|Promise<void>;onCancel:()=>void;onOpenAdmin:()=>void;busy:boolean;
 }){
- const [rect,setRect]=useState<DOMRect|null>(null);
- const [uploading,setUploading]=useState(false);
- const dragState=useRef<{x:number;y:number;baseX:number;baseY:number}|null>(null);
- const resizeState=useRef<{x:number;y:number;base:number}|null>(null);
-
+ const [rect,setRect]=useState<DOMRect|null>(null),[uploading,setUploading]=useState(false),[panelSide,setPanelSide]=useState<'left'|'right'>('right'),[panelOpen,setPanelOpen]=useState(true),[tab,setTab]=useState<PanelTab>('layers');
+ const dragState=useRef<{x:number;y:number;baseX:number;baseY:number}|null>(null),resizeState=useRef<{x:number;y:number;base:number}|null>(null);
  const selectedWorkId=selection.startsWith('work:')?selection.slice(5):'';
  const selectedWork=selectedWorkId?config.works.find(w=>w.id===selectedWorkId)||null:null;
  const sectionSelection=(selection.startsWith('work:')?'work':selection) as SectionKey;
 
- const target=()=>{
+ const targetFor=(value:VisualSelection=selection)=>{
   if(typeof document==='undefined')return null;
-  if(selectedWorkId){
-   return Array.from(document.querySelectorAll<HTMLElement>('[data-visual-work-id]')).find(el=>el.dataset.visualWorkId===selectedWorkId)||null;
-  }
-  return document.querySelector<HTMLElement>(`[data-visual-section="${selection}"]`);
+  if(value.startsWith('work:')){const id=value.slice(5);return Array.from(document.querySelectorAll<HTMLElement>('[data-visual-work-id]')).find(el=>el.dataset.visualWorkId===id)||null}
+  return document.querySelector<HTMLElement>(`[data-visual-section="${value}"]`);
  };
- const refresh=()=>{
-  const el=target();
-  setRect(el?el.getBoundingClientRect():null);
- };
- useEffect(()=>{
-  let raf=0;
-  const sync=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(refresh)};
-  sync();
-  window.addEventListener('scroll',sync,{passive:true});
-  window.addEventListener('resize',sync);
-  return()=>{cancelAnimationFrame(raf);window.removeEventListener('scroll',sync);window.removeEventListener('resize',sync)};
- },[selection,config]);
+ const refresh=()=>{const el=targetFor();setRect(el?el.getBoundingClientRect():null)};
+ useEffect(()=>{let raf=0;const sync=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(refresh)};sync();window.addEventListener('scroll',sync,{passive:true});window.addEventListener('resize',sync);return()=>{cancelAnimationFrame(raf);window.removeEventListener('scroll',sync);window.removeEventListener('resize',sync)}},[selection,config]);
+ useEffect(()=>{const el=targetFor();if(!el)return;const r=el.getBoundingClientRect();if(r.width<window.innerWidth*.76)setPanelSide(r.left+r.width/2>window.innerWidth/2?'left':'right');else if(selection==='nav')setPanelSide('right')},[selection]);
 
  const patch=<K extends keyof Config>(key:K,value:Config[K])=>setConfig(d=>({...d,[key]:value}));
  const patchWork=(id:string,key:keyof Work,value:Work[keyof Work])=>setConfig(d=>({...d,works:d.works.map(w=>w.id===id?{...w,[key]:value}:w)}));
-
+ const patchTeam=(id:string,key:string,value:unknown)=>setConfig(d=>({...d,teamMembers:d.teamMembers.map(m=>m.id===id?{...m,[key]:value}:m)}));
  const layoutKeys=(key:SectionKey)=>{
+  if(key==='nav')return {x:'navOffsetX',y:'navOffsetY',scale:'navScale'} as const;
   if(key==='hero')return {x:'heroOffsetX',y:'heroOffsetY',scale:'heroScale'} as const;
   if(key==='work')return {x:'workOffsetX',y:'workOffsetY',scale:'workScale'} as const;
   if(key==='about')return {x:'aboutOffsetX',y:'aboutOffsetY',scale:'aboutScale'} as const;
@@ -69,200 +52,79 @@ export default function VisualSiteEditor({
  const meta=layoutKeys(sectionSelection);
 
  const beginMove=(e:PointerEvent<HTMLButtonElement>)=>{
-  if(!meta||selectedWork)return;
-  e.preventDefault();e.stopPropagation();
+  if(!meta||selectedWork)return;e.preventDefault();e.stopPropagation();
   dragState.current={x:e.clientX,y:e.clientY,baseX:Number(config[meta.x]),baseY:Number(config[meta.y])};
-  const move=(event:globalThis.PointerEvent)=>{
-   const start=dragState.current;if(!start)return;
-   const nx=clamp(Math.round(start.baseX+event.clientX-start.x),-500,500);
-   const ny=clamp(Math.round(start.baseY+event.clientY-start.y),-500,500);
-   setConfig(d=>({...d,[meta.x]:nx,[meta.y]:ny}));
-  };
+  const move=(event:globalThis.PointerEvent)=>{const start=dragState.current;if(!start)return;setConfig(d=>({...d,[meta.x]:clamp(Math.round(start.baseX+event.clientX-start.x),-500,500),[meta.y]:clamp(Math.round(start.baseY+event.clientY-start.y),-500,500)}))};
   const up=()=>{dragState.current=null;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
   window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
  };
  const beginResize=(e:PointerEvent<HTMLButtonElement>)=>{
-  if(!meta||selectedWork)return;
-  e.preventDefault();e.stopPropagation();
+  if(!meta||selectedWork)return;e.preventDefault();e.stopPropagation();
   resizeState.current={x:e.clientX,y:e.clientY,base:Number(config[meta.scale])};
-  const move=(event:globalThis.PointerEvent)=>{
-   const start=resizeState.current;if(!start)return;
-   const delta=((event.clientX-start.x)+(event.clientY-start.y))/700;
-   const scale=Math.round(clamp(start.base+delta,.7,1.35)*100)/100;
-   setConfig(d=>({...d,[meta.scale]:scale}));
-  };
+  const move=(event:globalThis.PointerEvent)=>{const start=resizeState.current;if(!start)return;const delta=((event.clientX-start.x)+(event.clientY-start.y))/720;setConfig(d=>({...d,[meta.scale]:Math.round(clamp(start.base+delta,.65,1.45)*100)/100}))};
   const up=()=>{resizeState.current=null;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
   window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
  };
 
- const isVisible=(key:SectionKey)=>{
-  if(key==='nav')return config.showNav;
-  if(key==='hero')return config.showHero;
-  if(key==='footer')return config.showFooter;
-  if(key==='work')return config.navOrder.includes('work');
-  if(key==='about')return config.showAbout&&config.navOrder.includes('about');
-  if(key==='team')return config.showTeam&&config.navOrder.includes('team');
-  return true;
- };
- const removeSection=(key:SectionKey)=>setConfig(d=>{
-  if(key==='nav')return {...d,showNav:false};
-  if(key==='hero')return {...d,showHero:false};
-  if(key==='footer')return {...d,showFooter:false};
-  if(key==='work')return {...d,navOrder:d.navOrder.filter(x=>x!=='work')};
-  if(key==='about')return {...d,showAbout:false,navOrder:d.navOrder.filter(x=>x!=='about')};
-  if(key==='team')return {...d,showTeam:false,navOrder:d.navOrder.filter(x=>x!=='team')};
-  return d;
- });
- const restoreSection=(key:SectionKey)=>setConfig(d=>{
-  if(key==='nav')return {...d,showNav:true};
-  if(key==='hero')return {...d,showHero:true};
-  if(key==='footer')return {...d,showFooter:true};
-  if(key==='work')return {...d,navOrder:d.navOrder.includes('work')?d.navOrder:[...d.navOrder,'work']};
-  if(key==='about')return {...d,showAbout:true,navOrder:d.navOrder.includes('about')?d.navOrder:[...d.navOrder,'about']};
-  if(key==='team')return {...d,showTeam:true,navOrder:d.navOrder.includes('team')?d.navOrder:[...d.navOrder,'team']};
-  return d;
- });
- const resetLayout=()=>{
-  if(!meta)return;
-  setConfig(d=>({...d,[meta.x]:0,[meta.y]:0,[meta.scale]:1}));
- };
- const reorder=(item:NavItemKey,dir:number)=>setConfig(d=>{
-  const arr=[...d.navOrder],i=arr.indexOf(item),j=i+dir;
-  if(i<0||j<0||j>=arr.length)return d;
-  [arr[i],arr[j]]=[arr[j],arr[i]];
-  return {...d,navOrder:arr};
- });
+ const isVisible=(key:SectionKey)=>key==='nav'?config.showNav:key==='hero'?config.showHero:key==='footer'?config.showFooter:key==='work'?config.navOrder.includes('work'):key==='about'?config.showAbout&&config.navOrder.includes('about'):config.showTeam&&config.navOrder.includes('team');
+ const removeSection=(key:SectionKey)=>setConfig(d=>key==='nav'?{...d,showNav:false}:key==='hero'?{...d,showHero:false}:key==='footer'?{...d,showFooter:false}:key==='work'?{...d,navOrder:d.navOrder.filter(x=>x!=='work')}:key==='about'?{...d,showAbout:false,navOrder:d.navOrder.filter(x=>x!=='about')}:{...d,showTeam:false,navOrder:d.navOrder.filter(x=>x!=='team')});
+ const restoreSection=(key:SectionKey)=>setConfig(d=>key==='nav'?{...d,showNav:true}:key==='hero'?{...d,showHero:true}:key==='footer'?{...d,showFooter:true}:key==='work'?{...d,navOrder:d.navOrder.includes('work')?d.navOrder:[...d.navOrder,'work']}:key==='about'?{...d,showAbout:true,navOrder:d.navOrder.includes('about')?d.navOrder:[...d.navOrder,'about']}:{...d,showTeam:true,navOrder:d.navOrder.includes('team')?d.navOrder:[...d.navOrder,'team']});
+ const resetLayout=()=>{if(meta)setConfig(d=>({...d,[meta.x]:0,[meta.y]:0,[meta.scale]:1}))};
+ const reorderMenu=(item:NavItemKey,dir:number)=>setConfig(d=>{const arr=[...d.navOrder],i=arr.indexOf(item),j=i+dir;if(i<0||j<0||j>=arr.length)return d;[arr[i],arr[j]]=[arr[j],arr[i]];return {...d,navOrder:arr}});
+ const removeMenu=(item:NavItemKey)=>setConfig(d=>({...d,navOrder:d.navOrder.filter(x=>x!==item)}));
+ const restoreMenu=(item:NavItemKey)=>setConfig(d=>d.navOrder.includes(item)?d:{...d,navOrder:[...d.navOrder,item]});
+ const moveWork=(id:string,dir:number)=>setConfig(d=>{const arr=[...d.works],i=arr.findIndex(w=>w.id===id),j=i+dir;if(i<0||j<0||j>=arr.length)return d;[arr[i],arr[j]]=[arr[j],arr[i]];return {...d,works:arr}});
+ const addWork=()=>{const id='visual-'+Date.now(),work:Work={id,title:'New work',category:'Unassigned',year:new Date().getFullYear().toString(),role:'',description:'',poster:'',video:'',visible:false};setConfig(d=>({...d,works:[...d.works,work]}));setSelection(`work:${id}`);setTab('content')};
+ const duplicateWork=(work:Work)=>{const copy={...work,id:'visual-'+Date.now(),title:work.title+' copy'};setConfig(d=>({...d,works:[...d.works,copy]}));setSelection(`work:${copy.id}`);setTab('content')};
+ const deleteWork=(id:string)=>{setConfig(d=>({...d,works:d.works.filter(w=>w.id!==id)}));setSelection('work');setTab('layers')};
+ const uploadWork=async(file:File|undefined,field:'poster'|'video')=>{if(!file||!selectedWork)return;try{setUploading(true);const url=await uploadFile(file);setConfig(d=>({...d,works:d.works.map(w=>w.id===selectedWork.id?{...w,[field]:url,visible:true}:w)}))}finally{setUploading(false)}};
+ const uploadConfig=async(file:File|undefined,key:keyof Config)=>{if(!file)return;try{setUploading(true);const url=await uploadFile(file);setConfig(d=>({...d,[key]:url,...(key==='aboutImage'?{aboutMediaType:'image'}:{})}))}finally{setUploading(false)}};
+ const selectLayer=(value:VisualSelection)=>{setSelection(value);requestAnimationFrame(()=>targetFor(value)?.scrollIntoView({behavior:'smooth',block:value==='nav'?'start':'center'}))};
+ const hiddenSections=sections.filter(s=>!isVisible(s.key)),toolbarBottom=!!rect&&rect.top<112&&window.innerWidth>820,labelInside=!!rect&&rect.top<28;
 
- const addWork=()=>{
-  const id='visual-'+Date.now();
-  const work:Work={id,title:'New work',category:'Unassigned',year:new Date().getFullYear().toString(),role:'',description:'',poster:'',video:'',visible:false};
-  setConfig(d=>({...d,works:[...d.works,work]}));
-  setSelection(`work:${id}`);
- };
- const duplicateWork=(work:Work)=>{
-  const copy={...work,id:'visual-'+Date.now(),title:work.title+' copy'};
-  setConfig(d=>({...d,works:[...d.works,copy]}));
-  setSelection(`work:${copy.id}`);
- };
- const deleteWork=(id:string)=>{
-  setConfig(d=>({...d,works:d.works.filter(w=>w.id!==id)}));
-  setSelection('work');
- };
- const upload=async(file:File|undefined,field:'poster'|'video')=>{
-  if(!file||!selectedWork)return;
-  try{
-   setUploading(true);
-   const url=await uploadFile(file);
-   setConfig(d=>({...d,works:d.works.map(w=>w.id===selectedWork.id?{...w,[field]:url,visible:true}:w)}));
-  }finally{setUploading(false)}
- };
-
- const removed=sections.filter(s=>!isVisible(s.key));
- const activeSections=sections.filter(s=>isVisible(s.key));
-
- return <div className="visual-editor-ui" data-visual-editor="true">
-  <div className="visual-editor-topbar">
-   <div className="visual-editor-title"><Settings2 size={16}/><strong>VISUAL EDIT</strong><span>클릭해서 선택 · 핸들로 이동/크기조절</span></div>
-   <div className="visual-editor-actions">
-    <button type="button" onClick={onOpenAdmin}>ADMIN</button>
-    <button type="button" onClick={onCancel}><X size={15}/> 취소</button>
-    <button type="button" className="is-primary" disabled={busy} onClick={onSave}><Save size={15}/> {busy?'저장 중':'저장'}</button>
+ return <div className={'visual-editor-ui is-panel-'+panelSide} data-visual-editor="true">
+  <div className={'visual-editor-topbar '+(toolbarBottom?'is-bottom':'is-top')}>
+   <div className="visual-editor-title"><Settings2 size={16}/><strong>VISUAL EDIT</strong><span>화면에서 선택 · 이동 · 크기 · 콘텐츠 · 스타일</span></div>
+   <div className="visual-editor-toolbar-tools">
+    <button type="button" className="visual-toolbar-icon" title="패널 위치 전환" onClick={()=>setPanelSide(v=>v==='right'?'left':'right')}>{panelSide==='right'?<PanelLeft size={15}/>:<PanelRight size={15}/>}</button>
+    <button type="button" className="visual-toolbar-icon" title={panelOpen?'패널 접기':'패널 열기'} onClick={()=>setPanelOpen(v=>!v)}><SlidersHorizontal size={15}/></button>
+    <div className="visual-editor-actions"><button type="button" onClick={onOpenAdmin}>ADMIN</button><button type="button" onClick={onCancel}><X size={15}/><span>취소</span></button><button type="button" className="is-primary" disabled={busy} onClick={onSave}><Save size={15}/><span>{busy?'저장 중':'저장'}</span></button></div>
    </div>
   </div>
 
-  <aside className="visual-editor-panel">
-   <div className="visual-editor-section-picker">
-    {activeSections.map(s=><button type="button" className={sectionSelection===s.key&&!selectedWork?'is-active':''} key={s.key} onClick={()=>setSelection(s.key)}>{s.label}</button>)}
-   </div>
+  {panelOpen?<aside className={'visual-editor-panel is-'+panelSide}>
+   <div className="visual-panel-head"><div><strong>{selectedWork?'Work card':sections.find(s=>s.key===sectionSelection)?.label}</strong><small>{selectedWork?'카드 단위 편집':'섹션 단위 편집'}</small></div><button type="button" aria-label="편집 패널 접기" onClick={()=>setPanelOpen(false)}><X size={15}/></button></div>
+   <div className="visual-editor-tabs" role="tablist"><button className={tab==='layers'?'is-active':''} onClick={()=>setTab('layers')}><Layers3 size={13}/>Layers</button><button className={tab==='content'?'is-active':''} onClick={()=>setTab('content')}><Type size={13}/>Content</button><button className={tab==='layout'?'is-active':''} onClick={()=>setTab('layout')}><Maximize2 size={13}/>Layout</button><button className={tab==='style'?'is-active':''} onClick={()=>setTab('style')}><SlidersHorizontal size={13}/>Style</button></div>
+   {tab==='layers'&&<LayersPanel config={config} selection={selection} select={selectLayer} isVisible={isVisible} hide={removeSection} restore={restoreSection} moveWork={moveWork} patchWork={patchWork} deleteWork={deleteWork} addWork={addWork}/>}
+   {tab==='content'&&<div className="visual-editor-context">{selectedWork?<WorkEditor work={selectedWork} patch={(key,value)=>patchWork(selectedWork.id,key,value)} onUpload={uploadWork} uploading={uploading} onDuplicate={()=>duplicateWork(selectedWork)} onDelete={()=>deleteWork(selectedWork.id)}/>:<SectionEditor section={sectionSelection} config={config} patch={patch} patchTeam={patchTeam} reorder={reorderMenu} removeMenu={removeMenu} restoreMenu={restoreMenu} addWork={addWork} uploadConfig={uploadConfig} uploading={uploading}/>}</div>}
+   {tab==='layout'&&<div className="visual-editor-layout"><div className="visual-editor-panel-head"><strong>Geometry</strong>{meta&&<button type="button" onClick={resetLayout}><RotateCcw size={13}/>Reset</button>}</div>{meta&&<><Range label="X position" value={Number(config[meta.x])} min={-500} max={500} step={1} suffix="px" onChange={v=>patch(meta.x,v as never)}/><Range label="Y position" value={Number(config[meta.y])} min={-500} max={500} step={1} suffix="px" onChange={v=>patch(meta.y,v as never)}/><Range label="Scale" value={Math.round(Number(config[meta.scale])*100)} min={65} max={145} step={1} suffix="%" onChange={v=>patch(meta.scale,(v/100) as never)}/></>}{sectionSelection==='work'&&<Range label="Grid columns" value={config.columns} min={1} max={4} step={1} onChange={v=>patch('columns',v)}/>} {sectionSelection==='team'&&<><Range label="Media size" value={config.teamMediaSize} min={120} max={520} step={1} suffix="px" onChange={v=>patch('teamMediaSize',v)}/><Range label="Row gap" value={config.teamRowGap} min={12} max={180} step={1} suffix="px" onChange={v=>patch('teamRowGap',v)}/></>}<Range label="Global section spacing" value={config.spacing} min={28} max={180} step={1} suffix="px" onChange={v=>patch('spacing',v)}/>{!selectedWork&&<button type="button" className="visual-editor-danger" onClick={()=>removeSection(sectionSelection)}><EyeOff size={14}/> 이 영역 숨기기</button>}</div>}
+   {tab==='style'&&<StylePanel config={config} patch={patch} uploadConfig={uploadConfig} uploading={uploading}/>}
+   {hiddenSections.length>0&&<div className="visual-editor-restore"><span>숨긴 영역</span><div>{hiddenSections.map(s=><button type="button" key={s.key} onClick={()=>{restoreSection(s.key);selectLayer(s.key)}}><Plus size={13}/>{s.label}</button>)}</div></div>}
+  </aside>:<button type="button" className={'visual-panel-reopen is-'+panelSide} onClick={()=>setPanelOpen(true)}><SlidersHorizontal size={16}/><span>편집 패널</span></button>}
 
-   {removed.length>0&&<div className="visual-editor-restore">
-    <span>숨긴 영역 추가</span>
-    <div>{removed.map(s=><button type="button" key={s.key} onClick={()=>{restoreSection(s.key);setSelection(s.key)}}><Plus size={13}/>{s.label}</button>)}</div>
-   </div>}
-
-   <div className="visual-editor-context">
-    {selectedWork?<WorkEditor work={selectedWork} patch={(key,value)=>patchWork(selectedWork.id,key,value)} onUpload={upload} uploading={uploading} onDuplicate={()=>duplicateWork(selectedWork)} onDelete={()=>deleteWork(selectedWork.id)}/>:
-     <SectionEditor section={sectionSelection} config={config} patch={patch} reorder={reorder} addWork={addWork}/>}
-   </div>
-
-   {!selectedWork&&sectionSelection!=='nav'&&<div className="visual-editor-layout">
-    <div className="visual-editor-panel-head"><strong>Layout</strong>{meta&&<button type="button" onClick={resetLayout}><RotateCcw size={13}/> Reset</button>}</div>
-    {meta&&<>
-     <Range label="X" value={Number(config[meta.x])} min={-500} max={500} step={1} onChange={v=>patch(meta.x,v as never)}/>
-     <Range label="Y" value={Number(config[meta.y])} min={-500} max={500} step={1} onChange={v=>patch(meta.y,v as never)}/>
-     <Range label="Size" value={Math.round(Number(config[meta.scale])*100)} min={70} max={135} step={1} suffix="%" onChange={v=>patch(meta.scale,(v/100) as never)}/>
-    </>}
-    <button type="button" className="visual-editor-danger" onClick={()=>removeSection(sectionSelection)}><Trash2 size={14}/> 이 영역 숨기기</button>
-   </div>}
-  </aside>
-
-  {rect&&<div className="visual-selection-frame" style={{left:rect.left,top:rect.top,width:rect.width,height:rect.height}}>
-   <span className="visual-selection-label">{selectedWork?'WORK CARD':sections.find(s=>s.key===sectionSelection)?.label}</span>
-   {meta&&!selectedWork&&<button type="button" className="visual-move-handle" aria-label="영역 이동" onPointerDown={beginMove}><Grip size={16}/></button>}
-   {meta&&!selectedWork&&<button type="button" className="visual-resize-handle" aria-label="영역 크기 조절" onPointerDown={beginResize}><Maximize2 size={15}/></button>}
-  </div>}
+  {rect&&<div className={'visual-selection-frame is-panel-'+panelSide+(labelInside?' is-label-inside':'')} style={{left:rect.left,top:rect.top,width:rect.width,height:rect.height}}><span className="visual-selection-label">{selectedWork?'WORK CARD':sections.find(s=>s.key===sectionSelection)?.label}</span>{meta&&!selectedWork&&<button type="button" className="visual-move-handle" aria-label="영역 이동" onPointerDown={beginMove}><Grip size={16}/></button>}{meta&&!selectedWork&&<button type="button" className="visual-resize-handle" aria-label="영역 크기 조절" onPointerDown={beginResize}><Maximize2 size={15}/></button>}</div>}
  </div>;
 }
 
-function Range({label,value,min,max,step,suffix='',onChange}:{label:string;value:number;min:number;max:number;step:number;suffix?:string;onChange:(v:number)=>void}){
- return <label className="visual-range"><span>{label}<b>{Math.round(value*100)/100}{suffix}</b></span><input type="range" value={value} min={min} max={max} step={step} onChange={e=>onChange(Number(e.target.value))}/></label>;
+function LayersPanel({config,selection,select,isVisible,hide,restore,moveWork,patchWork,deleteWork,addWork}:{config:Config;selection:VisualSelection;select:(v:VisualSelection)=>void;isVisible:(k:SectionKey)=>boolean;hide:(k:SectionKey)=>void;restore:(k:SectionKey)=>void;moveWork:(id:string,dir:number)=>void;patchWork:(id:string,key:keyof Work,value:Work[keyof Work])=>void;deleteWork:(id:string)=>void;addWork:()=>void}){
+ return <div className="visual-layers"><div className="visual-layer-heading"><span>Page layers</span><button onClick={addWork}><Plus size={13}/>작품</button></div>{sections.map(section=><div className="visual-layer-group" key={section.key}><div className={'visual-layer-row '+(selection===section.key?'is-active':'')}><button className="visual-layer-select" onClick={()=>select(section.key)}><span>{section.label}</span><small>{isVisible(section.key)?'VISIBLE':'HIDDEN'}</small></button><button className="visual-layer-icon" aria-label={isVisible(section.key)?'숨기기':'표시하기'} onClick={()=>isVisible(section.key)?hide(section.key):restore(section.key)}>{isVisible(section.key)?<Eye size={14}/>:<EyeOff size={14}/>}</button></div>{section.key==='work'&&<div className="visual-layer-children">{config.works.map((work,index)=><div className={'visual-layer-row is-child '+(selection===`work:${work.id}`?'is-active':'')} key={work.id}><button className="visual-layer-select" onClick={()=>select(`work:${work.id}`)}><span>{work.title||'Untitled'}</span><small>{work.visible?'LIVE':'DRAFT'}</small></button><div className="visual-layer-mini-actions"><button disabled={index===0} onClick={()=>moveWork(work.id,-1)}><ArrowUp size={12}/></button><button disabled={index===config.works.length-1} onClick={()=>moveWork(work.id,1)}><ArrowDown size={12}/></button><button onClick={()=>patchWork(work.id,'visible',!work.visible)}>{work.visible?<Eye size={12}/>:<EyeOff size={12}/>}</button><button className="is-danger" onClick={()=>deleteWork(work.id)}><Trash2 size={12}/></button></div></div>)}</div>}</div>)}</div>;
 }
+function Range({label,value,min,max,step,suffix='',onChange}:{label:string;value:number;min:number;max:number;step:number;suffix?:string;onChange:(v:number)=>void}){return <label className="visual-range"><span>{label}<b>{Math.round(value*100)/100}{suffix}</b></span><input type="range" value={value} min={min} max={max} step={step} onChange={e=>onChange(Number(e.target.value))}/></label>}
+function TextField({label,value,onChange,multi=false}:{label:string;value:string;onChange:(v:string)=>void;multi?:boolean}){return <label className="visual-field"><span>{label}</span>{multi?<textarea value={value} onChange={e=>onChange(e.target.value)}/>:<input value={value} onChange={e=>onChange(e.target.value)}/>}</label>}
+function FileField({label,accept,disabled,value,onFile,onClear}:{label:string;accept:string;disabled:boolean;value?:string;onFile:(file:File|undefined)=>void;onClear?:()=>void}){return <label className="visual-upload"><span>{label}</span><input type="file" accept={accept} disabled={disabled} onChange={e=>onFile(e.target.files?.[0])}/>{value&&<span className="visual-upload-state">등록됨 {onClear&&<button type="button" onClick={e=>{e.preventDefault();onClear()}}>제거</button>}</span>}</label>}
 
-function TextField({label,value,onChange,multi=false}:{label:string;value:string;onChange:(v:string)=>void;multi?:boolean}){
- return <label className="visual-field"><span>{label}</span>{multi?<textarea value={value} onChange={e=>onChange(e.target.value)}/>:<input value={value} onChange={e=>onChange(e.target.value)}/>}</label>;
+function SectionEditor({section,config,patch,patchTeam,reorder,removeMenu,restoreMenu,addWork,uploadConfig,uploading}:{section:SectionKey;config:Config;patch:<K extends keyof Config>(key:K,value:Config[K])=>void;patchTeam:(id:string,key:string,value:unknown)=>void;reorder:(item:NavItemKey,dir:number)=>void;removeMenu:(item:NavItemKey)=>void;restoreMenu:(item:NavItemKey)=>void;addWork:()=>void;uploadConfig:(file:File|undefined,key:keyof Config)=>void;uploading:boolean}){
+ const missing=(['work','about','team','contact'] as NavItemKey[]).filter(x=>!config.navOrder.includes(x));
+ if(section==='nav')return <><h3>Header</h3><TextField label="브랜드 이름" value={config.name} onChange={v=>patch('name',v)}/><FileField label="상단 로고" accept="image/*" disabled={uploading} value={config.logo} onFile={f=>uploadConfig(f,'logo')} onClear={()=>patch('logo','')}/><Range label="Glass opacity" value={config.navOpacity} min={0} max={100} step={1} suffix="%" onChange={v=>patch('navOpacity',v)}/><div className="visual-menu-order"><span>Menu order & labels</span>{config.navOrder.map((item,index)=><div key={item}><input value={String(config[labelKeys[item]])} onChange={e=>patch(labelKeys[item],e.target.value)}/><div><button disabled={index===0} onClick={()=>reorder(item,-1)}><ArrowUp size={13}/></button><button disabled={index===config.navOrder.length-1} onClick={()=>reorder(item,1)}><ArrowDown size={13}/></button><button className="is-danger" onClick={()=>removeMenu(item)}><Trash2 size={13}/></button></div></div>)}{missing.length>0&&<div className="visual-menu-restore">{missing.map(item=><button key={item} onClick={()=>restoreMenu(item)}><Plus size={12}/>{navLabels[item]}</button>)}</div>}</div></>;
+ if(section==='hero')return <><h3>Main visual</h3><TextField label="Hover title" value={config.heroCaption} onChange={v=>patch('heroCaption',v)}/><TextField label="Eyebrow" value={config.eyebrow} onChange={v=>patch('eyebrow',v)}/><TextField label="Bottom copy" value={config.subtitle} onChange={v=>patch('subtitle',v)}/><FileField label="Main video" accept="video/mp4,video/webm" disabled={uploading} value={config.heroVideo} onFile={f=>uploadConfig(f,'heroVideo')} onClear={()=>patch('heroVideo','')}/><FileField label="Fallback image" accept="image/jpeg,image/png,image/webp" disabled={uploading} value={config.heroPoster} onFile={f=>uploadConfig(f,'heroPoster')} onClear={()=>patch('heroPoster','')}/><label className="visual-toggle"><span>자동 재생</span><input type="checkbox" checked={config.autoplay} onChange={e=>patch('autoplay',e.target.checked)}/></label></>;
+ if(section==='work')return <><div className="visual-editor-panel-head"><h3>Work</h3><button type="button" onClick={addWork}><Plus size={13}/>작품 추가</button></div><TextField label="Small title" value={config.workKicker} onChange={v=>patch('workKicker',v)}/><TextField label="Headline" value={config.headline} multi onChange={v=>patch('headline',v)}/><TextField label="Aside" value={config.workAside} multi onChange={v=>patch('workAside',v)}/><Range label="Columns" value={config.columns} min={1} max={4} step={1} onChange={v=>patch('columns',v)}/></>;
+ if(section==='about')return <><h3>About</h3><TextField label="Small title" value={config.aboutKicker} onChange={v=>patch('aboutKicker',v)}/><TextField label="Headline" value={config.aboutHeadline} multi onChange={v=>patch('aboutHeadline',v)}/><TextField label="Body" value={config.about} multi onChange={v=>patch('about',v)}/><TextField label="Disciplines" value={config.aboutDisciplines} multi onChange={v=>patch('aboutDisciplines',v)}/><FileField label="About image" accept="image/jpeg,image/png,image/webp" disabled={uploading} value={config.aboutImage} onFile={f=>uploadConfig(f,'aboutImage')} onClear={()=>patch('aboutImage','')}/></>;
+ if(section==='team')return <><h3>Team</h3><TextField label="Small title" value={config.teamKicker} onChange={v=>patch('teamKicker',v)}/><TextField label="Headline" value={config.teamHeadline} multi onChange={v=>patch('teamHeadline',v)}/><div className="visual-team-list">{config.teamMembers.map(m=><label key={m.id}><span>{m.name||m.codeName}</span><input type="checkbox" checked={m.visible} onChange={e=>patchTeam(m.id,'visible',e.target.checked)}/></label>)}</div></>;
+ return <><h3>Footer</h3><TextField label="Admin label" value={config.footerAdminLabel} onChange={v=>patch('footerAdminLabel',v)}/></>;
 }
-
-function SectionEditor({section,config,patch,reorder,addWork}:{section:SectionKey;config:Config;patch:<K extends keyof Config>(key:K,value:Config[K])=>void;reorder:(item:NavItemKey,dir:number)=>void;addWork:()=>void}){
- if(section==='nav')return <>
-  <h3>Header</h3>
-  <TextField label="브랜드 이름" value={config.name} onChange={v=>patch('name',v)}/>
-  <Range label="Glass opacity" value={config.navOpacity} min={0} max={100} step={1} suffix="%" onChange={v=>patch('navOpacity',v)}/>
-  <div className="visual-menu-order"><span>Menu order</span>{config.navOrder.map((item,index)=><div key={item}><b>{navLabels[item]}</b><div><button disabled={index===0} onClick={()=>reorder(item,-1)}><ArrowUp size={13}/></button><button disabled={index===config.navOrder.length-1} onClick={()=>reorder(item,1)}><ArrowDown size={13}/></button></div></div>)}</div>
- </>;
- if(section==='hero')return <>
-  <h3>Main visual</h3>
-  <TextField label="Hover title" value={config.heroCaption} onChange={v=>patch('heroCaption',v)}/>
-  <TextField label="Eyebrow" value={config.eyebrow} onChange={v=>patch('eyebrow',v)}/>
-  <TextField label="Bottom copy" value={config.subtitle} onChange={v=>patch('subtitle',v)}/>
- </>;
- if(section==='work')return <>
-  <div className="visual-editor-panel-head"><h3>Work</h3><button type="button" onClick={addWork}><Plus size={13}/> 작품 추가</button></div>
-  <TextField label="Small title" value={config.workKicker} onChange={v=>patch('workKicker',v)}/>
-  <TextField label="Headline" value={config.headline} multi onChange={v=>patch('headline',v)}/>
-  <TextField label="Aside" value={config.workAside} multi onChange={v=>patch('workAside',v)}/>
-  <Range label="Columns" value={config.columns} min={1} max={4} step={1} onChange={v=>patch('columns',v)}/>
-  <div className="visual-work-list">{config.works.map(w=><button key={w.id} type="button" onClick={()=>document.querySelector<HTMLElement>(`[data-visual-work-id="${w.id}"]`)?.click()}><span>{w.title||'Untitled'}</span><small>{w.visible?'LIVE':'DRAFT'}</small></button>)}</div>
- </>;
- if(section==='about')return <>
-  <h3>About</h3>
-  <TextField label="Small title" value={config.aboutKicker} onChange={v=>patch('aboutKicker',v)}/>
-  <TextField label="Headline" value={config.aboutHeadline} multi onChange={v=>patch('aboutHeadline',v)}/>
-  <TextField label="Body" value={config.about} multi onChange={v=>patch('about',v)}/>
-  <TextField label="Disciplines" value={config.aboutDisciplines} multi onChange={v=>patch('aboutDisciplines',v)}/>
- </>;
- if(section==='team')return <>
-  <h3>Team</h3>
-  <TextField label="Small title" value={config.teamKicker} onChange={v=>patch('teamKicker',v)}/>
-  <TextField label="Headline" value={config.teamHeadline} multi onChange={v=>patch('teamHeadline',v)}/>
-  <Range label="Media size" value={config.teamMediaSize} min={120} max={520} step={1} suffix="px" onChange={v=>patch('teamMediaSize',v)}/>
-  <Range label="Row gap" value={config.teamRowGap} min={12} max={180} step={1} suffix="px" onChange={v=>patch('teamRowGap',v)}/>
- </>;
- return <>
-  <h3>Footer</h3>
-  <TextField label="Admin label" value={config.footerAdminLabel} onChange={v=>patch('footerAdminLabel',v)}/>
- </>;
+function StylePanel({config,patch,uploadConfig,uploading}:{config:Config;patch:<K extends keyof Config>(key:K,value:Config[K])=>void;uploadConfig:(file:File|undefined,key:keyof Config)=>void;uploading:boolean}){
+ return <div className="visual-style-panel"><div className="visual-editor-panel-head"><strong>Site style</strong></div><div className="visual-segmented"><button className={config.theme==='dark'?'is-active':''} onClick={()=>patch('theme','dark')}>Dark</button><button className={config.theme==='light'?'is-active':''} onClick={()=>patch('theme','light')}>Light</button></div><label className="visual-color"><span>Accent</span><input type="color" value={config.accent} onChange={e=>patch('accent',e.target.value)}/><b>{config.accent.toUpperCase()}</b></label><label className="visual-field"><span>Font</span><select value={config.font} onChange={e=>patch('font',e.target.value)}><option>Arial, Helvetica, sans-serif</option><option>Helvetica Neue, Arial, sans-serif</option><option>Georgia, serif</option><option>Times New Roman, serif</option><option>Verdana, sans-serif</option><option>Courier New, monospace</option><option>system-ui, sans-serif</option></select></label><Range label="Body size" value={config.fontSize} min={12} max={24} step={1} suffix="px" onChange={v=>patch('fontSize',v)}/><Range label="Corner radius" value={config.radius} min={0} max={54} step={1} suffix="px" onChange={v=>patch('radius',v)}/><Range label="Glass blur" value={config.blur} min={0} max={60} step={1} suffix="px" onChange={v=>patch('blur',v)}/><Range label="Glass opacity" value={config.glass} min={10} max={100} step={1} suffix="%" onChange={v=>patch('glass',v)}/><Range label="Motion" value={Math.round(config.motion*100)} min={0} max={180} step={5} suffix="%" onChange={v=>patch('motion',v/100)}/><label className="visual-field"><span>Background</span><select value={config.backgroundType} onChange={e=>patch('backgroundType',e.target.value)}><option value="none">None</option><option value="image">Image</option><option value="video">Video</option></select></label>{config.backgroundType==='image'&&<FileField label="Background image" accept="image/*" disabled={uploading} value={config.backgroundImage} onFile={f=>uploadConfig(f,'backgroundImage')} onClear={()=>patch('backgroundImage','')}/>} {config.backgroundType==='video'&&<FileField label="Background video" accept="video/mp4,video/webm" disabled={uploading} value={config.backgroundVideo} onFile={f=>uploadConfig(f,'backgroundVideo')} onClear={()=>patch('backgroundVideo','')}/>} {config.backgroundType!=='none'&&<><Range label="Background opacity" value={config.backgroundOpacity} min={0} max={100} step={1} suffix="%" onChange={v=>patch('backgroundOpacity',v)}/><Range label="Background dim" value={config.backgroundDim} min={0} max={100} step={1} suffix="%" onChange={v=>patch('backgroundDim',v)}/></>}</div>;
 }
-
 function WorkEditor({work,patch,onUpload,uploading,onDuplicate,onDelete}:{work:Work;patch:(key:keyof Work,value:Work[keyof Work])=>void;onUpload:(file:File|undefined,field:'poster'|'video')=>void;uploading:boolean;onDuplicate:()=>void;onDelete:()=>void}){
- return <>
-  <div className="visual-editor-panel-head"><h3>Work card</h3><div><button type="button" onClick={onDuplicate}><Copy size={13}/></button><button type="button" className="is-danger" onClick={onDelete}><Trash2 size={13}/></button></div></div>
-  <TextField label="Title" value={work.title} onChange={v=>patch('title',v)}/>
-  <TextField label="Category" value={work.category} onChange={v=>patch('category',v)}/>
-  <TextField label="Year" value={work.year} onChange={v=>patch('year',v)}/>
-  <TextField label="Role" value={work.role} onChange={v=>patch('role',v)}/>
-  <TextField label="Description" value={work.description} multi onChange={v=>patch('description',v)}/>
-  <label className="visual-toggle"><span>공개</span><input type="checkbox" checked={work.visible} onChange={e=>patch('visible',e.target.checked)}/></label>
-  <label className="visual-upload"><span>Poster / Image</span><input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={e=>onUpload(e.target.files?.[0],'poster')}/></label>
-  <label className="visual-upload"><span>Video</span><input type="file" accept="video/mp4,video/webm" disabled={uploading} onChange={e=>onUpload(e.target.files?.[0],'video')}/></label>
- </>;
+ return <><div className="visual-editor-panel-head"><h3>Work card</h3><div><button type="button" title="복제" onClick={onDuplicate}><Copy size={13}/></button><button type="button" className="is-danger" title="삭제" onClick={onDelete}><Trash2 size={13}/></button></div></div><TextField label="Title" value={work.title} onChange={v=>patch('title',v)}/><TextField label="Category" value={work.category} onChange={v=>patch('category',v)}/><TextField label="Year" value={work.year} onChange={v=>patch('year',v)}/><TextField label="Role" value={work.role} onChange={v=>patch('role',v)}/><TextField label="Description" value={work.description} multi onChange={v=>patch('description',v)}/><label className="visual-toggle"><span>공개</span><input type="checkbox" checked={work.visible} onChange={e=>patch('visible',e.target.checked)}/></label><FileField label="Poster / Image" accept="image/jpeg,image/png,image/webp" disabled={uploading} value={work.poster} onFile={f=>onUpload(f,'poster')} onClear={()=>patch('poster','')}/><FileField label="Video" accept="video/mp4,video/webm" disabled={uploading} value={work.video} onFile={f=>onUpload(f,'video')} onClear={()=>patch('video','')}/></>;
 }

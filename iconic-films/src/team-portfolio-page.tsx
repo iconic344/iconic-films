@@ -61,9 +61,10 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   useEffect(()=>()=>{if(viewerMusicHeld.current){viewerMusicHeld.current=false;onVideoViewerClose()}},[]);
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>{
-      if(viewerIndex!==null)return;
-      if(e.key==='Escape')onBack();
-
+      if(e.key!=='Escape')return;
+      if(e.defaultPrevented||viewerIndex!==null||document.querySelector('.unified-media-dialog,.media-gallery.is-fullscreen'))return;
+      e.preventDefault();
+      onBack();
     };
     window.addEventListener('keydown',key);
     return()=>window.removeEventListener('keydown',key);

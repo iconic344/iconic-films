@@ -760,3 +760,32 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
     min-height:620px!important;
   }
 }
+
+
+/* 2026-10-07 no-gap hero pass: the reel begins immediately after the sticky nav
+   and fills the remainder of the first viewport. Existing edge fades stay intact. */
+@media (min-width:1025px){
+  .site>.nav[data-visual-section="nav"]{
+    translate:var(--nav-offset-x,0px) var(--nav-offset-y,0px)!important;
+    scale:var(--nav-scale,1)!important;
+    transform-origin:50% 0!important;
+  }
+  .site>main>.hero{padding-top:0!important}
+  .hero-gallery{margin-top:0!important;margin-bottom:0!important}
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen){
+    padding-top:0!important;padding-bottom:0!important;margin-top:0!important
+  }
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-track,
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
+    height:calc(100dvh - 94px)!important;
+    min-height:620px!important;
+    max-height:none!important
+  }
+  .hero-gallery .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-caption{top:0!important;bottom:0!important}
+}
+@media (min-width:1025px) and (max-height:760px){
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-track,
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
+    min-height:calc(100dvh - 94px)!important
+  }
+}

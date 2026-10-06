@@ -234,3 +234,11 @@
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
 }
+
+
+/* 2026-10-07 cursor interpolation polish */
+.iconic-cursor{transition:opacity .18s cubic-bezier(.22,1,.36,1)!important}
+.iconic-cursor>span::before,.iconic-cursor>span::after{transition:opacity .32s cubic-bezier(.22,1,.36,1)!important}
+.iconic-cursor-optics{transition:opacity .24s cubic-bezier(.22,1,.36,1)!important}
+.cursor-optics-glass{transition:opacity .34s cubic-bezier(.22,1,.36,1)!important}
+.iconic-cursor-caption{transition:opacity .28s cubic-bezier(.22,1,.36,1)!important}
