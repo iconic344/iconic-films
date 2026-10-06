@@ -222,3 +222,18 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
   .unified-media-dialog .media-gallery-tools button{width:34px!important;height:34px!important}
   .unified-media-dialog .media-gallery-arrow{width:38px!important;height:38px!important}
 }
+
+
+/* 2026-10-07 aspect-aware fullscreen media */
+.media-gallery.is-fullscreen.is-landscape .media-gallery-artwork>video{
+  object-fit:cover!important;
+  object-position:center!important;
+}
+.media-gallery.is-fullscreen.is-landscape .media-gallery-backdrop,
+.media-gallery.is-fullscreen.is-landscape .media-gallery-backdrop-glass{
+  opacity:0!important;
+}
+.media-gallery.is-fullscreen.is-portrait .media-gallery-artwork>video{
+  object-fit:contain!important;
+  object-position:center!important;
+}
