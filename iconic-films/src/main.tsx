@@ -4,5 +4,6 @@ import './globals.css';
 import './media-experience.css';
 import './portfolio-refinements.css';
 import './desktop-refinements.css';
+import './mobile-refinements.css';
 
 createRoot(document.getElementById('root')!).render(<App/>);
