@@ -8105,3 +8105,118 @@ body{
     margin-right:74px!important;
   }
 }
+
+
+/* 2026-10-06 seamless keyed team-member transition */
+/* Each member is now a keyed page instance. Outgoing content fully dissolves before
+   the next member mounts, preventing the previous profile from flashing a second time. */
+.team-portfolio-page.member-motion-leaving .team-portfolio-hero,
+.team-portfolio-page.member-motion-leaving .team-portfolio-member-index,
+.team-portfolio-page.member-motion-leaving .team-portfolio-work,
+.team-portfolio-page.member-motion-leaving .team-portfolio-member-switch,
+.team-portfolio-page.member-motion-leaving .team-portfolio-footer{
+  animation:team-keyed-leave .30s cubic-bezier(.32,.72,0,1) both!important;
+  pointer-events:none!important;
+}
+.team-portfolio-page.member-motion-entering .team-portfolio-hero,
+.team-portfolio-page.member-motion-entering .team-portfolio-member-index,
+.team-portfolio-page.member-motion-entering .team-portfolio-work,
+.team-portfolio-page.member-motion-entering .team-portfolio-member-switch,
+.team-portfolio-page.member-motion-entering .team-portfolio-footer{
+  animation:team-keyed-enter .78s cubic-bezier(.16,1,.3,1) both!important;
+}
+.team-portfolio-page.member-motion-entering .team-portfolio-member-index{animation-delay:.035s!important}
+.team-portfolio-page.member-motion-entering .team-portfolio-work{animation-delay:.065s!important}
+.team-portfolio-page.member-motion-entering .team-portfolio-member-switch,
+.team-portfolio-page.member-motion-entering .team-portfolio-footer{animation-delay:.085s!important}
+
+@keyframes team-keyed-leave{
+  0%{
+    opacity:1;
+    filter:blur(0);
+    transform:translate3d(0,0,0) scale(1);
+  }
+  100%{
+    opacity:0;
+    filter:blur(4px);
+    transform:translate3d(0,3px,0) scale(.997);
+  }
+}
+@keyframes team-keyed-enter{
+  0%{
+    opacity:0;
+    filter:blur(7px);
+    transform:translate3d(0,7px,0) scale(.994);
+  }
+  46%{
+    opacity:.82;
+    filter:blur(1.5px);
+    transform:translate3d(0,1px,0) scale(.9995);
+  }
+  100%{
+    opacity:1;
+    filter:blur(0);
+    transform:translate3d(0,0,0) scale(1);
+  }
+}
+
+.team-portfolio-page.member-motion-leaving::before{
+  animation:team-keyed-glass-leave .30s cubic-bezier(.32,.72,0,1) both!important;
+}
+.team-portfolio-page.member-motion-entering::before{
+  animation:team-keyed-glass-enter .78s cubic-bezier(.16,1,.3,1) both!important;
+}
+@keyframes team-keyed-glass-leave{
+  0%{
+    opacity:0;
+    -webkit-backdrop-filter:blur(0) saturate(1);
+    backdrop-filter:blur(0) saturate(1);
+  }
+  100%{
+    opacity:.30;
+    -webkit-backdrop-filter:blur(12px) saturate(1.08);
+    backdrop-filter:blur(12px) saturate(1.08);
+  }
+}
+@keyframes team-keyed-glass-enter{
+  0%{
+    opacity:.30;
+    -webkit-backdrop-filter:blur(12px) saturate(1.08);
+    backdrop-filter:blur(12px) saturate(1.08);
+  }
+  55%{
+    opacity:.08;
+    -webkit-backdrop-filter:blur(3px) saturate(1.02);
+    backdrop-filter:blur(3px) saturate(1.02);
+  }
+  100%{
+    opacity:0;
+    -webkit-backdrop-filter:blur(0) saturate(1);
+    backdrop-filter:blur(0) saturate(1);
+  }
+}
+
+/* Avoid a one-frame transition reset on Safari/iOS and Chromium compositing. */
+.team-portfolio-hero,
+.team-portfolio-member-index,
+.team-portfolio-work,
+.team-portfolio-member-switch,
+.team-portfolio-footer{
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  will-change:opacity,transform,filter;
+}
+@media(prefers-reduced-motion:reduce){
+  .team-portfolio-page.member-motion-leaving .team-portfolio-hero,
+  .team-portfolio-page.member-motion-leaving .team-portfolio-member-index,
+  .team-portfolio-page.member-motion-leaving .team-portfolio-work,
+  .team-portfolio-page.member-motion-leaving .team-portfolio-member-switch,
+  .team-portfolio-page.member-motion-leaving .team-portfolio-footer,
+  .team-portfolio-page.member-motion-entering .team-portfolio-hero,
+  .team-portfolio-page.member-motion-entering .team-portfolio-member-index,
+  .team-portfolio-page.member-motion-entering .team-portfolio-work,
+  .team-portfolio-page.member-motion-entering .team-portfolio-member-switch,
+  .team-portfolio-page.member-motion-entering .team-portfolio-footer{
+    animation:none!important;
+  }
+}
