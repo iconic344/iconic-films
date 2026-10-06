@@ -107,7 +107,7 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
 
   return <div className="editor member-self-editor">
     <div className="editor-header">
-      <div><span className="kicker">VIIVII sara / {member.codeName||member.name}</span><h2>Edit team portfolio.</h2></div>
+      <div><span className="kicker">VIIVII sara / {member.name||'Portfolio'}</span><h2>Edit team portfolio.</h2></div>
       <div>
         <button className="save" disabled={busy} onClick={onSave}><Save size={16}/>{busy?(uploading||'처리 중…'):'저장 & 적용'}</button>
         <button type="button" className="icon" aria-label="편집 닫기" onClick={onClose}><X size={22}/></button>
@@ -139,7 +139,6 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
           <div className="team-editor-card-head"><div><span className="kicker">CATEGORY</span><h3>Portfolio category</h3></div></div>
           <div className="team-member-fields">
             <label className="field">대분류 이름<input placeholder="Fashion / Commercial / Events" value={member.name} onChange={e=>patch('name',e.target.value)}/></label>
-            <label className="field">INDEX CODE<input maxLength={8} value={member.codeName||''} onChange={e=>patch('codeName',e.target.value.toUpperCase().replace(/\s+/g,'').slice(0,8))}/></label>
             <label className="field">INDEX 문구<input maxLength={40} placeholder="CATEGORY INDEX" value={member.portfolioTeamIndexLabel||'CATEGORY INDEX'} onChange={e=>patch('portfolioTeamIndexLabel',e.target.value.slice(0,40))}/></label>
             <label className="field">세부 카테고리<textarea placeholder={"Fashion Show\nLookbook\nCampaign\nEditorial"} value={(member.portfolioSubcategories||[]).join('\n')} onChange={e=>setSubcategories(e.target.value)}/></label>
             <label className="field">참여자 / 제작 크레딧<textarea placeholder={"DIRECTOR / xnives\nDOP / name\nSTYLING / name"} value={member.portfolioCredits||''} onChange={e=>patch('portfolioCredits',e.target.value)}/></label>
