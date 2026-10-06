@@ -364,6 +364,56 @@ function normalizeUpload(name:string,type:string,size:number){
   return {type,ext:ext&&/^[a-z0-9]{1,8}$/.test(ext)?ext:'bin'};
 }
 
+const memberStringFields=[
+  'codeName','name','role','bio','instagram','photo','portfolioTitle','portfolioIntro','portfolioReturnLabel',
+  'portfolioNameFont','portfolioNameColor','portfolioRoleFont','portfolioRoleColor','portfolioBioFont','portfolioBioColor',
+  'portfolioTitleFont','portfolioTitleColor','portfolioIntroFont','portfolioIntroColor','portfolioUtilityFont','portfolioUtilityColor'
+] as const;
+const memberNumberFields=[
+  'photoRadius','photoSize','portfolioColumns','portfolioGap','portfolioRadius','portfolioProfileSize',
+  'portfolioNameSize','portfolioNameX','portfolioNameY','portfolioRoleSize','portfolioRoleX','portfolioRoleY',
+  'portfolioBioSize','portfolioBioX','portfolioBioY','portfolioTitleSize','portfolioTitleX','portfolioTitleY',
+  'portfolioIntroSize','portfolioIntroX','portfolioIntroY','portfolioUtilitySize','portfolioUtilityX','portfolioUtilityY',
+  'portfolioReturnX','portfolioReturnY','portfolioSliderWidth','portfolioSliderHeight','portfolioGridWidth'
+] as const;
+const memberAlignFields=['portfolioNameAlign','portfolioRoleAlign','portfolioBioAlign','portfolioTitleAlign','portfolioIntroAlign','portfolioUtilityAlign'] as const;
+function cleanMemberUpdate(current:any,input:any){
+  if(!input||typeof input!=='object')throw new HttpError(400,'팀원 편집 정보가 올바르지 않습니다.');
+  const next={...current};
+  for(const key of memberStringFields){
+    if(input[key]===undefined)continue;
+    if(typeof input[key]!=='string')throw new HttpError(400,'문자 입력 형식이 올바르지 않습니다.');
+    const limit=key==='bio'||key==='portfolioIntro'?5000:key==='instagram'||key==='photo'?2048:400;
+    if(input[key].length>limit)throw new HttpError(400,'입력 내용이 너무 깁니다.');
+    next[key]=input[key];
+  }
+  if(typeof next.instagram==='string'&&next.instagram&& !/^https?:\/\//i.test(next.instagram))throw new HttpError(400,'Instagram 주소는 http:// 또는 https:// 주소로 입력해 주세요.');
+  if(typeof next.photo==='string'&&next.photo&&!/^(https?:\/\/|\/)/i.test(next.photo))throw new HttpError(400,'프로필 미디어 주소가 올바르지 않습니다.');
+  for(const key of memberNumberFields){
+    if(input[key]===undefined)continue;
+    if(typeof input[key]!=='number'||!Number.isFinite(input[key]))throw new HttpError(400,'숫자 설정이 올바르지 않습니다.');
+    next[key]=input[key];
+  }
+  for(const key of memberAlignFields){
+    if(input[key]===undefined)continue;
+    if(!['left','center','right'].includes(input[key]))throw new HttpError(400,'정렬 설정이 올바르지 않습니다.');
+    next[key]=input[key];
+  }
+  if(input.portfolioLayout!==undefined){
+    if(input.portfolioLayout!=='grid'&&input.portfolioLayout!=='slider')throw new HttpError(400,'포트폴리오 보기 방식이 올바르지 않습니다.');
+    next.portfolioLayout=input.portfolioLayout;
+  }
+  if(input.works!==undefined){
+    if(!Array.isArray(input.works)||input.works.length>240||input.works.some((url:any)=>typeof url!=='string'||url.length>2048||!/^(https?:\/\/|\/)/i.test(url)))throw new HttpError(400,'포트폴리오 미디어 목록이 올바르지 않습니다.');
+    next.works=[...input.works];
+  }
+  // Member editors can never change routing, ownership, or public visibility.
+  next.id=current.id;
+  next.portfolioSlug=current.portfolioSlug;
+  next.visible=current.visible;
+  return next;
+}
+
 export default async function handler(req:Req,res:ServerResponse){
   try{
     const url=new URL(req.url||'/',`http://${header(req,'host')||'localhost'}`);
