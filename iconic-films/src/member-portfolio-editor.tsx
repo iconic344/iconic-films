@@ -6,6 +6,7 @@ import type {Config,TeamMember,TextStyle} from './defaults';
 import TextStyleEditor from './text-style-editor';
 import TeamMedia from './team-media';
 import {uploadMemberFile} from './member-media-upload';
+import {memberRequest} from './member-session';
 
 type Props={
   config:Config;
@@ -20,6 +21,9 @@ type Props={
 
 export default function MemberPortfolioEditor({config,member,setMember,busy,setBusy,notify,onSave,onClose}:Props){
   const [uploading,setUploading]=useState('');
+  const [newPin,setNewPin]=useState('');
+  const [confirmPin,setConfirmPin]=useState('');
+  const [pinBusy,setPinBusy]=useState(false);
   const patch=(key:keyof TeamMember,value:any)=>setMember(current=>current?{...current,[key]:value} as TeamMember:current);
   const miniRange=(key:keyof TeamMember,label:string,min:number,max:number,step=1,suffix='px')=><label className="field layout-range">{label}<span className="val">{Number(member[key])}{suffix}</span><Slider value={[Number(member[key])]} min={min} max={max} step={step} onValueChange={v=>patch(key,v[0])}/></label>;
 
@@ -67,6 +71,19 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
       notify('작품 업로드 완료. 저장 & 적용을 눌러 반영하세요.');
     }catch(e){notify((e as Error).message)}
     finally{setUploading('');setBusy(false)}
+  }
+
+  async function changeOwnPin(){
+    if(pinBusy)return;
+    if(newPin.length!==4){notify('새 비밀번호는 숫자 4자리로 입력해 주세요.');return}
+    if(newPin!==confirmPin){notify('새 비밀번호 확인이 일치하지 않습니다.');return}
+    try{
+      setPinBusy(true);
+      await memberRequest(member.id,'/api/team-self-security','PUT',{pin:newPin});
+      setNewPin('');setConfirmPin('');
+      notify('포트폴리오 비밀번호가 변경되었습니다. 다음 접속부터 새 비밀번호를 사용하세요.');
+    }catch(e){notify((e as Error).message)}
+    finally{setPinBusy(false)}
   }
 
   return <div className="editor member-self-editor">
@@ -119,6 +136,20 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
           {member.photo&&<div className="team-editor-photo"><TeamMedia src={member.photo} alt="프로필 미리보기" className="team-editor-photo-media" interactive/></div>}
           <label className="field file-upload">작품 미디어 업로드<input type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadWorks(e.target.files)}/><span className="uploaded-file">이미지 / 영상 / 3D 여러 개 선택 가능</span></label>
           {!!member.works?.length&&<div className="team-editor-works">{member.works.map((url,i)=><div key={url+i}><TeamMedia src={url} alt={'작품 '+(i+1)} className="team-editor-work-media" interactive/><button type="button" aria-label="작품 삭제" onClick={()=>patch('works',member.works.filter((_,j)=>j!==i))}><Trash2 size={14}/></button></div>)}</div>}
+        </section>
+
+        <section className="editor-card team-editor-card member-self-security">
+          <div className="team-editor-card-head"><div><span className="kicker">SECURITY</span><h3>Portfolio password</h3></div></div>
+          <p className="member-self-security-copy">현재 팀원 포트폴리오의 EDIT 비밀번호만 변경됩니다. 지금 열려 있는 탭의 편집 권한은 유지되고, 다음에 새로 접속할 때부터 변경한 비밀번호를 사용합니다.</p>
+          <div className="member-self-security-fields">
+            <label className="field">새 비밀번호
+              <input type="password" inputMode="numeric" maxLength={4} placeholder="숫자 4자리" value={newPin} onChange={e=>setNewPin(e.target.value.replace(/\D/g,'').slice(0,4))}/>
+            </label>
+            <label className="field">새 비밀번호 확인
+              <input type="password" inputMode="numeric" maxLength={4} placeholder="다시 입력" value={confirmPin} onChange={e=>setConfirmPin(e.target.value.replace(/\D/g,'').slice(0,4))}/>
+            </label>
+          </div>
+          <button type="button" className="member-self-security-apply" disabled={pinBusy||newPin.length!==4||confirmPin.length!==4||newPin!==confirmPin} onClick={changeOwnPin}>{pinBusy?'변경 중…':'비밀번호 변경 적용'}</button>
         </section>
 
         <section className="editor-card team-editor-card">
