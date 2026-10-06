@@ -422,7 +422,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
 
       {teamMembers.length>1&&<section className="team-portfolio-member-index" aria-label="Team member navigation">
         <div className="team-member-index-head">
-          <span>TEAM INDEX / {String(memberIndex+1).padStart(2,'0')} — {String(teamMembers.length).padStart(2,'0')}</span>
+          <span>{member.portfolioTeamIndexLabel||'TEAM INDEX'} / {String(memberIndex+1).padStart(2,'0')} — {String(teamMembers.length).padStart(2,'0')}</span>
           <div className="team-member-index-arrows">
             <button type="button" aria-label="이전 팀원" onClick={memberPrev}><ChevronLeft size={17}/></button>
             <button type="button" aria-label="다음 팀원" onClick={memberNext}><ChevronRight size={17}/></button>
