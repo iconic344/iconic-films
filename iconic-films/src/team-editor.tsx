@@ -91,12 +91,12 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
         <div className="team-member-fields">
           <label className="field">이름<input value={member.name} onChange={e=>patch(member.id,'name',e.target.value)}/></label>
           <label className="field">CODE NAME<input placeholder="X / I / S..." maxLength={8} value={member.codeName||''} onChange={e=>patch(member.id,'codeName',e.target.value.toUpperCase().replace(/\s+/g,'').slice(0,8))}/><span className="uploaded-file">팀원 페이지의 TEAM INDEX에 표시됩니다. 비우면 이름 첫 글자를 사용합니다.</span></label>
-          <label className="field">역할<input placeholder="Director / Photographer / Make-up / Hair..." value={member.role} onChange={e=>patch(member.id,'role',e.target.value)}/></label>
-          <label className="field">소개<textarea placeholder="간단한 소개, 전문 분야, 크레딧 등을 적어주세요." value={member.bio||''} onChange={e=>patch(member.id,'bio',e.target.value)}/></label>
+          
+          
           <label className="field">촬영자 / 참여자 크레딧<textarea placeholder={"PHOTO / xnives\nMODEL / name\nSTYLING / name"} value={member.portfolioCredits||''} onChange={e=>patch(member.id,'portfolioCredits',e.target.value)}/><span className="uploaded-file">한 줄에 하나씩 입력하면 프로필 이름 아래에 크레딧으로 표시됩니다.</span></label>
-          <label className="field">포트폴리오 페이지 주소<input placeholder="xnives" value={member.portfolioSlug||''} onChange={e=>patch(member.id,'portfolioSlug',e.target.value.toLowerCase().replace(/[^a-z0-9가-힣-]/g,'-').replace(/-+/g,'-'))}/><span className="uploaded-file">/team/{member.portfolioSlug||'member'}</span></label>
-          <label className="field">포트폴리오 제목<input value={member.portfolioTitle||'Selected works'} onChange={e=>patch(member.id,'portfolioTitle',e.target.value)}/></label>
-          <label className="field">포트폴리오 소개<textarea placeholder="팀원 전용 포트폴리오 페이지 소개 문구" value={member.portfolioIntro||''} onChange={e=>patch(member.id,'portfolioIntro',e.target.value)}/></label>
+          
+          
+          
           
           <div className="team-portfolio-type-editor team-portfolio-type-editor--primary">
             <h4>Portfolio typography / position</h4>
