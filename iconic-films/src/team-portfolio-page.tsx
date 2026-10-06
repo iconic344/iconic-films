@@ -318,4 +318,3 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     <MediaGalleryDialog items={works.map((src,i)=>({id:member.id+'-'+i,src,title:member.name||'Portfolio',kicker:subcategory==='All'?member.portfolioWorkCategories?.[i]:subcategory}))} index={viewerIndex} onClose={closeViewer} onIndexChange={setViewerIndex}/>
   </div>
 }
-

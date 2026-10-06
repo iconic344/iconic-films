@@ -9,14 +9,23 @@ const formatTime=(n:number)=>`${Math.floor(n/60)}:${String(Math.floor(n%60)).pad
 export function MediaGallery({items,initialIndex=0,onIndexChange,onExpand,onReady,modal=false}:{items:GalleryItem[];initialIndex?:number;onIndexChange?:(index:number)=>void;onExpand?:()=>void;onReady?:()=>void;modal?:boolean}){
  const [index,setIndex]=useState(Math.min(initialIndex,Math.max(0,items.length-1)));
  const [playing,setPlaying]=useState(()=>!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
- const [muted,setMuted]=useState(true),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false);
+ const [muted,setMuted]=useState(true),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(false);
  const root=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),drag=useRef<{x:number;y:number}|null>(null),dragged=useRef(false),elapsed=useRef(0);
  const item=items[index],type=item?teamMediaType(item.src):'image';
  useEffect(()=>{if(modal)root.current?.focus({preventScroll:true})},[modal]);
  const choose=(n:number)=>{if(!items.length)return;const target=(n+items.length)%items.length;setIndex(target);onIndexChange?.(target)};
  const advance=()=>{if(items.length>1)choose(index+1);else if(video.current){video.current.currentTime=0;video.current.play().catch(()=>setPlaying(false))}else elapsed.current=0};
  useEffect(()=>{setIndex(Math.min(initialIndex,Math.max(0,items.length-1)))},[initialIndex,items.length]);
- useEffect(()=>{elapsed.current=0;setProgress(0);setTime(0);setDuration(0);setError(false)},[item?.id,item?.src]);
+ useEffect(()=>{
+  elapsed.current=0;setProgress(0);setTime(0);setError(false);
+  root.current?.querySelectorAll('video').forEach(v=>{v.pause();if(v===video.current)v.currentTime=0});
+  const v=video.current;setDuration(v&&Number.isFinite(v.duration)?v.duration:0);
+ },[item?.id,item?.src]);
+ useEffect(()=>{
+  if(!expanded)return;
+  const previous=document.body.style.overflow;document.body.style.overflow='hidden';
+  return()=>{document.body.style.overflow=previous};
+ },[expanded]);
  useEffect(()=>{
   const el=root.current;if(!el)return;
   let intersects=true;
@@ -29,7 +38,7 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,onExpand,onRead
   const v=video.current;if(!v)return;
   if(playing&&visible)v.play().catch(()=>{if(!v.muted){v.muted=true;setMuted(true);v.play().catch(()=>setPlaying(false))}else setPlaying(false)});
   else v.pause();
- },[playing,visible,item?.src]);
+ },[playing,visible,item?.id,item?.src]);
  useEffect(()=>{
   if(type==='video'||!playing||!visible||!item||error)return;
   let last=performance.now();
@@ -40,17 +49,20 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,onExpand,onRead
  const fullscreen=()=>{
   const el=root.current;if(!el)return;
   if(document.fullscreenElement)document.exitFullscreen?.().catch(()=>{});
-  else if(el.requestFullscreen)el.requestFullscreen().catch(()=>{});
-  else (video.current as HTMLVideoElement&{webkitEnterFullscreen?:()=>void})?.webkitEnterFullscreen?.();
+  else if(expanded)setExpanded(false);
+  else if(el.requestFullscreen)el.requestFullscreen().catch(()=>setExpanded(true));
+  else setExpanded(true);
  };
  const key=(e:React.KeyboardEvent)=>{
   if((e.target as HTMLElement).matches('input'))return;
+  if(e.key==='Escape'&&expanded){e.preventDefault();e.stopPropagation();setExpanded(false);return}
   if(e.key==='ArrowLeft'){e.preventDefault();choose(index-1)}
   if(e.key==='ArrowRight'){e.preventDefault();choose(index+1)}
   if(e.key===' '&&!((e.target as HTMLElement).closest('button'))){e.preventDefault();toggle()}
  };
  if(!item)return null;
- return <div ref={root} className={'media-gallery '+(modal?'is-modal':'')} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} onKeyDown={key}>
+ return <div ref={root} className={'media-gallery '+(modal?'is-modal ':'')+(expanded?'is-expanded':'')} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} onKeyDown={key}>
+  {expanded&&<button type="button" className="media-gallery-close" aria-label="전체 화면 종료" onClick={()=>setExpanded(false)}><X size={23}/></button>}
   <div className="media-gallery-viewport" onPointerDown={e=>{if(e.button!==0||(e.target as HTMLElement).closest('button,input,model-viewer'))return;drag.current={x:e.clientX,y:e.clientY};dragged.current=false;e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={e=>{if(!drag.current)return;const dx=e.clientX-drag.current.x,dy=e.clientY-drag.current.y;drag.current=null;if(Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)){dragged.current=true;choose(index+(dx<0?1:-1))}e.currentTarget.releasePointerCapture?.(e.pointerId)}} onPointerCancel={()=>{drag.current=null}}>
    <div className="media-gallery-track" style={{'--gallery-index':index} as CSSProperties}>
     {items.map((entry,i)=>{

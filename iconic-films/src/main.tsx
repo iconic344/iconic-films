@@ -4,4 +4,3 @@ import './globals.css';
 import './media-experience.css';
 
 createRoot(document.getElementById('root')!).render(<App/>);
-

@@ -395,4 +395,3 @@ export default function Home(){
  {note&&<div role="status" className="toast glass">{note}<button onClick={()=>setNote('')} aria-label="알림 닫기"><X size={16}/></button></div>}
  </div>
 }
-
