@@ -9922,3 +9922,231 @@ body{
     padding-bottom:94px!important;
   }
 }
+
+
+/* 2026-10-06 editor geometry hotfix: compact nav + true viewport preview dock */
+/* Remove transformed editor roots so viewport-fixed accessories never get trapped
+   inside the scrolling editor and float over content. */
+.editor{
+  transform:none!important;
+  animation:editor-fade-in .24s ease both!important;
+  padding-bottom:0!important;
+}
+.editor.is-closing{
+  animation:editor-fade-out .22s ease both!important;
+}
+.editor-preview-hidden{
+  transform:none!important;
+}
+@keyframes editor-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes editor-fade-out{from{opacity:1}to{opacity:0}}
+
+/* Compact Apple-style floating control shelf: hug the controls instead of drawing
+   a huge empty glass rectangle across the whole editor. */
+.editor .editor-tabs{
+  padding-top:18px!important;
+  padding-bottom:108px!important;
+}
+.editor .editor-nav-shell{
+  position:sticky!important;
+  top:96px!important;
+  z-index:12!important;
+  display:inline-grid!important;
+  width:max-content!important;
+  max-width:100%!important;
+  justify-self:start!important;
+  gap:5px!important;
+  margin:0 0 20px!important;
+  padding:6px!important;
+  border:1px solid var(--lg-line-strong)!important;
+  border-radius:22px!important;
+  background:
+    radial-gradient(90% 150% at 8% -20%,rgba(255,255,255,.14),transparent 54%),
+    color-mix(in srgb,var(--lg-control) 92%,transparent)!important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb,#fff 22%,transparent),
+    0 12px 30px rgba(0,0,0,.09)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(1.28)!important;
+  backdrop-filter:blur(28px) saturate(1.28)!important;
+}
+.editor .editor-group-tabs,
+.editor .editor-subtabs{
+  width:max-content!important;
+  max-width:min(100%,calc(100vw - 12vw))!important;
+  min-height:0!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding:1px!important;
+  margin:0!important;
+  gap:3px!important;
+}
+.editor .editor-group-tabs>button,
+.editor .editor-subtabs>button{
+  min-height:33px!important;
+  height:33px!important;
+  padding:0 13px!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:transparent!important;
+  color:var(--lg-secondary)!important;
+  box-shadow:none!important;
+  opacity:1!important;
+  font-size:11.5px!important;
+  font-weight:650!important;
+}
+.editor .editor-group-tabs>button.active,
+.editor .editor-subtabs>button[data-state="active"]{
+  color:var(--lg-text)!important;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb,var(--lg-content-strong) 94%,transparent),
+      color-mix(in srgb,var(--lg-control-hover) 82%,transparent)
+    )!important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb,#fff 24%,transparent),
+    0 2px 9px rgba(0,0,0,.07)!important;
+}
+
+/* The preview control is now outside the editor scroll tree and fixed to the viewport.
+   It is a true full-width bottom accessory bar, never a floating rectangle over fields. */
+.editor-preview-dock{
+  --dock-text:#151517;
+  --dock-secondary:rgba(28,28,32,.66);
+  position:fixed!important;
+  left:0!important;
+  right:0!important;
+  bottom:0!important;
+  z-index:58!important;
+  width:100vw!important;
+  min-height:66px!important;
+  margin:0!important;
+  padding:
+    11px max(5vw,22px)
+    max(11px,env(safe-area-inset-bottom))
+    max(5vw,22px)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+  border:0!important;
+  border-top:1px solid rgba(60,60,67,.14)!important;
+  border-radius:0!important;
+  background:
+    radial-gradient(45% 130% at 14% -25%,rgba(255,255,255,.20),transparent 58%),
+    rgba(244,244,247,.84)!important;
+  color:var(--dock-text)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.48),
+    0 -14px 42px rgba(0,0,0,.08)!important;
+  -webkit-backdrop-filter:blur(34px) saturate(1.34)!important;
+  backdrop-filter:blur(34px) saturate(1.34)!important;
+}
+:root[data-theme=dark] .editor-preview-dock{
+  --dock-text:rgba(252,252,254,.98);
+  --dock-secondary:rgba(245,245,247,.70);
+  border-top-color:rgba(235,235,245,.12)!important;
+  background:
+    radial-gradient(45% 130% at 14% -25%,rgba(255,255,255,.08),transparent 58%),
+    rgba(28,28,32,.82)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 -18px 48px rgba(0,0,0,.30)!important;
+}
+.editor-preview-dock>span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--dock-secondary)!important;
+  font-size:11px!important;
+  font-weight:600!important;
+  letter-spacing:.01em!important;
+  opacity:1!important;
+}
+.editor-preview-dock>button{
+  flex:0 0 auto;
+  min-height:38px!important;
+  padding:0 15px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  border:1px solid rgba(60,60,67,.12)!important;
+  border-radius:999px!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.70),rgba(255,255,255,.42))!important;
+  color:var(--dock-text)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.72),
+    0 4px 14px rgba(0,0,0,.07)!important;
+  font-size:10px!important;
+  font-weight:700!important;
+  letter-spacing:.055em!important;
+  opacity:1!important;
+}
+:root[data-theme=dark] .editor-preview-dock>button{
+  border-color:rgba(235,235,245,.12)!important;
+  background:
+    linear-gradient(180deg,rgba(72,72,78,.82),rgba(50,50,55,.64))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 5px 16px rgba(0,0,0,.20)!important;
+}
+@media(hover:hover) and (pointer:fine){
+  .editor-preview-dock>button:hover{
+    transform:translateY(-1px)!important;
+  }
+}
+
+/* Reserve the dock height inside every editor so the last controls never disappear beneath it. */
+.editor .editor-bottom{
+  padding-bottom:88px!important;
+}
+
+/* iPad: compact shelf but keep enough safe area below the sticky header. */
+@media (min-width:761px) and (max-width:1180px){
+  .editor .editor-nav-shell{
+    top:calc(max(8px,env(safe-area-inset-top)) + 84px)!important;
+    max-width:calc(100vw - 32px)!important;
+  }
+  .editor .editor-group-tabs,
+  .editor .editor-subtabs{
+    max-width:calc(100vw - 48px)!important;
+  }
+}
+
+/* Phone: shelf fills available width only because the controls genuinely need it;
+   bottom preview dock remains full-width and safe-area aware. */
+@media(max-width:760px){
+  .editor .editor-tabs{
+    padding-top:12px!important;
+    padding-bottom:104px!important;
+  }
+  .editor .editor-nav-shell{
+    top:calc(max(8px,env(safe-area-inset-top)) + 76px)!important;
+    display:grid!important;
+    width:100%!important;
+    max-width:100%!important;
+    border-radius:19px!important;
+    padding:5px!important;
+  }
+  .editor .editor-group-tabs,
+  .editor .editor-subtabs{
+    width:100%!important;
+    max-width:100%!important;
+  }
+  .editor-preview-dock{
+    min-height:64px!important;
+    padding:
+      9px 14px
+      max(9px,env(safe-area-inset-bottom))
+      14px!important;
+  }
+  .editor-preview-dock>span{
+    max-width:62%;
+    font-size:10px!important;
+  }
+  .editor-preview-dock>button{
+    min-height:36px!important;
+    padding:0 13px!important;
+  }
+}
