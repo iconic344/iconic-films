@@ -42,7 +42,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     memberSwitchTimer.current=window.setTimeout(()=>{
       onSelectMember(target);
       memberSwitchTimer.current=null;
-    },300);
+    },170);
   };
   const memberPrev=()=>teamMembers.length&&selectMember(teamMembers[(memberIndex-1+teamMembers.length)%teamMembers.length],-1);
   const memberNext=()=>teamMembers.length&&selectMember(teamMembers[(memberIndex+1)%teamMembers.length],1);
@@ -177,7 +177,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     window.scrollTo({top:0,behavior:'auto'});
     setMemberMotion('entering');
     if(memberSwitchTimer.current!==null)window.clearTimeout(memberSwitchTimer.current);
-    memberSwitchTimer.current=window.setTimeout(()=>{setMemberMotion('idle');memberSwitchTimer.current=null},780);
+    memberSwitchTimer.current=window.setTimeout(()=>{setMemberMotion('idle');memberSwitchTimer.current=null},420);
   },[member.id]);
   useEffect(()=>()=>{if(memberSwitchTimer.current!==null)window.clearTimeout(memberSwitchTimer.current);if(viewerMotionTimer.current!==null)window.clearTimeout(viewerMotionTimer.current)},[]);
   useEffect(()=>{
@@ -399,7 +399,6 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
       </nav>
       <div className="nav-tools">
         <button type="button" className="icon" aria-label={theme==='light'?'다크 모드':'라이트 모드'} title={theme==='light'?'다크 모드':'라이트 모드'} onClick={onToggleTheme}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</button>
-        <button type="button" className="team-edit-link" onClick={()=>onMemberEdit(member)}>edit</button>
         <button type="button" className="admin-link" onClick={onAdmin}>{config.footerAdminLabel||'admin'}</button>
       </div>
     </header>
@@ -417,6 +416,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
             <div className="team-portfolio-links">
               {member.instagram&&<a href={member.instagram} target="_blank" rel="noreferrer">Instagram <ArrowUpRight size={14}/></a>}
               <button type="button" onClick={onBack}>{member.portfolioReturnLabel||'VIIVII sara / Team'}</button>
+              <button type="button" className="team-portfolio-inline-edit" onClick={()=>onMemberEdit(member)}>EDIT</button>
             </div>
           </div>
         </div>
