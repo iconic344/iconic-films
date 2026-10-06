@@ -10,6 +10,7 @@ const fmtMediaTime=(v:number)=>`${Math.floor((v||0)/60)}:${String(Math.floor((v|
 
 export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onSelectMember,onToggleTheme,onContact,onAdmin,onVideoViewerOpen,onVideoViewerClose,onMemberEdit}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onSelectMember:(member:TeamMember)=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void;onVideoViewerOpen:()=>void;onVideoViewerClose:()=>void;onMemberEdit:(member:TeamMember)=>void}){
   const [index,setIndex]=useState(0);
+  const [subcategory,setSubcategory]=useState('All');
   const [viewerIndex,setViewerIndex]=useState<number|null>(null);
   const [viewerClosing,setViewerClosing]=useState(false);
   const [viewerPlaying,setViewerPlaying]=useState(false);
@@ -31,7 +32,13 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const memberSwitchTimer=useRef<number|null>(null);
   const memberSwipeStart=useRef<{x:number;y:number}|null>(null);
   const memberSwipeMoved=useRef(false);
-  const works=useMemo(()=>member.works||[],[member.works]);
+  const subcategories=useMemo(()=>member.portfolioSubcategories||[],[member.portfolioSubcategories]);
+  const works=useMemo(()=>{
+    const all=member.works||[];
+    if(subcategory==='All')return all;
+    const labels=member.portfolioWorkCategories||[];
+    return all.filter((_,i)=>(labels[i]||subcategories[0]||'All')===subcategory);
+  },[member.works,member.portfolioWorkCategories,subcategories,subcategory]);
   const teamMembers=useMemo(()=>(config.teamMembers||[]).filter(item=>item.visible),[config.teamMembers]);
   const memberIndex=Math.max(0,teamMembers.findIndex(item=>item.id===member.id));
   const selectMember=(target:TeamMember,direction:1|-1)=>{
@@ -166,6 +173,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
 
   useEffect(()=>{
     setIndex(0);
+    setSubcategory('All');
     setViewerClosing(false);
     setViewerIndex(null);
     setViewerPlaying(false);
@@ -420,12 +428,12 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
         </div>
       </section>
 
-      {teamMembers.length>1&&<section className="team-portfolio-member-index" aria-label="Team member navigation">
+      {teamMembers.length>1&&<section className="team-portfolio-member-index" aria-label="Portfolio category navigation">
         <div className="team-member-index-head">
-          <span>{member.portfolioTeamIndexLabel||'TEAM INDEX'} / {String(memberIndex+1).padStart(2,'0')} — {String(teamMembers.length).padStart(2,'0')}</span>
+          <span>{member.portfolioTeamIndexLabel||'CATEGORY INDEX'} / {String(memberIndex+1).padStart(2,'0')} — {String(teamMembers.length).padStart(2,'0')}</span>
           <div className="team-member-index-arrows">
-            <button type="button" aria-label="이전 팀원" onClick={memberPrev}><ChevronLeft size={17}/></button>
-            <button type="button" aria-label="다음 팀원" onClick={memberNext}><ChevronRight size={17}/></button>
+            <button type="button" aria-label="이전 카테고리" onClick={memberPrev}><ChevronLeft size={17}/></button>
+            <button type="button" aria-label="다음 카테고리" onClick={memberNext}><ChevronRight size={17}/></button>
           </div>
         </div>
         <div className="team-member-index-list">
@@ -445,25 +453,27 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
       <section className="team-portfolio-work">
         <div className="team-portfolio-work-head">
           <div>
-            <span className="kicker">PORTFOLIO / {String(works.length).padStart(2,'0')}</span>
-            <h2>{member.portfolioTitle||'Selected works'}</h2>
-            {member.portfolioIntro&&<p>{member.portfolioIntro}</p>}
+            <span className="kicker">ARCHIVE / {String(works.length).padStart(2,'0')}</span>
+            <h2>Selected works</h2>
           </div>
           <span className="team-portfolio-layout-label">{member.portfolioLayout==='slider'?<GalleryHorizontal size={15}/>:<Grid2X2 size={15}/>} {member.portfolioLayout}</span>
         </div>
+        {!!subcategories.length&&<div className="team-portfolio-subfilters" role="group" aria-label={(member.name||'Portfolio')+' 세부 카테고리'}>
+          {['All',...subcategories].map(label=><button type="button" key={label} className={subcategory===label?'active':''} onClick={()=>{setSubcategory(label);setIndex(0);setViewerIndex(null)}}>{label}</button>)}
+        </div>}
 
-        {!works.length&&<div className="team-portfolio-empty">Portfolio coming soon.</div>}
+        {!works.length&&<div className="team-portfolio-empty">No work in this category yet.</div>}
 
         {!!works.length&&member.portfolioLayout==='grid'&&<div className="team-portfolio-grid">
           {works.map((url,i)=><button type="button" className="team-portfolio-grid-item" key={url+i} onClick={()=>openViewer(i)}>
-            <TeamMedia src={url} alt={(member.name||'Team member')+' portfolio '+(i+1)} className="team-portfolio-work-media" autoPlay/>
+            <TeamMedia src={url} alt={(member.name||'Portfolio')+' portfolio '+(i+1)} className="team-portfolio-work-media" autoPlay/>
             <span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span>
           </button>)}
         </div>}
 
         {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider">
           <button type="button" className="team-portfolio-slide-stage" onPointerDown={e=>begin(e.clientX)} onPointerUp={e=>end(e.clientX,d=>d>0?next():prev())} onClick={()=>{if(swiped.current){swiped.current=false;return}openViewer(index)}}>
-            <TeamMedia key={works[index]} src={works[index]} alt={(member.name||'Team member')+' portfolio '+(index+1)} className="team-portfolio-slide-media" autoPlay/>
+            <TeamMedia key={works[index]} src={works[index]} alt={(member.name||'Portfolio')+' portfolio '+(index+1)} className="team-portfolio-slide-media" autoPlay/>
             <span className="team-portfolio-slide-count">{String(index+1).padStart(2,'0')} / {String(works.length).padStart(2,'0')}</span>
           </button>
           <div className="team-portfolio-slider-controls">
@@ -475,7 +485,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
       </section>
     </main>
 
-    {teamMembers.length>1&&<nav className="team-portfolio-member-switch" aria-label="Previous and next team member">
+    {teamMembers.length>1&&<nav className="team-portfolio-member-switch" aria-label="Previous and next portfolio category">
       <button type="button" onClick={memberPrev}><ChevronLeft size={17}/><span><small>PREVIOUS</small>{teamMembers[(memberIndex-1+teamMembers.length)%teamMembers.length]?.name}</span></button>
       <button type="button" onClick={memberNext}><span><small>NEXT</small>{teamMembers[(memberIndex+1)%teamMembers.length]?.name}</span><ChevronRight size={17}/></button>
     </nav>}
@@ -497,8 +507,8 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
               <div className="team-media-card-head">
                 <div className="team-media-card-copy">
                   <span className="team-media-card-kicker">{label} / {String(viewerIndex+1).padStart(2,'0')}</span>
-                  <strong className="team-media-card-title">{member.name||'Team member'}</strong>
-                  <span className="team-media-card-meta">{String(viewerIndex+1).padStart(2,'0')} / {String(works.length).padStart(2,'0')}</span>
+                  <strong className="team-media-card-title">{member.name||'Portfolio'}</strong>
+                  <span className="team-media-card-meta">{subcategory!=='All'?subcategory+' · ':''}{String(viewerIndex+1).padStart(2,'0')} / {String(works.length).padStart(2,'0')}</span>
                 </div>
                 <span className="team-media-card-gesture-hint" aria-hidden="true">DRAG / SWIPE</span>
               </div>
@@ -514,7 +524,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
                     <button type="button" className="team-media-control" aria-label={viewerMuted?'소리 켜기':'음소거'} onClick={()=>setViewerMuted(v=>!v)}>{viewerMuted?<VolumeX size={17}/>:<Volume2 size={17}/>}</button>
                     
                   </div>
-                </>:<TeamMedia key={src} src={src} alt={(member.name||'Team member')+' portfolio '+(viewerIndex+1)} className="team-media-viewer-media" interactive autoPlay/>}
+                </>:<TeamMedia key={src} src={src} alt={(member.name||'Portfolio')+' portfolio '+(viewerIndex+1)} className="team-media-viewer-media" interactive autoPlay/>}
               </div>
             </div>
             {works.length>1&&<>
@@ -524,7 +534,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
             <span className="team-media-count">{String(viewerIndex+1).padStart(2,'0')} / {String(works.length).padStart(2,'0')}</span>
           </div>;
         })()}
-        <DialogTitle className="sr-only">{member.name||'Team member'} portfolio</DialogTitle>
+        <DialogTitle className="sr-only">{member.name||'Portfolio'} portfolio</DialogTitle>
       </DialogContent>
     </Dialog>
   </div>
