@@ -22,6 +22,10 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,onExpand,onRead
   elapsed.current=0;setProgress(0);setTime(0);setError(false);
   root.current?.querySelectorAll('video').forEach(v=>{v.pause();if(v===video.current)v.currentTime=0});
   const v=video.current;setDuration(v&&Number.isFinite(v.duration)?v.duration:0);
+  // Adjacent slides may finish loading before becoming active. Reuse that
+  // decoded frame immediately so their fullscreen backdrop is ready too.
+  setReadySrc(v&&v.readyState>=2?item.src:'');
+  if(v&&v.readyState>=2)setReady(n=>n+1);
  },[item?.id,item?.src]);
  useEffect(()=>{
   if(!expanded)return;

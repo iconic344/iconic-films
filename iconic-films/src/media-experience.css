@@ -45,7 +45,7 @@
 .media-gallery.has-video:not(.is-fullscreen) .media-gallery-artwork>video{object-fit:contain!important}
 .team-portfolio-slider:has(.media-gallery){width:100vw!important;max-width:none!important;margin-inline:calc(50% - 50vw)!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;overflow:visible!important}
 .media-gallery:fullscreen,.media-gallery.is-expanded{--gallery-card:100vw;--gallery-gap:0px;position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;padding:0;z-index:10040;display:block;color:#fff;background:transparent}
-.media-gallery.is-fullscreen,.unified-media-dialog .media-gallery.is-fullscreen{--gallery-card:100vw;--gallery-gap:0px;position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;margin:0;padding:0;display:block}
+.media-gallery.is-fullscreen,.unified-media-dialog .media-gallery.is-fullscreen{--gallery-card:100vw;--gallery-gap:0px;position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;margin:0;padding:0;display:block;outline:none}
 .unified-media-dialog:has(.media-gallery.is-fullscreen)>.media-gallery-close{display:none}
 .media-gallery.is-fullscreen .media-gallery-viewport{width:100%;height:100%;touch-action:none}
 .media-gallery.is-fullscreen .media-gallery-slide{aspect-ratio:auto;height:100dvh;min-height:0;border-radius:0}
