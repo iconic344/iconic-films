@@ -11584,14 +11584,15 @@ body{
   content:"";
   position:absolute;
   left:0;right:0;bottom:0;
-  z-index:2;
-  height:46%;
+  z-index:3;
+  height:52%;
   pointer-events:none;
   background:linear-gradient(
     to bottom,
     transparent 0%,
-    color-mix(in srgb,var(--page) 18%,transparent) 35%,
-    color-mix(in srgb,var(--page) 72%,transparent) 72%,
+    color-mix(in srgb,var(--page) 18%,transparent) 28%,
+    color-mix(in srgb,var(--page) 72%,transparent) 64%,
+    var(--page) 88%,
     var(--page) 100%
   );
 }
@@ -11748,7 +11749,7 @@ body{
 .team-portfolio-hero-light{
   position:absolute;
   inset:0;
-  z-index:3;
+  z-index:2;
   pointer-events:none;
   opacity:0;
   mix-blend-mode:screen;
@@ -11765,23 +11766,31 @@ body{
     transition:transform .65s cubic-bezier(.16,1,.3,1);
   }
   .team-portfolio-hero[data-pointer-active="true"] .team-portfolio-hero-light{opacity:1}
-  .iconic-cursor[data-hero="true"]{mix-blend-mode:normal}
-  .iconic-cursor[data-hero="true"]::after{
-    content:"";
-    position:absolute;
-    left:-48px;top:-48px;
-    width:96px;height:96px;
-    border-radius:50%;
-    background:radial-gradient(circle,rgba(255,255,255,.20),rgba(255,255,255,.06) 32%,transparent 68%);
-    pointer-events:none;
-  }
-  .iconic-cursor[data-hero="true"]>span{
-    background:rgba(255,255,255,.16);
-    border:1px solid rgba(255,255,255,.5);
-    box-shadow:0 0 18px rgba(255,255,255,.22),inset 0 0 12px rgba(255,255,255,.12);
-  }
+  .iconic-cursor-glow[data-visible="true"]{opacity:1}
 }
 @media (prefers-reduced-motion:reduce){
   .team-portfolio-hero-light{display:none}
   .team-portfolio-hero.has-hero-media .team-portfolio-hero-media{transform:none;transition:none}
+}
+
+/* Cursor lighting is independent of the original cursor shape and blend mode. */
+.iconic-cursor-glow{
+  position:fixed;
+  top:0;left:0;
+  width:0;height:0;
+  z-index:9998;
+  pointer-events:none;
+  opacity:0;
+  mix-blend-mode:screen;
+  transition:opacity .2s ease;
+  transform-origin:0 0;
+}
+.iconic-cursor-glow::after{
+  content:"";
+  position:absolute;
+  left:-48px;top:-48px;
+  width:96px;height:96px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.20),rgba(255,255,255,.06) 32%,transparent 68%);
+  pointer-events:none;
 }
