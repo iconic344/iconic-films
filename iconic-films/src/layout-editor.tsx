@@ -1,21 +1,35 @@
 'use client';
-import type {Dispatch,SetStateAction} from 'react';
+import {useState,type Dispatch,type SetStateAction} from 'react';
 import {Slider} from '@/components/ui/slider';
-import type {Config,SiteTextStyles,TextStyle} from './defaults';
+import {GripVertical} from 'lucide-react';
+import type {Config,SiteTextStyles,TextStyle,NavItemKey} from './defaults';
 import TextStyleEditor from './text-style-editor';
 
 export default function LayoutEditor({draft,setDraft}:{draft:Config;setDraft:Dispatch<SetStateAction<Config>>}){
+  const [dragging,setDragging]=useState<NavItemKey|null>(null);
   const set=<K extends keyof Config>(key:K,value:Config[K])=>setDraft(d=>({...d,[key]:value}));
   const range=(key:keyof Config,label:string,min:number,max:number,step=1,suffix='px')=><label className="field layout-range">{label}<span className="val">{Number(draft[key])}{suffix}</span><Slider value={[Number(draft[key])]} min={min} max={max} step={step} onValueChange={v=>set(key,v[0] as never)}/></label>;
   const setStyle=(key:keyof SiteTextStyles,value:TextStyle)=>setDraft(d=>({...d,textStyles:{...d.textStyles,[key]:value}}));
+  const labelKey:Record<NavItemKey,'navWorkLabel'|'navAboutLabel'|'navTeamLabel'|'navContactLabel'>={work:'navWorkLabel',about:'navAboutLabel',team:'navTeamLabel',contact:'navContactLabel'};
+  const menuName:Record<NavItemKey,string>={work:'Work',about:'About',team:'Team',contact:'Contact'};
+  const moveMenu=(from:NavItemKey,to:NavItemKey)=>setDraft(d=>{
+    if(from===to)return d;
+    const next=[...d.navOrder],fromIndex=next.indexOf(from),toIndex=next.indexOf(to);
+    if(fromIndex<0||toIndex<0)return d;
+    next.splice(fromIndex,1);next.splice(toIndex,0,from);
+    return {...d,navOrder:next};
+  });
   return <div className="editor-grid layout-editor">
     <section className="editor-card">
       <h3>Public copy</h3>
       <p>상단 메뉴와 메인 영상, 푸터처럼 공통으로 보이는 문구를 수정합니다.</p>
-      <label className="field">메뉴 · Work<input value={draft.navWorkLabel} onChange={e=>set('navWorkLabel',e.target.value)}/></label>
-      <label className="field">메뉴 · About<input value={draft.navAboutLabel} onChange={e=>set('navAboutLabel',e.target.value)}/></label>
-      <label className="field">메뉴 · Team<input value={draft.navTeamLabel} onChange={e=>set('navTeamLabel',e.target.value)}/></label>
-      <label className="field">메뉴 · Contact<input value={draft.navContactLabel} onChange={e=>set('navContactLabel',e.target.value)}/></label>
+      <div className="menu-order-editor" aria-label="상단 메뉴 순서 편집">
+        {draft.navOrder.map((item,index)=><div className={'menu-order-row '+(dragging===item?'is-dragging':'')} key={item} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(dragging)moveMenu(dragging,item);setDragging(null)}}>
+          <button type="button" className="menu-drag-handle" draggable aria-label={menuName[item]+' 순서 이동'} onDragStart={e=>{setDragging(item);e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',item)}} onDragEnd={()=>setDragging(null)}><GripVertical size={18}/></button>
+          <label className="field">메뉴 · {menuName[item]}<input value={draft[labelKey[item]]} onChange={e=>set(labelKey[item],e.target.value)}/></label>
+          <span className="menu-order-index">{String(index+1).padStart(2,'0')}</span>
+        </div>)}
+      </div>
       <label className="field">메인 영상 캡션<input value={draft.heroCaption} onChange={e=>set('heroCaption',e.target.value)}/></label>
       <label className="field">메인 영상 버튼<input value={draft.heroButtonLabel} onChange={e=>set('heroButtonLabel',e.target.value)}/></label>
       <label className="field">Team 프로필 버튼<input value={draft.teamViewLabel} onChange={e=>set('teamViewLabel',e.target.value)}/></label>
