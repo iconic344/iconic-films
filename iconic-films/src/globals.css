@@ -8220,3 +8220,207 @@ body{
     animation:none!important;
   }
 }
+
+
+/* 2026-10-06 scoped team portfolio editing */
+.team-edit-link{
+  border:0;
+  background:transparent;
+  color:var(--ink);
+  padding:6px 4px;
+  font:inherit;
+  font-size:10px;
+  line-height:1;
+  opacity:.72;
+  text-transform:lowercase;
+  transition:opacity .24s ease,transform .35s cubic-bezier(.16,1,.3,1);
+}
+@media(hover:hover) and (pointer:fine){
+  .team-edit-link:hover{opacity:1;transform:translateY(-1px)}
+}
+.team-edit-link:active{transform:scale(.95)}
+.member-login-dialog .small{
+  max-width:360px;
+  line-height:1.6;
+}
+.member-self-editor{
+  z-index:120!important;
+}
+.member-self-editor .editor-header{
+  position:sticky;
+  top:0;
+  z-index:5;
+}
+.member-self-editor-note{
+  width:min(1780px,90vw);
+  margin:18px auto 0;
+  padding:15px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:22px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:color-mix(in srgb,var(--card) 82%,transparent);
+  color:var(--soft);
+}
+.member-self-editor-note strong{
+  color:var(--ink);
+  font-size:13px;
+  font-weight:600;
+}
+.member-self-editor-note span{
+  font-size:11px;
+  line-height:1.55;
+  text-align:right;
+}
+.member-self-editor-dashboard{
+  width:min(1780px,90vw);
+  margin:20px auto 110px;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+}
+.member-self-editor-dashboard .team-editor-card{
+  grid-column:auto!important;
+}
+.member-self-editor-dashboard .team-member-fields{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+}
+.member-self-editor-dashboard .team-member-fields>label:has(textarea){
+  grid-column:1/-1;
+}
+.member-self-editor-dashboard .team-portfolio-type-editor{
+  grid-template-columns:1fr!important;
+  gap:18px!important;
+}
+.member-self-editor-dashboard .team-portfolio-size-editor{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:18px!important;
+}
+.member-self-editor-dashboard .team-editor-works{
+  margin-top:16px;
+}
+.security-grid{
+  display:grid;
+  grid-template-columns:minmax(320px,.72fr) minmax(0,1.28fr);
+  gap:24px;
+  align-items:start;
+}
+.team-security-card{
+  min-width:0;
+}
+.team-security-head{
+  margin-bottom:16px;
+}
+.team-security-head p{
+  margin-top:7px;
+}
+.team-security-list{
+  display:grid;
+  gap:8px;
+}
+.team-security-row{
+  display:grid;
+  grid-template-columns:minmax(180px,1fr) 118px auto auto;
+  gap:8px;
+  align-items:center;
+  min-height:58px;
+  padding:8px 10px 8px 14px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:color-mix(in srgb,var(--card) 74%,transparent);
+}
+.team-security-name{
+  min-width:0;
+  display:grid;
+  grid-template-columns:28px minmax(0,auto) minmax(0,1fr);
+  gap:8px;
+  align-items:center;
+}
+.team-security-name>span{
+  color:var(--soft);
+  font-size:9px;
+  letter-spacing:.08em;
+}
+.team-security-name>strong{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:12px;
+  font-weight:600;
+}
+.team-security-name>small{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--soft);
+  font-size:9px;
+}
+.team-security-row>input{
+  width:100%;
+  height:40px;
+  padding:0 12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--page);
+  color:var(--ink);
+}
+.team-security-row>button{
+  min-height:40px;
+  padding:0 13px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:transparent;
+  color:var(--ink);
+  white-space:nowrap;
+}
+.team-security-row>button:disabled{opacity:.34}
+@media(hover:hover) and (pointer:fine){
+  .team-security-row>button:not(:disabled):hover{
+    background:var(--ink);
+    color:var(--page);
+    border-color:var(--ink);
+  }
+}
+@media(max-width:1100px){
+  .security-grid{grid-template-columns:1fr}
+  .member-self-editor-dashboard{grid-template-columns:1fr!important}
+}
+@media(max-width:760px){
+  .team-portfolio-site-nav .nav-tools{
+    gap:9px!important;
+  }
+  .team-portfolio-site-nav .team-edit-link,
+  .team-portfolio-site-nav .admin-link{
+    font-size:10px!important;
+    padding-inline:2px!important;
+  }
+  .member-self-editor-note{
+    width:calc(100% - 24px);
+    flex-direction:column;
+    align-items:flex-start;
+    gap:6px;
+  }
+  .member-self-editor-note span{text-align:left}
+  .member-self-editor-dashboard{
+    width:calc(100% - 24px);
+    margin-top:14px;
+  }
+  .member-self-editor-dashboard .team-member-fields,
+  .member-self-editor-dashboard .team-portfolio-size-editor{
+    grid-template-columns:1fr!important;
+  }
+  .member-self-editor-dashboard .team-member-fields>*{
+    grid-column:1!important;
+  }
+  .team-security-row{
+    grid-template-columns:1fr 104px;
+  }
+  .team-security-name{grid-column:1/-1}
+  .team-security-row>button{
+    width:100%;
+  }
+}
