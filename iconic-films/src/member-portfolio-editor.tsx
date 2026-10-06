@@ -2,6 +2,7 @@
 import {useState,type Dispatch,type SetStateAction} from 'react';
 import {Save,Trash2,X} from 'lucide-react';
 import {Slider} from '@/components/ui/slider';
+import {Switch} from '@/components/ui/switch';
 import type {Config,TeamMember,TextStyle} from './defaults';
 import TextStyleEditor from './text-style-editor';
 import TeamMedia from './team-media';
@@ -133,6 +134,12 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
       </aside>
     </div>
 
+    <section className="editor-card team-editor-card member-credit-editor-top">
+      <div className="team-editor-card-head"><div><span className="kicker">HERO CREDIT</span><h3>Hero credits</h3></div><label className="toggle">크레딧 표시<Switch checked={member.portfolioCreditsVisible!==false} onCheckedChange={v=>patch('portfolioCreditsVisible',v)}/></label></div>
+      <label className="field team-credit-editor-text">크레딧 내용<textarea placeholder={"DIRECTOR / xnives\nFILM MAKER / iconic\nPHOTOGRAPHER / h.feel"} value={member.portfolioCredits||''} onChange={e=>patch('portfolioCredits',e.target.value)}/></label>
+      <TextStyleEditor label="히어로 크레딧 스타일 / 위치" value={portfolioStyle('Role')} onChange={v=>patchPortfolioStyle('Role',v)}/>
+    </section>
+
     <div className="team-editor-dashboard member-self-editor-dashboard">
       <div className="team-editor-left-rail">
         <section className="editor-card team-editor-card">
@@ -141,7 +148,6 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
             <label className="field">대분류 이름<input placeholder="Fashion / Commercial / Events" value={member.name} onChange={e=>patch('name',e.target.value)}/></label>
             <label className="field">INDEX 문구<input maxLength={40} placeholder="CATEGORY INDEX" value={member.portfolioTeamIndexLabel||'CATEGORY INDEX'} onChange={e=>patch('portfolioTeamIndexLabel',e.target.value.slice(0,40))}/></label>
             <label className="field">세부 카테고리<textarea placeholder={"Fashion Show\nLookbook\nCampaign\nEditorial"} value={(member.portfolioSubcategories||[]).join('\n')} onChange={e=>setSubcategories(e.target.value)}/></label>
-            <label className="field">참여자 / 제작 크레딧<textarea placeholder={"DIRECTOR / xnives\nDOP / name\nSTYLING / name"} value={member.portfolioCredits||''} onChange={e=>patch('portfolioCredits',e.target.value)}/></label>
             
             
             
@@ -153,7 +159,6 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
           <div className="team-editor-card-head"><div><span className="kicker">TYPOGRAPHY</span><h3>Portfolio typography / position</h3></div></div>
           <div className="team-portfolio-type-editor">
             <TextStyleEditor label="카테고리 이름" value={portfolioStyle('Name')} onChange={v=>patchPortfolioStyle('Name',v)}/>
-            <TextStyleEditor label="크레딧" value={portfolioStyle('Role')} onChange={v=>patchPortfolioStyle('Role',v)}/>
             <TextStyleEditor label="카테고리 보조문구" value={portfolioStyle('Bio')} onChange={v=>patchPortfolioStyle('Bio',v)}/>
             <TextStyleEditor label="아카이브 제목" value={portfolioStyle('Title')} onChange={v=>patchPortfolioStyle('Title',v)}/>
             <TextStyleEditor label="아카이브 설명" value={portfolioStyle('Intro')} onChange={v=>patchPortfolioStyle('Intro',v)}/>
