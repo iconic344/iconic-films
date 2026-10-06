@@ -100,3 +100,42 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
     cursor:none!important;
   }
 }
+
+
+/* 2026-10-07 contextual media metadata: reveal only on intent */
+@media (min-width:1025px) and (hover:hover) and (pointer:fine){
+  .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-caption{
+    opacity:0!important;
+    transform:translateY(10px)!important;
+    pointer-events:none!important;
+    transition:
+      opacity .28s ease,
+      transform .48s cubic-bezier(.16,1,.3,1)!important;
+  }
+  .media-gallery:not(.is-modal):not(.is-fullscreen):hover .media-gallery-caption,
+  .media-gallery:not(.is-modal):not(.is-fullscreen):focus-within .media-gallery-caption{
+    opacity:1!important;
+    transform:translateY(0)!important;
+  }
+
+  /* Team category hero metadata behaves the same way: media first, information on intent. */
+  .team-portfolio-hero .team-portfolio-profile,
+  .team-portfolio-hero .team-portfolio-hero-credits{
+    opacity:0!important;
+    transform:translateY(10px)!important;
+    pointer-events:none;
+    transition:
+      opacity .3s ease,
+      transform .5s cubic-bezier(.16,1,.3,1)!important;
+  }
+  .team-portfolio-hero:hover .team-portfolio-profile,
+  .team-portfolio-hero:hover .team-portfolio-hero-credits,
+  .team-portfolio-hero:focus-within .team-portfolio-profile,
+  .team-portfolio-hero:focus-within .team-portfolio-hero-credits{
+    opacity:1!important;
+    transform:translateY(0)!important;
+  }
+  .team-portfolio-hero .team-portfolio-profile{
+    pointer-events:auto;
+  }
+}
