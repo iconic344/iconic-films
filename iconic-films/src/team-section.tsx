@@ -53,8 +53,8 @@ export default function TeamSection({config,onOpen}:{config:Config;onOpen:(membe
 
   return <section id="team" className="team-section reveal team-stack-section" style={sectionStyle}>
     <div className="team-section-head">
-      <span className="kicker" style={textCss('teamKicker')}>{config.teamKicker||'03 / PEOPLE'}</span>
-      <h2 style={textCss('teamHeadline')}>{(config.teamHeadline||'People behind the image.').split('\n').map((line,i)=><span key={i}>{line}{i<(config.teamHeadline||'').split('\n').length-1&&<br/>}</span>)}</h2>
+      <span className="kicker" style={textCss('teamKicker')}>{config.teamKicker||'03 / PORTFOLIO'}</span>
+      <h2 style={textCss('teamHeadline')}>{(config.teamHeadline||'Selected disciplines.').split('\n').map((line,i)=><span key={i}>{line}{i<(config.teamHeadline||'').split('\n').length-1&&<br/>}</span>)}</h2>
     </div>
 
     <div className="team-stack-list">
@@ -65,7 +65,7 @@ export default function TeamSection({config,onOpen}:{config:Config;onOpen:(membe
           href={'/team/'+encodeURIComponent(slug)}
           key={member.id}
           onClick={event=>open(event,member)}
-          aria-label={(member.name||'Team member')+' 포트폴리오 보기'}
+          aria-label={(member.name||'Portfolio category')+' 포트폴리오 보기'}
         >
           <div className="team-stack-visual">
             {member.photo
@@ -74,14 +74,14 @@ export default function TeamSection({config,onOpen}:{config:Config;onOpen:(membe
             <span className="team-stack-number">{String(index+1).padStart(2,'0')}</span>
           </div>
 
-          <div className="team-stack-copy">
-            <span style={textCss('teamMemberRole')}>{member.role||'CREATIVE'}</span>
-            <h3 style={textCss('teamMemberName')}>{member.name||'Unnamed'}</h3>
-            {member.bio&&<p style={textCss('teamMemberBio')}>{member.bio}</p>}
+          <div className="team-stack-copy team-stack-copy--portfolio">
+            <span style={textCss('teamMemberRole')}>PORTFOLIO / {String(member.works?.length||0).padStart(2,'0')}</span>
+            <h3 style={textCss('teamMemberName')}>{member.name||'Portfolio'}</h3>
+            {!!member.portfolioSubcategories?.length&&<p className="team-stack-subcategories" style={textCss('teamMemberBio')}>{member.portfolioSubcategories.slice(0,4).join(' · ')}</p>}
           </div>
 
           <div className="team-stack-end">
-            <span className="team-stack-view" style={textCss('teamView')}>{config.teamViewLabel||'View profile'} <ArrowUpRight size={15}/></span>
+            <span className="team-stack-view" style={textCss('teamView')}>View portfolio <ArrowUpRight size={15}/></span>
           </div>
         </a>;
       })}
