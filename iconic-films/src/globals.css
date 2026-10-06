@@ -8424,3 +8424,150 @@ body{
     width:100%;
   }
 }
+
+
+/* 2026-10-06 team motion performance pass + inline edit */
+/* Member changes must stay on the compositor: opacity + translate only.
+   Remove blur/backdrop-filter animation, staggered section animation and permanent
+   filter will-change layers that caused visible frame drops on desktop/iPad/mobile. */
+.team-portfolio-page::before{
+  display:none!important;
+  animation:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  will-change:auto!important;
+}
+.team-portfolio-page.member-motion-leaving .team-portfolio-hero,
+.team-portfolio-page.member-motion-leaving .team-portfolio-member-index,
+.team-portfolio-page.member-motion-leaving .team-portfolio-work,
+.team-portfolio-page.member-motion-entering .team-portfolio-hero,
+.team-portfolio-page.member-motion-entering .team-portfolio-member-index,
+.team-portfolio-page.member-motion-entering .team-portfolio-work{
+  animation:none!important;
+  filter:none!important;
+  transform:none!important;
+}
+.team-portfolio-page.member-motion-leaving .team-portfolio-main,
+.team-portfolio-page.member-motion-leaving .team-portfolio-member-switch,
+.team-portfolio-page.member-motion-leaving .team-portfolio-footer{
+  animation:team-fast-page-out .17s cubic-bezier(.4,0,.2,1) both!important;
+  pointer-events:none!important;
+}
+.team-portfolio-page.member-motion-entering .team-portfolio-main,
+.team-portfolio-page.member-motion-entering .team-portfolio-member-switch,
+.team-portfolio-page.member-motion-entering .team-portfolio-footer{
+  animation:team-fast-page-in .42s cubic-bezier(.16,1,.3,1) both!important;
+}
+@keyframes team-fast-page-out{
+  from{opacity:1;transform:translate3d(0,0,0)}
+  to{opacity:0;transform:translate3d(0,4px,0)}
+}
+@keyframes team-fast-page-in{
+  0%{opacity:0;transform:translate3d(0,7px,0)}
+  62%{opacity:.96;transform:translate3d(0,1px,0)}
+  100%{opacity:1;transform:translate3d(0,0,0)}
+}
+.team-portfolio-main,
+.team-portfolio-member-switch,
+.team-portfolio-footer{
+  backface-visibility:hidden!important;
+  -webkit-backface-visibility:hidden!important;
+  will-change:auto!important;
+}
+.team-portfolio-page.member-motion-leaving .team-portfolio-main,
+.team-portfolio-page.member-motion-leaving .team-portfolio-member-switch,
+.team-portfolio-page.member-motion-leaving .team-portfolio-footer,
+.team-portfolio-page.member-motion-entering .team-portfolio-main,
+.team-portfolio-page.member-motion-entering .team-portfolio-member-switch,
+.team-portfolio-page.member-motion-entering .team-portfolio-footer{
+  will-change:opacity,transform!important;
+}
+.team-portfolio-hero,
+.team-portfolio-member-index,
+.team-portfolio-work{
+  will-change:auto!important;
+  filter:none!important;
+}
+
+/* Keep reactive hover/touch feedback light; backdrop blur and image filters force
+   expensive repaints across large Team cards. */
+.team-member-index-list>button.member-reactive{
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  transition:
+    transform .28s cubic-bezier(.16,1,.3,1),
+    background .22s ease,
+    color .22s ease,
+    border-color .22s ease,
+    box-shadow .28s ease!important;
+}
+@media(hover:hover) and (pointer:fine){
+  .team-member-index-list>button.member-reactive:hover{
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+    transform:translate3d(0,-2px,0) scale(1.006)!important;
+    box-shadow:0 10px 28px rgba(0,0,0,.10)!important;
+  }
+  .team-portfolio-avatar.member-reactive:hover .team-portfolio-avatar-media{
+    filter:none!important;
+  }
+}
+.team-portfolio-avatar.member-reactive,
+.team-portfolio-avatar.member-reactive .team-portfolio-avatar-media{
+  transition-duration:.38s!important;
+}
+.team-portfolio-avatar.member-reactive::after{
+  mix-blend-mode:normal!important;
+}
+
+/* Edit belongs to the member identity row, not the global site header. */
+.team-portfolio-inline-edit{
+  position:relative;
+  translate:none!important;
+  margin-left:2px;
+  min-height:28px;
+  padding:0 11px!important;
+  border:1px solid color-mix(in srgb,var(--ink) 16%,transparent)!important;
+  border-radius:999px!important;
+  background:color-mix(in srgb,var(--ink) 5%,transparent)!important;
+  color:var(--ink)!important;
+  font-family:var(--portfolio-utility-font,Arial,Helvetica,sans-serif)!important;
+  font-size:max(11px,var(--portfolio-utility-size,11px))!important;
+  font-weight:600!important;
+  letter-spacing:.08em!important;
+  line-height:1!important;
+  opacity:.74;
+  transition:
+    opacity .2s ease,
+    transform .28s cubic-bezier(.16,1,.3,1),
+    background .2s ease,
+    border-color .2s ease!important;
+}
+@media(hover:hover) and (pointer:fine){
+  .team-portfolio-inline-edit:hover{
+    opacity:1;
+    transform:translateY(-1px)!important;
+    background:color-mix(in srgb,var(--ink) 9%,transparent)!important;
+    border-color:color-mix(in srgb,var(--ink) 24%,transparent)!important;
+  }
+}
+.team-portfolio-inline-edit:active{
+  transform:scale(.96)!important;
+}
+@media(max-width:760px){
+  .team-portfolio-inline-edit{
+    min-height:30px;
+    padding:0 12px!important;
+    font-size:11px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .team-portfolio-page.member-motion-leaving .team-portfolio-main,
+  .team-portfolio-page.member-motion-leaving .team-portfolio-member-switch,
+  .team-portfolio-page.member-motion-leaving .team-portfolio-footer,
+  .team-portfolio-page.member-motion-entering .team-portfolio-main,
+  .team-portfolio-page.member-motion-entering .team-portfolio-member-switch,
+  .team-portfolio-page.member-motion-entering .team-portfolio-footer{
+    animation:none!important;
+  }
+}
