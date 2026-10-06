@@ -365,7 +365,7 @@ function normalizeUpload(name:string,type:string,size:number){
 }
 
 const memberStringFields=[
-  'codeName','memberLabel','name','role','bio','instagram','photo','portfolioTitle','portfolioIntro','portfolioReturnLabel',
+  'codeName','memberLabel','name','role','bio','instagram','photo','portfolioTitle','portfolioIntro','portfolioCredits','portfolioReturnLabel',
   'portfolioNameFont','portfolioNameColor','portfolioRoleFont','portfolioRoleColor','portfolioBioFont','portfolioBioColor',
   'portfolioTitleFont','portfolioTitleColor','portfolioIntroFont','portfolioIntroColor','portfolioUtilityFont','portfolioUtilityColor'
 ] as const;
@@ -383,7 +383,7 @@ function cleanMemberUpdate(current:any,input:any){
   for(const key of memberStringFields){
     if(input[key]===undefined)continue;
     if(typeof input[key]!=='string')throw new HttpError(400,'문자 입력 형식이 올바르지 않습니다.');
-    const limit=key==='bio'||key==='portfolioIntro'?5000:key==='instagram'||key==='photo'?2048:400;
+    const limit=key==='bio'||key==='portfolioIntro'?5000:key==='portfolioCredits'?2000:key==='instagram'||key==='photo'?2048:400;
     if(input[key].length>limit)throw new HttpError(400,'입력 내용이 너무 깁니다.');
     next[key]=input[key];
   }
