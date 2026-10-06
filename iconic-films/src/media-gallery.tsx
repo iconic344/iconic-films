@@ -1,4 +1,5 @@
 import {useEffect,useRef,useState,type CSSProperties} from 'react';
+import {createPortal} from 'react-dom';
 import {ChevronLeft,ChevronRight,Play,Pause,Volume2,VolumeX,Maximize,Minimize,X} from 'lucide-react';
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
 import TeamMedia,{teamMediaType} from './team-media';
@@ -10,7 +11,7 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,onExpand,onRead
  const [index,setIndex]=useState(Math.min(initialIndex,Math.max(0,items.length-1)));
  const [playing,setPlaying]=useState(()=>!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
  const [muted,setMuted]=useState(true),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(false),[nativeFullscreen,setNativeFullscreen]=useState(false),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState('');
- const root=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),drag=useRef<{x:number;y:number}|null>(null),dragged=useRef(false),elapsed=useRef(0),ambient=useRef<HTMLCanvasElement>(null),idleTimer=useRef(0);
+ const root=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),drag=useRef<{x:number;y:number}|null>(null),dragged=useRef(false),elapsed=useRef(0),ambient=useRef<HTMLCanvasElement>(null),idleTimer=useRef(0),restoreTime=useRef<number|null>(null);
  const item=items[index],type=item?teamMediaType(item.src):'image',isFullscreen=expanded||nativeFullscreen;
  useEffect(()=>{if(modal)root.current?.focus({preventScroll:true})},[modal]);
  const choose=(n:number)=>{if(!items.length)return;const target=(n+items.length)%items.length;setIndex(target);onIndexChange?.(target)};
@@ -33,12 +34,12 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,onExpand,onRead
   const observer=new IntersectionObserver(entries=>{intersects=entries[0].isIntersecting;sync()},{threshold:.1});observer.observe(el);
   document.addEventListener('visibilitychange',sync);
   return()=>{observer.disconnect();document.removeEventListener('visibilitychange',sync)};
- },[]);
+ },[expanded]);
  useEffect(()=>{
   const v=video.current;if(!v)return;
   if(playing&&visible)v.play().catch(()=>{if(!v.muted){v.muted=true;setMuted(true);v.play().catch(()=>setPlaying(false))}else setPlaying(false)});
   else v.pause();
- },[playing,visible,item?.id,item?.src]);
+ },[playing,visible,item?.id,item?.src,expanded]);
  useEffect(()=>{
   if(type==='video'||!playing||!visible||!item||error)return;
   let last=performance.now();
@@ -48,13 +49,14 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,onExpand,onRead
  const toggle=()=>setPlaying(v=>!v);
  const exitFullscreen=()=>{
   if(document.fullscreenElement===root.current)void document.exitFullscreen().catch(()=>{});
-  else setExpanded(false);
+  else {restoreTime.current=video.current?.currentTime??null;setExpanded(false)}
  };
  const fullscreen=()=>{
   const el=root.current;if(!el)return;
   if(isFullscreen){exitFullscreen();return}
-  if(el.requestFullscreen)void el.requestFullscreen().catch(()=>setExpanded(true));
-  else setExpanded(true);
+  const fallback=()=>{restoreTime.current=video.current?.currentTime??null;setExpanded(true)};
+  if(el.requestFullscreen)void el.requestFullscreen().catch(fallback);
+  else fallback();
  };
  const wake=()=>{
   setIdle(false);window.clearTimeout(idleTimer.current);
@@ -81,7 +83,7 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,onExpand,onRead
    if(playing&&visible)frame=requestAnimationFrame(draw);
   };
   draw(performance.now());return()=>cancelAnimationFrame(frame);
- },[item?.id,item?.src,type,playing,visible,ready]);
+ },[item?.id,item?.src,type,playing,visible,ready,expanded]);
  const key=(e:React.KeyboardEvent)=>{
   if((e.target as HTMLElement).matches('input'))return;
   if(e.key==='Escape'&&isFullscreen){e.preventDefault();e.stopPropagation();exitFullscreen();return}
@@ -90,7 +92,7 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,onExpand,onRead
   if(e.key===' '&&!((e.target as HTMLElement).closest('button'))){e.preventDefault();toggle()}
  };
  if(!item)return null;
- return <div ref={root} className={'media-gallery '+(modal?'is-modal ':'')+(expanded?'is-expanded ':'')+(isFullscreen?'is-fullscreen ':'')+(type==='video'?'has-video':'has-image')} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} data-cursor-idle={idle?'true':'false'} onPointerMove={wake} onPointerDown={wake} onFocusCapture={wake} onKeyDown={e=>{wake();key(e)}}>
+ const gallery=<div ref={root} className={'media-gallery '+(modal?'is-modal ':'')+(expanded?'is-expanded ':'')+(isFullscreen?'is-fullscreen ':'')+(type==='video'?'has-video':'has-image')} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} data-cursor-idle={idle?'true':'false'} onPointerMove={wake} onPointerDown={wake} onFocusCapture={wake} onKeyDown={e=>{wake();key(e)}}>
   {isFullscreen&&<button type="button" className="media-gallery-close" aria-label="전체 화면 종료" onClick={exitFullscreen}><X size={23}/></button>}
   <div className="media-gallery-viewport" onPointerDown={e=>{if(e.button!==0||(e.target as HTMLElement).closest('button,input,model-viewer'))return;drag.current={x:e.clientX,y:e.clientY};dragged.current=false;e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={e=>{if(!drag.current)return;const dx=e.clientX-drag.current.x,dy=e.clientY-drag.current.y;drag.current=null;if(Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)){dragged.current=true;choose(index+(dx<0?1:-1))}e.currentTarget.releasePointerCapture?.(e.pointerId)}} onPointerCancel={()=>{drag.current=null}}>
    <div className="media-gallery-track" style={{'--gallery-index':index} as CSSProperties}>
@@ -102,7 +104,7 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,onExpand,onRead
        {active&&kind==='video'&&<canvas ref={ambient} style={{opacity:readySrc===entry.src?1:0}}/>}
       </div><div className="media-gallery-glass" aria-hidden="true"/>
       <div className="media-gallery-artwork" onClick={()=>{if(dragged.current){dragged.current=false;return}if(active&&kind==='video')toggle()}}>
-       {kind==='video'?<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-index)<=1?entry.src:undefined} poster={entry.poster} muted={active?muted:true} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setReady(n=>n+1);onReady?.();if(playing&&visible)video.current?.play().catch(()=>setPlaying(false))}}} onLoadedMetadata={e=>{if(active){setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setPlaying(false);onReady?.()}}}/>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
+       {kind==='video'?<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-index)<=1?entry.src:undefined} poster={entry.poster} muted={active?muted:true} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setReady(n=>n+1);onReady?.();if(playing&&visible)video.current?.play().catch(()=>setPlaying(false))}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setPlaying(false);onReady?.()}}}/>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
       </div>
 
       {active&&error&&<p className="media-gallery-error" role="status">미디어를 불러오지 못했습니다. <button type="button" onClick={()=>{setError(false);video.current?.load();setPlaying(true)}}>다시 시도</button></p>}
@@ -121,6 +123,9 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,onExpand,onRead
   <div className="media-gallery-navigation"><div className="media-gallery-indicators" role="group" aria-label="미디어 선택">{items.map((entry,i)=><button type="button" key={entry.id} aria-label={`${i+1}번 미디어: ${entry.title}`} aria-current={i===index?'true':undefined} className={i===index?'is-active':''} onClick={()=>choose(i)}><span style={{'--gallery-progress':i===index?progress:0} as CSSProperties}/></button>)}</div><button type="button" className="media-gallery-toggle" aria-label={playing?'일시정지':'재생'} onClick={toggle}>{playing?<Pause size={20} fill="currentColor"/>:<Play size={20} fill="currentColor"/>}</button></div>
   <span className="sr-only" aria-live="polite">{index+1} / {items.length}: {item.title}</span>
  </div>;
+ // Native fullscreen retains the DOM. Unsupported browsers get a body portal
+ // so transformed sections cannot clip or cover the viewport fallback.
+ return expanded&&!modal?createPortal(gallery,document.body):gallery;
 }
 
 export default function MediaGalleryDialog({items,index,onClose,onIndexChange}:{items:GalleryItem[];index:number|null;onClose:()=>void;onIndexChange?:(index:number)=>void}){
