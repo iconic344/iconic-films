@@ -10292,3 +10292,85 @@ body{
       14px!important;
   }
 }
+
+
+/* 2026-10-06 editor switch state visibility fix */
+/* Apple-style binary switches: ON uses a fixed system-green state in both themes,
+   OFF stays neutral gray so state is always immediately legible. */
+.editor [data-slot="switch"]{
+  position:relative!important;
+  width:42px!important;
+  min-width:42px!important;
+  height:24px!important;
+  min-height:24px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:999px!important;
+  overflow:visible!important;
+  background:rgba(120,120,128,.22)!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(60,60,67,.08),
+    inset 0 1px 2px rgba(0,0,0,.06)!important;
+  transition:
+    background .22s ease,
+    box-shadow .22s ease,
+    opacity .22s ease!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+:root[data-theme=dark] .editor [data-slot="switch"]{
+  background:rgba(120,120,128,.34)!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(235,235,245,.08),
+    inset 0 1px 2px rgba(0,0,0,.16)!important;
+}
+.editor [data-slot="switch"][data-state="checked"]{
+  background:#34C759!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.04),
+    0 0 0 1px rgba(52,199,89,.08)!important;
+}
+.editor [data-slot="switch"][data-state="unchecked"]{
+  background:rgba(120,120,128,.22)!important;
+}
+:root[data-theme=dark] .editor [data-slot="switch"][data-state="unchecked"]{
+  background:rgba(120,120,128,.34)!important;
+}
+.editor [data-slot="switch-thumb"]{
+  position:absolute!important;
+  top:2px!important;
+  left:2px!important;
+  width:20px!important;
+  min-width:20px!important;
+  height:20px!important;
+  min-height:20px!important;
+  border-radius:50%!important;
+  background:#fff!important;
+  transform:translateX(0)!important;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.18),
+    0 2px 6px rgba(0,0,0,.14)!important;
+  transition:
+    transform .24s cubic-bezier(.22,1,.36,1),
+    box-shadow .2s ease!important;
+}
+.editor [data-slot="switch"][data-state="checked"] [data-slot="switch-thumb"]{
+  transform:translateX(18px)!important;
+  background:#fff!important;
+}
+.editor [data-slot="switch"]:active [data-slot="switch-thumb"]{
+  width:22px!important;
+}
+.editor [data-slot="switch"][data-state="checked"]:active [data-slot="switch-thumb"]{
+  transform:translateX(16px)!important;
+}
+.editor [data-slot="switch"]:focus-visible{
+  outline:none!important;
+  box-shadow:
+    0 0 0 4px rgba(10,132,255,.20),
+    inset 0 0 0 1px rgba(60,60,67,.08)!important;
+}
+.editor [data-slot="switch"]:disabled{
+  opacity:.38!important;
+  cursor:not-allowed!important;
+}
