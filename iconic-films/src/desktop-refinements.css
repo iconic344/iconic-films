@@ -531,3 +531,24 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
     left:20px!important;
   }
 }
+
+
+/* Main reel edge treatment: subtle vertical fade only, never across the center. */
+.hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork::before,
+.hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  height:13%;
+  z-index:3;
+  pointer-events:none;
+}
+.hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork::before{
+  top:0;
+  background:linear-gradient(to bottom,rgba(0,0,0,.22),rgba(0,0,0,.07) 46%,rgba(0,0,0,0));
+}
+.hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork::after{
+  bottom:0;
+  background:linear-gradient(to top,rgba(0,0,0,.22),rgba(0,0,0,.07) 46%,rgba(0,0,0,0));
+}
