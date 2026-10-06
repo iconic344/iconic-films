@@ -18,7 +18,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const [viewerDuration,setViewerDuration]=useState(0);
   const [viewerMotion,setViewerMotion]=useState<'idle'|'out'|'in'>('idle');
   const [viewerDirection,setViewerDirection]=useState<1|-1>(1);
-  const [memberMotion,setMemberMotion]=useState<'idle'|'leaving'|'entering'>('idle');
+  const [memberMotion,setMemberMotion]=useState<'idle'|'leaving'|'entering'>('entering');
   const [memberDirection,setMemberDirection]=useState<1|-1>(1);
   const dragStart=useRef<number|null>(null);
   const swiped=useRef(false);
@@ -29,7 +29,6 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const viewerMotionTimer=useRef<number|null>(null);
   const viewerPreloadCache=useRef(new Map<string,Promise<void>>());
   const memberSwitchTimer=useRef<number|null>(null);
-  const previousMemberId=useRef(member.id);
   const memberSwipeStart=useRef<{x:number;y:number}|null>(null);
   const memberSwipeMoved=useRef(false);
   const works=useMemo(()=>member.works||[],[member.works]);
@@ -43,7 +42,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     memberSwitchTimer.current=window.setTimeout(()=>{
       onSelectMember(target);
       memberSwitchTimer.current=null;
-    },230);
+    },300);
   };
   const memberPrev=()=>teamMembers.length&&selectMember(teamMembers[(memberIndex-1+teamMembers.length)%teamMembers.length],-1);
   const memberNext=()=>teamMembers.length&&selectMember(teamMembers[(memberIndex+1)%teamMembers.length],1);
@@ -166,8 +165,6 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   };
 
   useEffect(()=>{
-    const changed=previousMemberId.current!==member.id;
-    previousMemberId.current=member.id;
     setIndex(0);
     setViewerClosing(false);
     setViewerIndex(null);
@@ -178,13 +175,22 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     viewerTransitioning.current=false;
     if(viewerMotionTimer.current!==null){window.clearTimeout(viewerMotionTimer.current);viewerMotionTimer.current=null}
     window.scrollTo({top:0,behavior:'auto'});
-    if(changed){
-      setMemberMotion('entering');
-      if(memberSwitchTimer.current!==null)window.clearTimeout(memberSwitchTimer.current);
-      memberSwitchTimer.current=window.setTimeout(()=>{setMemberMotion('idle');memberSwitchTimer.current=null},680);
-    }
+    setMemberMotion('entering');
+    if(memberSwitchTimer.current!==null)window.clearTimeout(memberSwitchTimer.current);
+    memberSwitchTimer.current=window.setTimeout(()=>{setMemberMotion('idle');memberSwitchTimer.current=null},780);
   },[member.id]);
   useEffect(()=>()=>{if(memberSwitchTimer.current!==null)window.clearTimeout(memberSwitchTimer.current);if(viewerMotionTimer.current!==null)window.clearTimeout(viewerMotionTimer.current)},[]);
+  useEffect(()=>{
+    const warmed:HTMLImageElement[]=[];
+    for(const item of teamMembers){
+      if(!item.photo||teamMediaType(item.photo)!=='image')continue;
+      const image=new Image();
+      image.decoding='async';
+      image.src=item.photo;
+      warmed.push(image);
+    }
+    return()=>{for(const image of warmed)image.src=''};
+  },[teamMembers]);
   useEffect(()=>{
     if(viewerIndex!==null&&works.length){
       void preloadViewerMedia(works[viewerIndex]||'');
