@@ -447,3 +447,87 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
   color:#fff!important;
   font-variant-numeric:tabular-nums;
 }
+
+
+/* 2026-10-07 precision pass: exact hero center + balanced vertical rhythm. */
+@media (min-width:1025px){
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen){
+    padding-top:60px!important;
+    padding-bottom:60px!important;
+  }
+
+  /* Treat the reel frame itself as the centering box. */
+  .hero-gallery .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-caption{
+    position:absolute!important;
+    top:60px!important;
+    right:0!important;
+    bottom:60px!important;
+    left:0!important;
+    width:auto!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0 clamp(24px,8vw,160px)!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+    translate:none!important;
+    transform:translateY(10px)!important;
+    pointer-events:none!important;
+  }
+  .hero-gallery .media-gallery:not(.is-modal):not(.is-fullscreen):hover .media-gallery-caption{
+    translate:none!important;
+    transform:translateY(0)!important;
+  }
+  .hero-gallery .media-gallery:not(.is-modal):not(.is-fullscreen):not(:hover) .media-gallery-caption{
+    translate:none!important;
+    transform:translateY(10px)!important;
+  }
+}
+
+/* Fullscreen video metadata never competes with the transport bar.
+   Images can keep their existing editorial caption placement. */
+@media (min-width:821px){
+  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-caption{
+    position:fixed!important;
+    top:max(24px,4vh)!important;
+    left:max(24px,3vw)!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:min(420px,34vw)!important;
+    max-width:min(420px,34vw)!important;
+    margin:0!important;
+    padding:0!important;
+    text-align:left!important;
+    z-index:10060!important;
+    pointer-events:none!important;
+    filter:drop-shadow(0 2px 10px rgba(0,0,0,.52))!important;
+  }
+  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-caption span{
+    margin-bottom:8px!important;
+  }
+  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-caption h3{
+    font-size:clamp(17px,1.4vw,24px)!important;
+    line-height:1.08!important;
+  }
+  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-caption p{
+    margin-top:8px!important;
+    max-height:min(24vh,180px)!important;
+    overflow:auto!important;
+    padding-right:6px!important;
+    white-space:pre-line!important;
+  }
+
+  /* Reserve the lower band exclusively for video transport. */
+  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-tools{
+    bottom:16px!important;
+    left:16px!important;
+    right:16px!important;
+    width:auto!important;
+  }
+  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-arrows{
+    bottom:82px!important;
+    left:20px!important;
+  }
+}
