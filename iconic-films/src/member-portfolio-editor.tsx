@@ -95,9 +95,23 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
       </div>
     </div>
 
-    <div className="member-self-editor-note">
-      <strong>{member.name||'Team member'}</strong>
-      <span>이 편집 권한은 현재 팀원 포트폴리오에만 적용됩니다. 사이트 전체 설정과 다른 팀원 페이지는 변경할 수 없습니다.</span>
+    <div className="member-self-topbar">
+      <section className="member-self-security-quick" aria-label="Portfolio password">
+        <div className="member-self-security-quick-copy">
+          <span className="kicker">SECURITY</span>
+          <strong>Portfolio password</strong>
+          <small>현재 팀원 EDIT 비밀번호만 변경됩니다.</small>
+        </div>
+        <div className="member-self-security-quick-fields">
+          <label>새 비밀번호<input type="password" inputMode="numeric" maxLength={4} placeholder="4자리" value={newPin} onChange={e=>setNewPin(e.target.value.replace(/\D/g,'').slice(0,4))}/></label>
+          <label>비밀번호 확인<input type="password" inputMode="numeric" maxLength={4} placeholder="다시 입력" value={confirmPin} onChange={e=>setConfirmPin(e.target.value.replace(/\D/g,'').slice(0,4))}/></label>
+          <button type="button" disabled={pinBusy||newPin.length!==4||confirmPin.length!==4||newPin!==confirmPin} onClick={changeOwnPin}>{pinBusy?'변경 중…':'변경 적용'}</button>
+        </div>
+      </section>
+      <aside className="member-self-editor-note">
+        <strong>{member.name||'Team member'}</strong>
+        <span>이 편집 권한은 현재 팀원 포트폴리오에만 적용됩니다. 사이트 전체 설정과 다른 팀원 페이지는 변경할 수 없습니다.</span>
+      </aside>
     </div>
 
     <div className="team-editor-dashboard member-self-editor-dashboard">
@@ -132,24 +146,10 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
       <div className="team-editor-right-rail">
         <section className="editor-card team-editor-card">
           <div className="team-editor-card-head"><div><span className="kicker">MEDIA</span><h3>Profile / portfolio</h3></div></div>
-          <label className="field file-upload">프로필 미디어 업로드<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadOne(e.target.files?.[0],'photo')}/><span className="uploaded-file">{member.photo?'프로필 미디어 등록됨':'이미지 / 영상 / GLB·glTF'}</span>{member.photo&&<button type="button" className="file-clear" onClick={()=>patch('photo','')}>미디어 제거</button>}</label>
-          {member.photo&&<div className="team-editor-photo"><TeamMedia src={member.photo} alt="프로필 미리보기" className="team-editor-photo-media" interactive/></div>}
-          <label className="field file-upload">작품 미디어 업로드<input type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadWorks(e.target.files)}/><span className="uploaded-file">이미지 / 영상 / 3D 여러 개 선택 가능</span></label>
+          <label className="field file-upload member-profile-upload">프로필 미디어 업로드<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadOne(e.target.files?.[0],'photo')}/><span className="uploaded-file">{member.photo?'프로필 미디어 등록됨':'이미지 / 영상 / GLB·glTF'}</span>{member.photo&&<button type="button" className="file-clear" onClick={()=>patch('photo','')}>미디어 제거</button>}</label>
+          {member.photo&&<div className="team-editor-photo member-profile-preview"><TeamMedia src={member.photo} alt="프로필 미리보기" className="team-editor-photo-media" interactive/></div>}
+          <label className="field file-upload member-work-upload">작품 미디어 업로드<input type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadWorks(e.target.files)}/><span className="uploaded-file">이미지 / 영상 / 3D 여러 개 선택 가능</span></label>
           {!!member.works?.length&&<div className="team-editor-works">{member.works.map((url,i)=><div key={url+i}><TeamMedia src={url} alt={'작품 '+(i+1)} className="team-editor-work-media" interactive/><button type="button" aria-label="작품 삭제" onClick={()=>patch('works',member.works.filter((_,j)=>j!==i))}><Trash2 size={14}/></button></div>)}</div>}
-        </section>
-
-        <section className="editor-card team-editor-card member-self-security">
-          <div className="team-editor-card-head"><div><span className="kicker">SECURITY</span><h3>Portfolio password</h3></div></div>
-          <p className="member-self-security-copy">현재 팀원 포트폴리오의 EDIT 비밀번호만 변경됩니다. 지금 열려 있는 탭의 편집 권한은 유지되고, 다음에 새로 접속할 때부터 변경한 비밀번호를 사용합니다.</p>
-          <div className="member-self-security-fields">
-            <label className="field">새 비밀번호
-              <input type="password" inputMode="numeric" maxLength={4} placeholder="숫자 4자리" value={newPin} onChange={e=>setNewPin(e.target.value.replace(/\D/g,'').slice(0,4))}/>
-            </label>
-            <label className="field">새 비밀번호 확인
-              <input type="password" inputMode="numeric" maxLength={4} placeholder="다시 입력" value={confirmPin} onChange={e=>setConfirmPin(e.target.value.replace(/\D/g,'').slice(0,4))}/>
-            </label>
-          </div>
-          <button type="button" className="member-self-security-apply" disabled={pinBusy||newPin.length!==4||confirmPin.length!==4||newPin!==confirmPin} onClick={changeOwnPin}>{pinBusy?'변경 중…':'비밀번호 변경 적용'}</button>
         </section>
 
         <section className="editor-card team-editor-card">
