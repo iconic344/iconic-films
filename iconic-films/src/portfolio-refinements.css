@@ -1,0 +1,36 @@
+/* Extend the same hero surface behind the category index, without moving content. */
+.team-portfolio-hero{--hero-fade-extension:240px;overflow:visible!important}
+.team-portfolio-hero-media,.team-portfolio-hero-light{inset:0 0 auto!important;height:calc(100% + var(--hero-fade-extension))!important}
+.team-portfolio-hero::before{inset:0 0 auto;height:calc(100% + var(--hero-fade-extension))}
+.team-portfolio-hero::after{inset:0 0 auto;height:calc(100% + var(--hero-fade-extension));background:linear-gradient(to bottom,transparent 30%,color-mix(in srgb,var(--page) 8%,transparent) 45%,color-mix(in srgb,var(--page) 28%,transparent) 62%,color-mix(in srgb,var(--page) 58%,transparent) 77%,color-mix(in srgb,var(--page) 86%,transparent) 91%,var(--page) 100%)}
+.team-portfolio-member-index{position:relative;z-index:5;background:transparent!important}
+.team-portfolio-work{position:relative;z-index:5}
+
+/* The original circular cursor remains the anchor; only its hover fill changes. */
+.iconic-cursor{z-index:2147483646;mix-blend-mode:difference!important}
+.iconic-cursor>span{background:transparent!important;border:0!important}
+.iconic-cursor>span::before,.iconic-cursor>span::after{content:"";position:absolute;inset:0;border-radius:inherit;box-sizing:border-box;pointer-events:none;transition:opacity .48s cubic-bezier(.22,1,.36,1)}
+.iconic-cursor>span::before{background:#fff;opacity:1}
+.iconic-cursor>span::after{border:var(--cursor-ring-width,.85px) solid #fff;opacity:0}
+.iconic-cursor[data-hovered="true"]>span::before{opacity:0}
+.iconic-cursor[data-hovered="true"]>span::after{opacity:.82}
+.iconic-cursor-glow{z-index:2147483644}
+.iconic-cursor-glow::after{background:radial-gradient(circle,rgba(255,255,255,.14),rgba(255,255,255,.035) 32%,transparent 68%)}
+.iconic-cursor-optics{position:fixed;left:0;top:0;width:0;height:0;z-index:2147483645;pointer-events:none;opacity:0;transition:opacity .18s ease;transform-origin:0 0}
+.iconic-cursor-optics[data-visible="true"]{opacity:1}
+.cursor-optics-glass{position:absolute;left:-32px;top:-32px;width:64px;height:64px;display:block;border-radius:50%;opacity:0;transform:scale(.09375);transform-origin:center;overflow:hidden;backdrop-filter:blur(3px) saturate(1.12);-webkit-backdrop-filter:blur(3px) saturate(1.12);background:radial-gradient(ellipse at 16% 18%,rgba(130,210,255,.12),transparent 56%),radial-gradient(ellipse at 88% 28%,rgba(255,130,204,.11),transparent 55%),radial-gradient(ellipse at 50% 94%,rgba(165,255,215,.10),transparent 53%),rgba(255,255,255,.025);box-shadow:inset .5px .5px .5px rgba(220,240,255,.18),inset -.5px -.5px .7px rgba(255,190,225,.14);transition:opacity .5s cubic-bezier(.22,1,.36,1);will-change:transform}
+.iconic-cursor-optics[data-hovered="true"] .cursor-optics-glass{opacity:1}
+.cursor-optics-label{position:absolute;top:0;left:0;display:block;transform:translate(-50%,-50%);font:600 9px/1 Arial,Helvetica,sans-serif;letter-spacing:.09em;color:#fff;mix-blend-mode:difference;opacity:0;transition:opacity .35s cubic-bezier(.22,1,.36,1);white-space:nowrap;pointer-events:none}
+.iconic-cursor-optics[data-hovered="true"] .cursor-optics-label{opacity:var(--cursor-label-opacity,0)}
+
+/* One paired translation for the entire page: no dissolves, stagger or remount. */
+.team-slide-viewport{position:relative;overflow:clip;overflow-clip-margin:0;isolation:isolate;width:100%;min-width:0}
+.team-slide-page{width:100%;min-width:0;opacity:1;transform:none}
+.team-slide-viewport.is-transitioning .team-slide-page{transition:transform var(--team-slide-ms,900ms) cubic-bezier(.65,0,.25,1);will-change:transform;backface-visibility:hidden}
+.team-slide-page.is-outgoing{position:absolute;left:0;right:0;transform:translate3d(0,0,0);pointer-events:none}
+.team-slide-page.is-incoming{position:relative;transform:translate3d(calc(var(--team-slide-direction)*100%),0,0)}
+.team-slide-viewport.is-moving .team-slide-page.is-outgoing{transform:translate3d(calc(var(--team-slide-direction)*-100%),0,0)}
+.team-slide-viewport.is-moving .team-slide-page.is-incoming{transform:translate3d(0,0,0)}
+.team-slide-viewport.is-transitioning .scroll-reveal{opacity:1!important;translate:none!important;transition:none!important}
+.team-slide-page .team-portfolio-main,.team-slide-page .team-portfolio-member-switch,.team-slide-page .team-portfolio-footer{animation:none!important;filter:none!important}
+@media(prefers-reduced-motion:reduce){.iconic-cursor-optics,.iconic-cursor-glow{display:none}.team-slide-viewport .team-slide-page{transition:none!important}}

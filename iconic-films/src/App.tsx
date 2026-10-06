@@ -17,7 +17,7 @@ import FocusRail from './focus-rail';
 import ScrollReveal from './scroll-reveal';
 import LogoEditor from './logo-editor';
 import TeamSection from './team-section';
-import TeamPortfolioPage from './team-portfolio-page';
+import TeamPortfolioTransition from './team-portfolio-transition';
 import TeamEditor from './team-editor';
 import MemberPortfolioEditor from './member-portfolio-editor';
 import ContactDialog from './contact-dialog';
@@ -334,7 +334,7 @@ export default function Home(){
  function closeMemberPortfolioEditor(){setMemberEditor(null);setMemberDraft(null)}
  if(!loaded)return <div className="site-boot" role="status" aria-label="Loading"><span className="site-boot-progress" aria-hidden="true"><i/></span></div>;
  const routedMember=teamRoute?c.teamMembers.find(member=>(member.portfolioSlug||member.id)===teamRoute&&member.visible):null;
- const teamPage=teamRoute&&routedMember?<div className={'team-page-shell '+(teamPageClosing?'is-closing':'')}><TeamPortfolioPage key={routedMember.id} config={c} member={routedMember} theme={theme} onBack={closeTeamPortfolio} onNavigate={leaveTeamPortfolio} onSelectMember={openTeamPortfolio} onToggleTheme={()=>{const v=theme==='light'?'dark':'light';setTheme(v);localStorage.setItem('iconic-theme',v)}} onContact={()=>setContactOpen(true)} onAdmin={enter} onVideoViewerOpen={pauseMusicForTeamVideo} onVideoViewerClose={resumeMusicAfterTeamVideo} onMemberEdit={openMemberPortfolioEditor}/></div>:null;
+ const teamPage=teamRoute&&routedMember?<div className={'team-page-shell '+(teamPageClosing?'is-closing':'')}><TeamPortfolioTransition config={c} member={routedMember} theme={theme} onBack={closeTeamPortfolio} onNavigate={leaveTeamPortfolio} onSelectMember={openTeamPortfolio} onToggleTheme={()=>{const v=theme==='light'?'dark':'light';setTheme(v);localStorage.setItem('iconic-theme',v)}} onContact={()=>setContactOpen(true)} onAdmin={enter} onVideoViewerOpen={pauseMusicForTeamVideo} onVideoViewerClose={resumeMusicAfterTeamVideo} onMemberEdit={openMemberPortfolioEditor}/></div>:null;
  const editorGroups=[
   {id:'site',label:'사이트',tabs:[['content','콘텐츠'],['layout','레이아웃'],['design','디자인'],['logo','메인 로고']]},
   {id:'visual',label:'비주얼',tabs:[['scene','이미지 & 3D'],['background','배경 & 패턴'],['motion','모션']]},
@@ -358,7 +358,7 @@ export default function Home(){
  return <div id="top" style={style} className={'site '+(ownerMode&&!admin&&!login?'has-owner-notice':'')}>
  {c.heroVideo&&!heroReady&&!teamRoute&&!admin&&!preview&&<div className="site-boot" role="status" aria-label="Loading"><span className="site-boot-progress" aria-hidden="true"><i/></span></div>}
  <ScrollReveal enabled={!admin||preview}/>
- <PointerExperience enabled={(!admin||preview)&&!login&&!work&&c.motion>0}/>
+ <PointerExperience enabled={(!admin||preview)&&!login&&c.motion>0}/>
  {!teamPage&&<div className="site-backdrop" aria-hidden="true">{c.backgroundType==='image'&&c.backgroundImage&&<img src={c.backgroundImage} alt="" style={{opacity:c.backgroundOpacity/100}}/>}{c.backgroundType==='video'&&c.backgroundVideo&&<video key={c.backgroundVideo} src={c.backgroundVideo} data-site-autoplay="true" autoPlay muted loop playsInline preload="auto" onLoadedMetadata={e=>keepMutedLoopPlaying(e.currentTarget)} onCanPlay={e=>keepMutedLoopPlaying(e.currentTarget)} style={{opacity:c.backgroundOpacity/100}}/>}{c.backgroundType!=='none'&&<div className="backdrop-dim" style={{background:'var(--page)',opacity:c.backgroundDim/100}}/>}<div className="site-pattern" style={{backgroundImage:patternImages[c.pattern]||'none',backgroundSize:`${c.patternSize}px ${c.patternSize}px`,opacity:c.patternOpacity/100}}/></div>}
  {teamPage?teamPage:<> <header className="nav"><a href="#" className="brand">{c.logo?<img src={c.logo} alt={c.name}/>:c.name}<span>®</span></a><nav><a href="#work">{c.navWorkLabel}</a><a href="#about">{c.navAboutLabel}</a>{c.showTeam&&c.teamMembers.some(m=>m.visible)&&<a href="#team">{c.navTeamLabel}</a>}<button type="button" className="nav-contact" onClick={()=>setContactOpen(true)}>{c.navContactLabel}</button></nav><div className="nav-tools"><Btn label={theme==='light'?'다크 모드':'라이트 모드'} onClick={()=>{const v=theme==='light'?'dark':'light';setTheme(v);localStorage.setItem('iconic-theme',v)}}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</Btn><button className="admin-link" onPointerEnter={()=>fetch('/api/auth',{method:'GET',cache:'no-store'}).catch(()=>{})} onFocus={()=>fetch('/api/auth',{method:'GET',cache:'no-store'}).catch(()=>{})} onClick={enter}>admin</button></div></header>
  <main><section className="hero">{c.eyebrow&&<div className="hero-top"><span>{c.eyebrow}</span></div>}<div className="hero-gallery"><MediaGallery items={heroItems} onReady={()=>setHeroReady(true)} onExpand={()=>openFilm({id:'reel',title:'Director’s cut',category:'Showreel',year:'2026',role:'Direction / Cinematography / Edit',description:'',poster:c.heroPoster,video:c.heroVideo,visible:true})}/></div><MainLogo config={c}/>{c.subtitle&&<div className="hero-bottom"><p>{c.subtitle}</p></div>}</section>

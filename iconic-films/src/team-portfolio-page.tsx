@@ -6,15 +6,12 @@ import type {Config,TeamMember} from './defaults';
 import TeamMedia,{teamMediaType} from './team-media';
 
 
-export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onSelectMember,onToggleTheme,onContact,onAdmin,onVideoViewerOpen,onVideoViewerClose,onMemberEdit}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onSelectMember:(member:TeamMember)=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void;onVideoViewerOpen:()=>void;onVideoViewerClose:()=>void;onMemberEdit:(member:TeamMember)=>void}){
+export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onSelectMember,onToggleTheme,onContact,onAdmin,onVideoViewerOpen,onVideoViewerClose,onMemberEdit}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onSelectMember:(member:TeamMember,direction?:1|-1)=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void;onVideoViewerOpen:()=>void;onVideoViewerClose:()=>void;onMemberEdit:(member:TeamMember)=>void}){
   const [index,setIndex]=useState(0);
   const [subcategory,setSubcategory]=useState('All');
   const [viewerIndex,setViewerIndex]=useState<number|null>(null);
-  const [memberMotion,setMemberMotion]=useState<'idle'|'leaving'|'entering'>('entering');
-  const [memberDirection,setMemberDirection]=useState<1|-1>(1);
   const heroRef=useRef<HTMLElement>(null);
   const viewerMusicHeld=useRef(false);
-  const memberSwitchTimer=useRef<number|null>(null);
   const memberSwipeStart=useRef<{x:number;y:number}|null>(null);
   const memberSwipeMoved=useRef(false);
   const subcategories=useMemo(()=>member.portfolioSubcategories||[],[member.portfolioSubcategories]);
@@ -26,16 +23,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   },[member.works,member.portfolioWorkCategories,subcategories,subcategory]);
   const teamMembers=useMemo(()=>(config.teamMembers||[]).filter(item=>item.visible),[config.teamMembers]);
   const memberIndex=Math.max(0,teamMembers.findIndex(item=>item.id===member.id));
-  const selectMember=(target:TeamMember,direction:1|-1)=>{
-    if(!target||target.id===member.id||memberMotion==='leaving')return;
-    if(memberSwitchTimer.current!==null)window.clearTimeout(memberSwitchTimer.current);
-    setMemberDirection(direction);
-    setMemberMotion('leaving');
-    memberSwitchTimer.current=window.setTimeout(()=>{
-      onSelectMember(target);
-      memberSwitchTimer.current=null;
-    },170);
-  };
+  const selectMember=(target:TeamMember,direction:1|-1)=>{if(target&&target.id!==member.id)onSelectMember(target,direction)};
   const memberPrev=()=>teamMembers.length&&selectMember(teamMembers[(memberIndex-1+teamMembers.length)%teamMembers.length],-1);
   const memberNext=()=>teamMembers.length&&selectMember(teamMembers[(memberIndex+1)%teamMembers.length],1);
   const prev=()=>setIndex(i=>(i-1+works.length)%works.length);
@@ -46,12 +34,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     setIndex(0);
     setSubcategory('All');
     setViewerIndex(null);
-    window.scrollTo({top:0,behavior:'auto'});
-    setMemberMotion('entering');
-    if(memberSwitchTimer.current!==null)window.clearTimeout(memberSwitchTimer.current);
-    memberSwitchTimer.current=window.setTimeout(()=>{setMemberMotion('idle');memberSwitchTimer.current=null},420);
   },[member.id]);
-  useEffect(()=>()=>{if(memberSwitchTimer.current!==null)window.clearTimeout(memberSwitchTimer.current)},[]);
   useEffect(()=>{
     const warmed:HTMLImageElement[]=[];
     for(const item of teamMembers){
@@ -86,6 +69,14 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   },[viewerIndex,member.portfolioLayout,works.length,onBack]);
 
   useEffect(()=>{
+    const hero=heroRef.current,index=hero?.parentElement?.querySelector('.team-portfolio-member-index');
+    if(!hero)return;
+    const measure=()=>{const extent=index?Math.max(180,index.getBoundingClientRect().bottom-hero.getBoundingClientRect().bottom+48):220;hero.style.setProperty('--hero-fade-extension',extent.toFixed(1)+'px')};
+    const observer=new ResizeObserver(measure);observer.observe(hero);if(index)observer.observe(index);measure();
+    return()=>observer.disconnect();
+  },[member.id]);
+
+  useEffect(()=>{
     const hero=heroRef.current;
     if(!hero||!member.photo)return;
     const fine=window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
@@ -101,11 +92,13 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     const update=()=>{
       frame=0;
       const rect=hero.getBoundingClientRect();
-      if(x<rect.left||x>rect.right||y<rect.top||y>rect.bottom){reset();return}
+      const extension=parseFloat(hero.style.getPropertyValue('--hero-fade-extension'))||240;
+      const height=rect.height+extension;
+      if(x<rect.left||x>rect.right||y<rect.top||y>rect.bottom+extension){reset();return}
       const px=(x-rect.left)/Math.max(rect.width,1);
-      const py=(y-rect.top)/Math.max(rect.height,1);
+      const py=(y-rect.top)/Math.max(height,1);
       hero.style.setProperty('--hero-light-x',((x-rect.left)/rect.width*100).toFixed(2)+'%');
-      hero.style.setProperty('--hero-light-y',((y-rect.top)/rect.height*100).toFixed(2)+'%');
+      hero.style.setProperty('--hero-light-y',((y-rect.top)/height*100).toFixed(2)+'%');
       hero.style.setProperty('--hero-shift-x',((px-.5)*20).toFixed(2)+'px');
       hero.style.setProperty('--hero-shift-y',((py-.5)*14).toFixed(2)+'px');
       hero.dataset.pointerActive='true';
@@ -231,7 +224,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     '--portfolio-grid-width':(member.portfolioGridWidth||100)+'%',
   } as CSSProperties;
 
-  return <div className={'team-portfolio-page member-motion-'+memberMotion+' member-direction-'+(memberDirection>0?'next':'prev')} style={pageStyle}>
+  return <div className="team-portfolio-page" style={pageStyle}>
     <header className="nav team-portfolio-site-nav">
       <a href="/" className="brand" onClick={e=>{e.preventDefault();onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:config.name}<span>®</span></a>
       <nav>

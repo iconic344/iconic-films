@@ -12,6 +12,7 @@ export const teamMediaType=(url:string)=>{
 export default function TeamMedia({src,alt='',className='',interactive=false,autoPlay=false}:{src:string;alt?:string;className?:string;interactive?:boolean;autoPlay?:boolean}){
   const [modelReady,setModelReady]=useState(false);
   const videoRef=useRef<HTMLVideoElement>(null);
+  const visible=useRef(false);
   const type=teamMediaType(src);
   useEffect(()=>{
     if(type!=='model')return;
@@ -20,21 +21,22 @@ export default function TeamMedia({src,alt='',className='',interactive=false,aut
     return()=>{live=false};
   },[type]);
   useEffect(()=>{
-    if(type!=='video'||interactive||autoPlay||!videoRef.current)return;
+    if(type!=='video'||interactive||!videoRef.current)return;
     const mobile=window.matchMedia('(max-width: 820px), (max-width: 1180px) and (any-pointer: coarse)').matches;
-    if(!mobile)return;
+    if(!autoPlay&&!mobile)return;
     const video=videoRef.current;
     video.muted=true;video.defaultMuted=true;video.loop=true;video.playsInline=true;
     const observer=new IntersectionObserver(entries=>{
       for(const entry of entries){
+        visible.current=entry.isIntersecting;
         if(entry.isIntersecting)video.play().catch(()=>{});
         else video.pause();
       }
-    },{rootMargin:'120px 0px',threshold:.01});
+    },{rootMargin:autoPlay?'0px':'120px 0px',threshold:.01});
     observer.observe(video);
-    return()=>observer.disconnect();
+    return()=>{observer.disconnect();visible.current=false;video.pause()};
   },[type,interactive,autoPlay,src]);
-  if(type==='video')return <video ref={videoRef} className={className} src={src} draggable={false} muted loop playsInline preload={autoPlay?'auto':'metadata'} controls={interactive} autoPlay={autoPlay} onCanPlay={e=>{if(autoPlay)e.currentTarget.play().catch(()=>{})}} onPointerEnter={e=>{if(!interactive&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.play().catch(()=>{})}} onPointerLeave={e=>{if(!interactive&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.pause()}}/>;
+  if(type==='video')return <video ref={videoRef} className={className} src={src} draggable={false} muted loop playsInline preload={autoPlay?'auto':'metadata'} controls={interactive} autoPlay={autoPlay} onCanPlay={e=>{if(autoPlay&&visible.current)e.currentTarget.play().catch(()=>{})}} onPointerEnter={e=>{if(!interactive&&!autoPlay&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.play().catch(()=>{})}} onPointerLeave={e=>{if(!interactive&&!autoPlay&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.pause()}}/>;
   if(type==='model')return modelReady?createElement('model-viewer',{
     class:className,
     src,
