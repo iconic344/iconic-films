@@ -20,8 +20,8 @@ type Props={
 
 export default function MemberPortfolioEditor({config,member,setMember,busy,setBusy,notify,onSave,onClose}:Props){
   const [uploading,setUploading]=useState('');
-  const patch=<K extends keyof TeamMember>(key:K,value:TeamMember[K])=>setMember(current=>current?{...current,[key]:value}:current);
-  const miniRange=(key:keyof TeamMember,label:string,min:number,max:number,step=1,suffix='px')=><label className="field layout-range">{label}<span className="val">{Number(member[key])}{suffix}</span><Slider value={[Number(member[key])]} min={min} max={max} step={step} onValueChange={v=>patch(key,v[0] as TeamMember[typeof key])}/></label>;
+  const patch=(key:keyof TeamMember,value:any)=>setMember(current=>current?{...current,[key]:value} as TeamMember:current);
+  const miniRange=(key:keyof TeamMember,label:string,min:number,max:number,step=1,suffix='px')=><label className="field layout-range">{label}<span className="val">{Number(member[key])}{suffix}</span><Slider value={[Number(member[key])]} min={min} max={max} step={step} onValueChange={v=>patch(key,v[0])}/></label>;
 
   const portfolioStyle=(prefix:'Name'|'Role'|'Bio'|'Title'|'Intro'|'Utility'):TextStyle=>({
     font:String(member[('portfolio'+prefix+'Font') as keyof TeamMember]||'Arial, Helvetica, sans-serif'),
