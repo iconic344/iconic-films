@@ -58,6 +58,28 @@ async function authorized(req:Req){
   checked(result);return Number(result.data?.expires)>Date.now();
 }
 async function requireAdmin(req:Req){if(!await authorized(req))throw new HttpError(401,'관리자 로그인이 필요합니다.');}
+function memberVisit(req:Req){return header(req,'x-viivii-member-visit');}
+async function memberAuthorized(req:Req,memberId:string){
+  if(!sameOrigin(req)||!memberId)return false;
+  const visit=memberVisit(req);
+  if(!/^[a-f0-9-]{72}$/.test(visit))return false;
+  const token=hash('member-visit:'+memberId+':'+visit);
+  const result=await db().from('iconic_sessions').select('expires').eq('token',token).maybeSingle();
+  checked(result);return Number(result.data?.expires)>Date.now();
+}
+async function requireMember(req:Req,memberId:string){
+  if(!await memberAuthorized(req,memberId))throw new HttpError(401,'팀원 포트폴리오 로그인이 필요합니다.');
+}
+async function expectedMemberPin(memberId:string){
+  const stored=await getSetting('member-pin:'+memberId).catch(()=>'');
+  return typeof stored==='string'&&stored?stored:hash('member-pin:'+memberId+':1234');
+}
+async function currentConfigPair(){
+  const bundled=resolveLegacyMedia(seed());
+  const stored=await getSetting('config').catch(()=>null);
+  const config=stored||bundled?fillMedia(stored||bundled,bundled):null;
+  return {bundled,stored,config};
+}
 async function expectedPin(){
   const configured=process.env.ADMIN_PIN?.trim();
   const configuredHash=configured&&/^\d{4}$/.test(configured)?hash('iconic:'+configured):'';
