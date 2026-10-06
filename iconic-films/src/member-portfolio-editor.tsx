@@ -25,6 +25,24 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
   const [confirmPin,setConfirmPin]=useState('');
   const [pinBusy,setPinBusy]=useState(false);
   const patch=(key:keyof TeamMember,value:any)=>setMember(current=>current?{...current,[key]:value} as TeamMember:current);
+  const setSubcategories=(raw:string)=>setMember(current=>{
+    if(!current)return current;
+    const values=Array.from(new Set(raw.split(/[\n,]/).map(v=>v.trim()).filter(Boolean))).slice(0,16);
+    const fallback=values[0]||'All';
+    return {...current,portfolioSubcategories:values,portfolioWorkCategories:(current.portfolioWorkCategories||[]).map(v=>values.includes(v)?v:fallback)} as TeamMember;
+  });
+  const setWorkCategory=(index:number,value:string)=>setMember(current=>{
+    if(!current)return current;
+    const labels=[...(current.portfolioWorkCategories||[])];
+    while(labels.length<(current.works||[]).length)labels.push((current.portfolioSubcategories||[])[0]||'All');
+    labels[index]=value;
+    return {...current,portfolioWorkCategories:labels} as TeamMember;
+  });
+  const removeWork=(index:number)=>setMember(current=>current?{
+    ...current,
+    works:(current.works||[]).filter((_,i)=>i!==index),
+    portfolioWorkCategories:(current.portfolioWorkCategories||[]).filter((_,i)=>i!==index)
+  } as TeamMember:current);
   const miniRange=(key:keyof TeamMember,label:string,min:number,max:number,step=1,suffix='px')=><label className="field layout-range">{label}<span className="val">{Number(member[key])}{suffix}</span><Slider value={[Number(member[key])]} min={min} max={max} step={step} onValueChange={v=>patch(key,v[0])}/></label>;
 
   const portfolioStyle=(prefix:'Name'|'Role'|'Bio'|'Title'|'Intro'|'Utility'):TextStyle=>({
@@ -67,8 +85,9 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
         setUploading(`작품 업로드 중… ${++count} / ${files.length}`);
         urls.push(await uploadMemberFile(member.id,file));
       }
-      patch('works',[...(member.works||[]),...urls]);
-      notify('작품 업로드 완료. 저장 & 적용을 눌러 반영하세요.');
+      const fallback=(member.portfolioSubcategories||[])[0]||'All';
+      setMember(current=>current?{...current,works:[...(current.works||[]),...urls],portfolioWorkCategories:[...(current.portfolioWorkCategories||[]),...urls.map(()=>fallback)]} as TeamMember:current);
+      notify('포트폴리오 미디어 업로드 완료. 세부 카테고리를 지정한 뒤 저장 & 적용을 눌러 반영하세요.');
     }catch(e){notify((e as Error).message)}
     finally{setUploading('');setBusy(false)}
   }
@@ -88,7 +107,7 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
 
   return <div className="editor member-self-editor">
     <div className="editor-header">
-      <div><span className="kicker">VIIVII sara / {member.codeName||member.name}</span><h2>Edit your portfolio.</h2></div>
+      <div><span className="kicker">VIIVII sara / {member.codeName||member.name}</span><h2>Edit team portfolio.</h2></div>
       <div>
         <button className="save" disabled={busy} onClick={onSave}><Save size={16}/>{busy?(uploading||'처리 중…'):'저장 & 적용'}</button>
         <button type="button" className="icon" aria-label="편집 닫기" onClick={onClose}><X size={22}/></button>
@@ -100,7 +119,7 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
         <div className="member-self-security-quick-copy">
           <span className="kicker">SECURITY</span>
           <strong>Portfolio password</strong>
-          <small>현재 팀원 EDIT 비밀번호만 변경됩니다.</small>
+          <small>현재 포트폴리오 카테고리 EDIT 비밀번호만 변경됩니다.</small>
         </div>
         <div className="member-self-security-quick-fields">
           <label>새 비밀번호<input type="password" inputMode="numeric" maxLength={4} placeholder="4자리" value={newPin} onChange={e=>setNewPin(e.target.value.replace(/\D/g,'').slice(0,4))}/></label>
@@ -109,21 +128,21 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
         </div>
       </section>
       <aside className="member-self-editor-note">
-        <strong>{member.name||'Team member'}</strong>
-        <span>이 편집 권한은 현재 팀원 포트폴리오에만 적용됩니다. 사이트 전체 설정과 다른 팀원 페이지는 변경할 수 없습니다.</span>
+        <strong>{member.name||'Portfolio category'}</strong>
+        <span>이 편집 권한은 현재 팀 포트폴리오 카테고리에만 적용됩니다. 다른 카테고리와 사이트 전체 설정은 변경할 수 없습니다.</span>
       </aside>
     </div>
 
     <div className="team-editor-dashboard member-self-editor-dashboard">
       <div className="team-editor-left-rail">
         <section className="editor-card team-editor-card">
-          <div className="team-editor-card-head"><div><span className="kicker">PROFILE</span><h3>Identity / copy</h3></div></div>
+          <div className="team-editor-card-head"><div><span className="kicker">CATEGORY</span><h3>Portfolio category</h3></div></div>
           <div className="team-member-fields">
-            <label className="field">이름<input value={member.name} onChange={e=>patch('name',e.target.value)}/></label>
-            <label className="field">CODE NAME<input maxLength={8} value={member.codeName||''} onChange={e=>patch('codeName',e.target.value.toUpperCase().replace(/\s+/g,'').slice(0,8))}/></label>
-            <label className="field">TEAM INDEX 문구<input maxLength={40} placeholder="TEAM INDEX" value={member.portfolioTeamIndexLabel||'TEAM INDEX'} onChange={e=>patch('portfolioTeamIndexLabel',e.target.value.slice(0,40))}/></label>
-            
-            <label className="field">촬영자 / 참여자 크레딧<textarea placeholder={"PHOTO / xnives\nMODEL / name\nSTYLING / name"} value={member.portfolioCredits||''} onChange={e=>patch('portfolioCredits',e.target.value)}/></label>
+            <label className="field">대분류 이름<input placeholder="Fashion / Commercial / Events" value={member.name} onChange={e=>patch('name',e.target.value)}/></label>
+            <label className="field">INDEX CODE<input maxLength={8} value={member.codeName||''} onChange={e=>patch('codeName',e.target.value.toUpperCase().replace(/\s+/g,'').slice(0,8))}/></label>
+            <label className="field">INDEX 문구<input maxLength={40} placeholder="CATEGORY INDEX" value={member.portfolioTeamIndexLabel||'CATEGORY INDEX'} onChange={e=>patch('portfolioTeamIndexLabel',e.target.value.slice(0,40))}/></label>
+            <label className="field">세부 카테고리<textarea placeholder={"Fashion Show\nLookbook\nCampaign\nEditorial"} value={(member.portfolioSubcategories||[]).join('\n')} onChange={e=>setSubcategories(e.target.value)}/></label>
+            <label className="field">참여자 / 제작 크레딧<textarea placeholder={"DIRECTOR / xnives\nDOP / name\nSTYLING / name"} value={member.portfolioCredits||''} onChange={e=>patch('portfolioCredits',e.target.value)}/></label>
             
             
             
@@ -134,11 +153,11 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
         <section className="editor-card team-editor-card">
           <div className="team-editor-card-head"><div><span className="kicker">TYPOGRAPHY</span><h3>Portfolio typography / position</h3></div></div>
           <div className="team-portfolio-type-editor">
-            <TextStyleEditor label="이름" value={portfolioStyle('Name')} onChange={v=>patchPortfolioStyle('Name',v)}/>
+            <TextStyleEditor label="카테고리 이름" value={portfolioStyle('Name')} onChange={v=>patchPortfolioStyle('Name',v)}/>
             <TextStyleEditor label="크레딧" value={portfolioStyle('Role')} onChange={v=>patchPortfolioStyle('Role',v)}/>
-            <TextStyleEditor label="소개" value={portfolioStyle('Bio')} onChange={v=>patchPortfolioStyle('Bio',v)}/>
-            <TextStyleEditor label="작품 제목" value={portfolioStyle('Title')} onChange={v=>patchPortfolioStyle('Title',v)}/>
-            <TextStyleEditor label="작품 소개" value={portfolioStyle('Intro')} onChange={v=>patchPortfolioStyle('Intro',v)}/>
+            <TextStyleEditor label="카테고리 보조문구" value={portfolioStyle('Bio')} onChange={v=>patchPortfolioStyle('Bio',v)}/>
+            <TextStyleEditor label="아카이브 제목" value={portfolioStyle('Title')} onChange={v=>patchPortfolioStyle('Title',v)}/>
+            <TextStyleEditor label="아카이브 설명" value={portfolioStyle('Intro')} onChange={v=>patchPortfolioStyle('Intro',v)}/>
             <TextStyleEditor label="기타 문구 / 헤더 / 카운트" value={portfolioStyle('Utility')} onChange={v=>patchPortfolioStyle('Utility',v)}/>
           </div>
         </section>
@@ -146,11 +165,11 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
 
       <div className="team-editor-right-rail">
         <section className="editor-card team-editor-card">
-          <div className="team-editor-card-head"><div><span className="kicker">MEDIA</span><h3>Profile / portfolio</h3></div></div>
-          <label className="field file-upload member-profile-upload">프로필 미디어 업로드<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadOne(e.target.files?.[0],'photo')}/><span className="uploaded-file">{member.photo?'프로필 미디어 등록됨':'이미지 / 영상 / GLB·glTF'}</span>{member.photo&&<button type="button" className="file-clear" onClick={()=>patch('photo','')}>미디어 제거</button>}</label>
-          {member.photo&&<div className="team-editor-photo member-profile-preview"><TeamMedia src={member.photo} alt="프로필 미리보기" className="team-editor-photo-media" interactive/></div>}
-          <label className="field file-upload member-work-upload">작품 미디어 업로드<input type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadWorks(e.target.files)}/><span className="uploaded-file">이미지 / 영상 / 3D 여러 개 선택 가능</span></label>
-          {!!member.works?.length&&<div className="team-editor-works">{member.works.map((url,i)=><div key={url+i}><TeamMedia src={url} alt={'작품 '+(i+1)} className="team-editor-work-media" interactive/><button type="button" aria-label="작품 삭제" onClick={()=>patch('works',member.works.filter((_,j)=>j!==i))}><Trash2 size={14}/></button></div>)}</div>}
+          <div className="team-editor-card-head"><div><span className="kicker">MEDIA</span><h3>Cover / portfolio</h3></div></div>
+          <label className="field file-upload member-profile-upload">카테고리 커버 미디어<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadOne(e.target.files?.[0],'photo')}/><span className="uploaded-file">{member.photo?'커버 미디어 등록됨':'이미지 / 영상 / GLB·glTF'}</span>{member.photo&&<button type="button" className="file-clear" onClick={()=>patch('photo','')}>미디어 제거</button>}</label>
+          {member.photo&&<div className="team-editor-photo member-profile-preview"><TeamMedia src={member.photo} alt="카테고리 커버 미리보기" className="team-editor-photo-media" interactive/></div>}
+          <label className="field file-upload member-work-upload">포트폴리오 미디어 업로드<input type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadWorks(e.target.files)}/><span className="uploaded-file">이미지 / 영상 / 3D 여러 개 선택 가능</span></label>
+          {!!member.works?.length&&<div className="team-editor-works team-editor-works--categorized">{member.works.map((url,i)=><div key={url+i} className="team-editor-work-card"><TeamMedia src={url} alt={'작품 '+(i+1)} className="team-editor-work-media" interactive/><div className="team-editor-work-meta"><span>{String(i+1).padStart(2,'0')}</span><select aria-label="세부 카테고리" value={(member.portfolioWorkCategories||[])[i]||(member.portfolioSubcategories||[])[0]||'All'} onChange={e=>setWorkCategory(i,e.target.value)}>{(member.portfolioSubcategories||[]).map(label=><option key={label} value={label}>{label}</option>)}{!(member.portfolioSubcategories||[]).length&&<option value="All">All</option>}</select></div><button type="button" aria-label="작품 삭제" onClick={()=>removeWork(i)}><Trash2 size={14}/></button></div>)}</div>}
         </section>
 
         <section className="editor-card team-editor-card">
@@ -171,6 +190,6 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
         </section>
       </div>
     </div>
-    <div className="editor-bottom">현재 팀원 페이지에만 저장됩니다. URL과 공개 여부는 사이트 관리자만 변경할 수 있습니다.</div>
+    <div className="editor-bottom">현재 팀 포트폴리오 카테고리에만 저장됩니다. 공개 여부와 전체 사이트 설정은 관리자만 변경할 수 있습니다.</div>
   </div>;
 }
