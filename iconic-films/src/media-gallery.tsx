@@ -8,19 +8,21 @@ import {scopeGallery} from './gallery-scope';
 export type GalleryItem={id:string;src:string;poster?:string;title:string;description?:string;kicker?:string;category?:string};
 const formatTime=(n:number)=>`${Math.floor(n/60)}:${String(Math.floor(n%60)).padStart(2,'0')}`;
 
-type GalleryProps={items:GalleryItem[];initialIndex?:number;onIndexChange?:(index:number)=>void;onExpand?:()=>void;onReady?:()=>void;modal?:boolean};
-export function MediaGallery({items,initialIndex=0,onIndexChange,...props}:GalleryProps){
+type GalleryProps={items:GalleryItem[];initialIndex?:number;onIndexChange?:(index:number)=>void;onExpand?:()=>void;onReady?:()=>void;modal?:boolean;preserveItems?:boolean};
+export function MediaGallery({items,initialIndex=0,onIndexChange,preserveItems=false,...props}:GalleryProps){
+ if(preserveItems)return <ScopedMediaGallery {...props} items={items} initialIndex={initialIndex} onIndexChange={onIndexChange}/>;
  const scoped=scopeGallery(items,initialIndex);
  return <ScopedMediaGallery {...props} items={scoped.items} initialIndex={scoped.index} onIndexChange={index=>onIndexChange?.(scoped.sourceIndices[index])}/>;
 }
 function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false}:GalleryProps){
  const [index,setIndex]=useState(Math.min(initialIndex,Math.max(0,items.length-1)));
  const [playing,setPlaying]=useState(()=>!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
- const [muted,setMuted]=useState(()=>!modal),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(modal),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState(''),[landscape,setLandscape]=useState(false);
+ const [muted,setMuted]=useState(()=>!modal),[mediaVolume,setMediaVolume]=useState(1),[volumeOpen,setVolumeOpen]=useState(false),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(modal),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState(''),[landscape,setLandscape]=useState(false);
  const root=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),drag=useRef<{x:number;y:number}|null>(null),dragged=useRef(false),elapsed=useRef(0),ambient=useRef<HTMLCanvasElement>(null),idleTimer=useRef(0),restoreTime=useRef<number|null>(null);
  const item=items[index],type=item?teamMediaType(item.src):'image',isFullscreen=expanded,showBackdrop=modal||isFullscreen;
  useEffect(()=>{if(modal)root.current?.focus({preventScroll:true})},[modal]);
- useEffect(()=>{if(modal)setMuted(false)},[modal,item?.id]);
+ useEffect(()=>{if(modal)setMuted(mediaVolume<=0)},[modal,item?.id]);
+ useEffect(()=>{const v=video.current;if(!v)return;v.volume=Math.max(0,Math.min(1,mediaVolume));v.muted=mediaVolume<=0?true:muted},[mediaVolume,muted,item?.id]);
  useEffect(()=>{if(isFullscreen)root.current?.focus({preventScroll:true})},[isFullscreen]);
  const choose=(n:number)=>{if(!items.length)return;const target=(n+items.length)%items.length;setIndex(target);onIndexChange?.(target)};
  const advance=()=>{if(items.length>1)choose(index+1);else if(video.current){video.current.currentTime=0;video.current.play().catch(()=>setPlaying(false))}else elapsed.current=0};
@@ -112,13 +114,16 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
      const active=i===index,kind=teamMediaType(entry.src);
      return <article className={'media-gallery-slide '+(active?'is-active':'')} key={entry.id} aria-hidden={!active} inert={!active}>
       <div className="media-gallery-artwork" onClick={()=>{if(dragged.current){dragged.current=false;return}if(!active)return;if(modal&&kind==='video'){toggle();return}if(onExpand&&kind!=='model'){if(kind==='video'&&video.current){video.current.muted=false;setMuted(false);void video.current.play().catch(()=>{})}onExpand();return}if(kind==='video')toggle()}}>
-       {kind==='video'?<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-index)<=1?entry.src:undefined} poster={entry.poster} muted={active?muted:true} autoPlay={active&&modal} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setReady(n=>n+1);onReady?.();if(playing&&visible)video.current?.play().catch(()=>setPlaying(false))}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setLandscape((e.currentTarget.videoWidth||0)/(e.currentTarget.videoHeight||1)>=1.45);if(modal){e.currentTarget.muted=false;setMuted(false)}setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setPlaying(false);onReady?.()}}}/>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
+       {kind==='video'?<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-index)<=1?entry.src:undefined} poster={entry.poster} muted={active?muted:true} autoPlay={active&&modal} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setReady(n=>n+1);onReady?.();if(playing&&visible)video.current?.play().catch(()=>setPlaying(false))}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setLandscape((e.currentTarget.videoWidth||0)/(e.currentTarget.videoHeight||1)>=1.45);if(modal){e.currentTarget.volume=mediaVolume;e.currentTarget.muted=mediaVolume<=0;setMuted(mediaVolume<=0)}setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setPlaying(false);onReady?.()}}}/>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
       </div>
 
       {active&&error&&<p className="media-gallery-error" role="status">미디어를 불러오지 못했습니다. <button type="button" onClick={()=>{setError(false);video.current?.load();setPlaying(true)}}>다시 시도</button></p>}
       {active&&kind==='video'&&<div className="media-gallery-tools">
        <button type="button" aria-label={playing?'일시정지':'재생'} onClick={toggle}>{playing?<Pause size={18} fill="currentColor"/>:<Play size={18} fill="currentColor"/>}</button><span>{formatTime(time)}</span><input type="range" aria-label="영상 재생 위치" min={0} max={duration||1} step={.1} value={Math.min(time,duration||0)} onChange={e=>{if(video.current)video.current.currentTime=Number(e.target.value)}}/><span>{formatTime(duration)}</span>
-       <button type="button" aria-label={muted?'소리 켜기':'음소거'} onClick={()=>setMuted(v=>!v)}>{muted?<VolumeX size={18}/>:<Volume2 size={18}/>}</button>
+       <div className={'media-volume-control '+(volumeOpen?'is-open':'')}>
+        <button type="button" aria-label="영상 볼륨 조절" aria-expanded={volumeOpen} onClick={()=>setVolumeOpen(v=>!v)}>{mediaVolume<=0||muted?<VolumeX size={18}/>:<Volume2 size={18}/>}</button>
+        {volumeOpen&&<div className="media-volume-popover" role="group" aria-label="영상 볼륨"><input type="range" aria-label="영상 볼륨" min={0} max={1} step={.01} value={muted?0:mediaVolume} onChange={e=>{const next=Number(e.target.value);setMediaVolume(next);setMuted(next<=0)}}/><span>{Math.round((muted?0:mediaVolume)*100)}</span></div>}
+       </div>
        {!modal&&<button type="button" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}>{isFullscreen?<Minimize size={17}/>:<Maximize size={17}/>}</button>}
       </div>}
       {active&&kind!=='video'&&!modal&&<button type="button" className="media-gallery-expand" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}><Maximize size={18}/></button>}
@@ -138,5 +143,5 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
 }
 
 export default function MediaGalleryDialog({items,index,onClose,onIndexChange}:{items:GalleryItem[];index:number|null;onClose:()=>void;onIndexChange?:(index:number)=>void}){
- return <Dialog open={index!==null} onOpenChange={open=>{if(!open)onClose()}}><DialogContent className="unified-media-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}><DialogTitle className="sr-only">미디어 갤러리</DialogTitle><DialogDescription className="sr-only">좌우 화살표 또는 스와이프로 같은 카테고리의 미디어를 넘길 수 있습니다.</DialogDescription>{index!==null&&<MediaGallery items={items} initialIndex={index} onIndexChange={onIndexChange} onExpand={onClose} modal/>}</DialogContent></Dialog>;
+ return <Dialog open={index!==null} onOpenChange={open=>{if(!open)onClose()}}><DialogContent className="unified-media-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}><DialogTitle className="sr-only">미디어 갤러리</DialogTitle><DialogDescription className="sr-only">좌우 화살표 또는 스와이프로 같은 카테고리의 미디어를 넘길 수 있습니다.</DialogDescription>{index!==null&&<MediaGallery items={items} initialIndex={index} onIndexChange={onIndexChange} onExpand={onClose} modal preserveItems/>}</DialogContent></Dialog>;
 }
