@@ -139,3 +139,9 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
     pointer-events:auto;
   }
 }
+
+
+/* Never expose the outdated fallback config while an uncached first visit syncs. */
+.site.is-config-syncing{
+  visibility:hidden!important;
+}
