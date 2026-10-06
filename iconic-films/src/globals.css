@@ -13355,3 +13355,9 @@ body:has(.visual-editor-ui) .scroll-toggle{opacity:.18;pointer-events:none}
 .site.visual-editing [data-visual-section]{
   transform-origin:center center!important;
 }
+
+
+/* Legacy fixed section rule is now a real editable Divider layer. */
+.site .hero{
+  border-bottom:0!important;
+}
