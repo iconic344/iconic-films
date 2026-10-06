@@ -24,12 +24,12 @@
   }
   .nav>.nav-tools{gap:2px!important}
   .nav>.nav-tools .icon{
-    width:34px!important;
-    height:34px!important;
+    width:44px!important;
+    height:44px!important;
   }
   .nav .admin-link{
-    min-height:34px!important;
-    padding:6px 7px!important;
+    min-height:44px!important;
+    padding:8px 8px!important;
     font-size:10px!important;
   }
   .nav>nav{
@@ -37,8 +37,8 @@
   }
   .nav>nav a,
   .nav>nav .nav-contact{
-    min-height:33px!important;
-    padding:6px 9px!important;
+    min-height:40px!important;
+    padding:8px 9px!important;
     font-size:10.5px!important;
   }
 
@@ -80,8 +80,8 @@
     border-radius:999px!important;
   }
   .media-gallery:not(.is-modal) .media-gallery-tools button{
-    width:31px!important;
-    height:31px!important;
+    width:38px!important;
+    height:38px!important;
   }
   .media-gallery:not(.is-modal) .media-gallery-tools span,
   .media-gallery:not(.is-modal) .media-gallery-tools input{
@@ -109,8 +109,8 @@
   .unified-media-dialog .media-gallery-close{
     top:max(12px,calc(env(safe-area-inset-top) + 8px))!important;
     right:max(12px,calc(env(safe-area-inset-right) + 8px))!important;
-    width:42px!important;
-    height:42px!important;
+    width:44px!important;
+    height:44px!important;
     opacity:1!important;
     pointer-events:auto!important;
   }
@@ -127,8 +127,8 @@
     pointer-events:auto!important;
   }
   .unified-media-dialog .media-gallery-tools button{
-    width:32px!important;
-    height:32px!important;
+    width:38px!important;
+    height:38px!important;
   }
   .unified-media-dialog .media-gallery-tools span{
     flex:0 0 auto;
@@ -148,8 +148,8 @@
     pointer-events:auto!important;
   }
   .unified-media-dialog .media-gallery-arrow{
-    width:36px!important;
-    height:36px!important;
+    width:44px!important;
+    height:44px!important;
   }
   .media-gallery.is-fullscreen[data-cursor-idle="true"] .media-gallery-tools,
   .media-gallery.is-fullscreen[data-cursor-idle="true"] .media-gallery-close,
@@ -222,8 +222,8 @@
     padding-inline:6px!important;
   }
   .unified-media-dialog .media-gallery-tools button{
-    width:30px!important;
-    height:30px!important;
+    width:36px!important;
+    height:36px!important;
   }
   .unified-media-dialog .media-gallery-tools span{
     font-size:8.5px!important;
