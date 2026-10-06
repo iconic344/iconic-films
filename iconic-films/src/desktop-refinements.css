@@ -789,3 +789,31 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
     min-height:calc(100dvh - 94px)!important
   }
 }
+
+
+/* 2026-10-07 EDIT SITE controlled hero fade.
+   Independent top/bottom range + density + opacity + blur. */
+@media (min-width:1025px){
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork::before{
+    height:var(--hero-fade-top-size,14%)!important;
+    opacity:var(--hero-fade-opacity,.72)!important;
+    filter:blur(var(--hero-fade-blur,0px))!important;
+    background:linear-gradient(
+      to bottom,
+      var(--page) 0%,
+      color-mix(in srgb,var(--page) var(--hero-fade-density,34%),transparent) 56%,
+      transparent 100%
+    )!important;
+  }
+  .hero-gallery .media-gallery.has-video:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork::after{
+    height:var(--hero-fade-bottom-size,14%)!important;
+    opacity:var(--hero-fade-opacity,.72)!important;
+    filter:blur(var(--hero-fade-blur,0px))!important;
+    background:linear-gradient(
+      to top,
+      var(--page) 0%,
+      color-mix(in srgb,var(--page) var(--hero-fade-density,34%),transparent) 56%,
+      transparent 100%
+    )!important;
+  }
+}

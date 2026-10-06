@@ -4,11 +4,12 @@ import {ArrowUpRight} from 'lucide-react';
 import type {Config,TeamMember} from './defaults';
 import TeamMedia from './team-media';
 
-export default function TeamSection({config,onOpen}:{config:Config;onOpen:(member:TeamMember)=>void}){
+export default function TeamSection({config,onOpen,order}:{config:Config;onOpen:(member:TeamMember)=>void;order?:number}){
   const visible=(config.teamMembers||[]).filter(member=>member.visible);
   if(!visible.length)return null;
 
   const sectionStyle={
+    order,
     '--team-head-x':config.textStyles.teamHeadline.x+'px',
     '--team-head-y':config.textStyles.teamHeadline.y+'px',
     '--team-head-size':config.textStyles.teamHeadline.size+'px',
