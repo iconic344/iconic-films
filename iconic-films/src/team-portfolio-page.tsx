@@ -351,8 +351,6 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     '--portfolio-columns':String(member.portfolioColumns||3),
     '--portfolio-gap':(member.portfolioGap||14)+'px',
     '--portfolio-radius':(member.portfolioRadius??18)+'px',
-    '--member-radius':(member.photoRadius??config.teamMediaRadius)+'%',
-    '--portfolio-profile-size':(member.portfolioProfileSize||430)+'px',
     '--portfolio-name-font':member.portfolioNameFont||'Arial, Helvetica, sans-serif',
     '--portfolio-name-size':(member.portfolioNameSize||112)+'px',
     '--portfolio-name-color':member.portfolioNameColor||'var(--ink)',
@@ -412,13 +410,13 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     </header>
 
     <main className="team-portfolio-main">
-      <section className="team-portfolio-hero">
+      <section className={'team-portfolio-hero'+(member.photo?' has-hero-media':'')}>
+        {member.photo&&<div className="team-portfolio-hero-media" aria-hidden="true">
+          <TeamMedia src={member.photo} alt="" className="team-portfolio-hero-media-element" autoPlay/>
+        </div>}
         <div className="team-portfolio-profile">
-          <div className="team-portfolio-avatar member-reactive" onPointerDown={beginMemberSwipe} onPointerMove={moveMemberSwipe} onPointerUp={endMemberSwipe} onPointerCancel={endMemberSwipe} onPointerLeave={resetPointer} title="드래그해서 다른 팀원 보기">
-            {member.photo?<TeamMedia src={member.photo} alt={member.name||member.role} className="team-portfolio-avatar-media" interactive/>:<span>{(member.name||'V').slice(0,1)}</span>}
-          </div>
           <div className="team-portfolio-copy">
-            <h1>{member.name||'Unnamed'}</h1>
+            <h1>{member.name||'Portfolio'}</h1>
             {member.bio&&<p>{member.bio}</p>}
             <div className="team-portfolio-credit-row">
               {!!member.portfolioCredits?.trim()&&<div className="team-portfolio-credits" aria-label="Credits">{member.portfolioCredits.split(/\r?\n/).map(line=>line.trim()).filter(Boolean).map((line,i)=><span key={i}>{line}</span>)}</div>}
