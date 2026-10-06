@@ -64,7 +64,8 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   setExpanded(false);
  };
  const fullscreen=()=>{
-  if(modal){onExpand?.();return}
+  if(!modal&&onExpand){onExpand();return}
+  if(modal)return;
   restoreTime.current=video.current?.currentTime??null;
   setExpanded(v=>!v);
  };
@@ -109,7 +110,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
     {items.map((entry,i)=>{
      const active=i===index,kind=teamMediaType(entry.src);
      return <article className={'media-gallery-slide '+(active?'is-active':'')} key={entry.id} aria-hidden={!active} inert={!active}>
-      <div className="media-gallery-artwork" onClick={()=>{if(dragged.current){dragged.current=false;return}if(active&&kind==='video')toggle()}}>
+      <div className="media-gallery-artwork" onClick={()=>{if(dragged.current){dragged.current=false;return}if(active&&onExpand&&kind!=='model'){onExpand();return}if(active&&kind==='video')toggle()}}>
        {kind==='video'?<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-index)<=1?entry.src:undefined} poster={entry.poster} muted={active?muted:true} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setReady(n=>n+1);onReady?.();if(playing&&visible)video.current?.play().catch(()=>setPlaying(false))}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setPlaying(false);onReady?.()}}}/>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
       </div>
 
@@ -119,7 +120,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
        <button type="button" aria-label={muted?'소리 켜기':'음소거'} onClick={()=>setMuted(v=>!v)}>{muted?<VolumeX size={18}/>:<Volume2 size={18}/>}</button>
        {!modal&&<button type="button" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}>{isFullscreen?<Minimize size={17}/>:<Maximize size={17}/>}</button>}
       </div>}
-      {active&&kind!=='video'&&<button type="button" className="media-gallery-expand" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}><Maximize size={18}/></button>}
+      {active&&kind!=='video'&&!modal&&<button type="button" className="media-gallery-expand" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}><Maximize size={18}/></button>}
      </article>;
     })}
    </div>
