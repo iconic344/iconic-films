@@ -14,6 +14,7 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,onExpand,onRead
  const root=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),drag=useRef<{x:number;y:number}|null>(null),dragged=useRef(false),elapsed=useRef(0),ambient=useRef<HTMLCanvasElement>(null),idleTimer=useRef(0),restoreTime=useRef<number|null>(null);
  const item=items[index],type=item?teamMediaType(item.src):'image',isFullscreen=expanded||nativeFullscreen,showBackdrop=modal||isFullscreen;
  useEffect(()=>{if(modal)root.current?.focus({preventScroll:true})},[modal]);
+ useEffect(()=>{if(isFullscreen)root.current?.focus({preventScroll:true})},[isFullscreen]);
  const choose=(n:number)=>{if(!items.length)return;const target=(n+items.length)%items.length;setIndex(target);onIndexChange?.(target)};
  const advance=()=>{if(items.length>1)choose(index+1);else if(video.current){video.current.currentTime=0;video.current.play().catch(()=>setPlaying(false))}else elapsed.current=0};
  useEffect(()=>{setIndex(Math.min(initialIndex,Math.max(0,items.length-1)))},[initialIndex,items.length]);
