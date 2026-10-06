@@ -85,7 +85,6 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
       <p>메인 Team 영역을 팀 전체 포트폴리오 카테고리 인덱스로 사용합니다.</p>
       <TextStyleEditor label="Team 작은 제목" value={draft.textStyles.teamKicker} onChange={v=>setGlobalStyle('teamKicker',v)} text={draft.teamKicker} onTextChange={v=>setConfig('teamKicker',v)}/>
       <TextStyleEditor label="Team 큰 제목" value={draft.textStyles.teamHeadline} onChange={v=>setGlobalStyle('teamHeadline',v)} text={draft.teamHeadline} onTextChange={v=>setConfig('teamHeadline',v)} multiline/>
-      <TextStyleEditor label="카테고리 메타" value={draft.textStyles.teamMemberRole} onChange={v=>setGlobalStyle('teamMemberRole',v)}/>
       <TextStyleEditor label="카테고리 이름" value={draft.textStyles.teamMemberName} onChange={v=>setGlobalStyle('teamMemberName',v)}/>
       <TextStyleEditor label="세부 카테고리" value={draft.textStyles.teamMemberBio} onChange={v=>setGlobalStyle('teamMemberBio',v)}/>
       <TextStyleEditor label="포트폴리오 버튼" value={draft.textStyles.teamView} onChange={v=>setGlobalStyle('teamView',v)} text={draft.teamViewLabel} onTextChange={v=>setConfig('teamViewLabel',v)}/>
