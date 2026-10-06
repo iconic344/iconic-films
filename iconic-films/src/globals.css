@@ -10951,3 +10951,77 @@ body{
     inset 0 0 0 1px var(--accent-color),
     0 8px 24px color-mix(in srgb,var(--accent-color) 10%,transparent)!important;
 }
+
+
+/* 2026-10-06 switch containment + playback responsive fix */
+/* Keep iOS-style toggle thumb fully inside its track. */
+.editor [data-slot="switch"]{
+  width:42px!important;
+  min-width:42px!important;
+  height:24px!important;
+  min-height:24px!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border-radius:999px!important;
+}
+.editor [data-slot="switch-thumb"]{
+  top:3px!important;
+  left:3px!important;
+  width:18px!important;
+  min-width:18px!important;
+  height:18px!important;
+  min-height:18px!important;
+  transform:translateX(0)!important;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.18),
+    0 2px 5px rgba(0,0,0,.12)!important;
+}
+.editor [data-slot="switch"][data-state="checked"] [data-slot="switch-thumb"]{
+  transform:translateX(18px)!important;
+}
+.editor [data-slot="switch"]:active [data-slot="switch-thumb"],
+.editor [data-slot="switch"][data-state="checked"]:active [data-slot="switch-thumb"]{
+  width:18px!important;
+  transform:translateX(0) scale(.94)!important;
+}
+.editor [data-slot="switch"][data-state="checked"]:active [data-slot="switch-thumb"]{
+  transform:translateX(18px) scale(.94)!important;
+}
+
+/* Playback settings must never overflow the editor card. */
+.editor .music-settings{
+  overflow:hidden!important;
+}
+.editor .music-settings .playback-settings-grid{
+  width:100%!important;
+  min-width:0!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  gap:32px!important;
+}
+.editor .music-settings .playback-settings-grid>div{
+  min-width:0!important;
+  width:100%!important;
+}
+.editor .music-settings .toggle{
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+.editor .music-settings .toggle>[data-slot="switch"]{
+  flex:0 0 42px!important;
+}
+.editor .music-settings .field,
+.editor .music-settings [data-slot="slider"]{
+  min-width:0!important;
+  max-width:100%!important;
+}
+
+/* Collapse earlier than before so medium desktop / tablet never clips the right column. */
+@media(max-width:1320px){
+  .editor .music-settings .playback-settings-grid{
+    grid-template-columns:1fr!important;
+    gap:20px!important;
+  }
+  .editor .music-settings .playback-settings-grid>div:nth-child(2){
+    padding-top:0!important;
+  }
+}
