@@ -10,6 +10,24 @@ export default function PointerExperience({enabled=true}:{enabled?:boolean}){
  const [mounted,setMounted]=useState(false),[portalTarget,setPortalTarget]=useState<Element|null>(null);const point=useRef<{x:number;y:number}|null>(null);const cursor=useRef<HTMLDivElement>(null),glow=useRef<HTMLDivElement>(null),optics=useRef<HTMLDivElement>(null),caption=useRef<HTMLDivElement>(null);
  useEffect(()=>{setMounted(true);const sync=()=>setPortalTarget(document.fullscreenElement||document.body);sync();document.addEventListener('fullscreenchange',sync);return()=>document.removeEventListener('fullscreenchange',sync)},[]);
  useEffect(()=>{
+  const suppress=()=>{
+   document.querySelectorAll('model-viewer').forEach(node=>{
+    const host=node as HTMLElement&{shadowRoot:ShadowRoot|null};
+    host.style.setProperty('cursor','none','important');
+    const root=host.shadowRoot;
+    if(!root||root.querySelector('[data-iconic-cursor-style]'))return;
+    const style=document.createElement('style');
+    style.setAttribute('data-iconic-cursor-style','true');
+    style.textContent='*, .userInput, canvas { cursor:none !important; }';
+    root.appendChild(style);
+   });
+  };
+  suppress();
+  const observer=new MutationObserver(suppress);
+  observer.observe(document.documentElement,{subtree:true,childList:true});
+  return()=>observer.disconnect();
+ },[mounted]);
+ useEffect(()=>{
   if(!mounted||!enabled||!cursor.current||!glow.current||!optics.current||!caption.current)return;
   const el=cursor.current,halo=glow.current,glass=optics.current,captionNode=caption.current,lens=el.firstElementChild as HTMLElement,fine=matchMedia('(any-hover: hover) and (any-pointer: fine)'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
   let raf=0,visible=false,down=false,x=0,y=0,last=0,diameter=6,wanted=6,targetDiameter=6,shrinkAt=0,hit:Element|null=null,dirty=false;
