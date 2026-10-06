@@ -449,6 +449,99 @@ export default async function handler(req:Req,res:ServerResponse){
       }
     }
 
+    if(route==='/api/team-auth'){
+      const queryMemberId=url.searchParams.get('memberId')||header(req,'x-viivii-member')||'';
+      if(method==='GET'){
+        json(res,{authenticated:await memberAuthorized(req,queryMemberId),memberId:queryMemberId});return;
+      }
+      if(method==='DELETE'){
+        const memberId=queryMemberId;
+        const visit=memberVisit(req);
+        if(memberId&&/^[a-f0-9-]{72}$/.test(visit)){
+          checked(await db().from('iconic_sessions').delete().eq('token',hash('member-visit:'+memberId+':'+visit)));
+        }
+        json(res,{ok:true});return;
+      }
+      if(method==='POST'){
+        const input=await body(req);
+        const memberId=typeof input?.memberId==='string'?input.memberId:'';
+        const pin=typeof input?.pin==='string'?input.pin:'';
+        if(!memberId||memberId.length>100)throw new HttpError(400,'팀원 정보가 올바르지 않습니다.');
+        if(!/^\d{4}$/.test(pin))throw new HttpError(400,'숫자 4자리를 입력하세요.');
+        const {config}=await currentConfigPair();
+        const member=config?.teamMembers?.find((item:any)=>item?.id===memberId&&item?.visible!==false);
+        if(!member)throw new HttpError(404,'팀원 포트폴리오를 찾을 수 없습니다.');
+
+        const ip=process.env.VERCEL?header(req,'x-forwarded-for').split(',')[0].trim():req.socket.remoteAddress||'local';
+        const attemptKey=hash('member-login:'+memberId+':'+ip);
+        const attempt=await db().from('iconic_attempts').select('count,until').eq('key',attemptKey).maybeSingle();checked(attempt);
+        if(attempt.data&&Number(attempt.data.until)>Date.now()&&attempt.data.count>=8)throw new HttpError(429,'시도 횟수를 초과했습니다. 10분 후 다시 시도해 주세요.');
+        const expected=await expectedMemberPin(memberId),computed=hash('member-pin:'+memberId+':'+pin);
+        if(expected.length!==computed.length||!timingSafeEqual(Buffer.from(expected),Buffer.from(computed))){
+          checked(await db().rpc('iconic_failed_attempt',{p_key:attemptKey}));
+          throw new HttpError(401,'비밀번호가 일치하지 않습니다.');
+        }
+        checked(await db().from('iconic_attempts').delete().eq('key',attemptKey));
+        const visit=randomUUID()+randomUUID();
+        checked(await db().from('iconic_sessions').delete().lt('expires',Date.now()));
+        checked(await db().from('iconic_sessions').insert({token:hash('member-visit:'+memberId+':'+visit),expires:Date.now()+43200000}));
+        json(res,{ok:true,memberId,visitKey:visit});return;
+      }
+    }
+
+    if(route==='/api/team-security'){
+      await requireAdmin(req);
+      if(method==='PUT'){
+        const input=await body(req);
+        const memberId=typeof input?.memberId==='string'?input.memberId:'';
+        const pin=typeof input?.pin==='string'?input.pin:'';
+        if(!memberId||memberId.length>100)throw new HttpError(400,'팀원 정보가 올바르지 않습니다.');
+        if(!/^\d{4}$/.test(pin))throw new HttpError(400,'숫자 4자리를 입력하세요.');
+        const {config}=await currentConfigPair();
+        if(!config?.teamMembers?.some((item:any)=>item?.id===memberId))throw new HttpError(404,'팀원을 찾을 수 없습니다.');
+        await putSetting('member-pin:'+memberId,hash('member-pin:'+memberId+':'+pin));
+        json(res,{ok:true,memberId});return;
+      }
+    }
+
+    if(route==='/api/team-member'){
+      const memberId=url.searchParams.get('memberId')||header(req,'x-viivii-member')||'';
+      if(!memberId||memberId.length>100)throw new HttpError(400,'팀원 정보가 올바르지 않습니다.');
+      await requireMember(req,memberId);
+      const pair=await currentConfigPair();
+      const member=pair.config?.teamMembers?.find((item:any)=>item?.id===memberId);
+      if(!member)throw new HttpError(404,'팀원 포트폴리오를 찾을 수 없습니다.');
+      if(method==='GET'){json(res,{member});return;}
+      if(method==='PUT'){
+        const input=await body(req);
+        const updated=cleanMemberUpdate(member,input?.member);
+        const raw=structuredClone(pair.stored||pair.config);
+        if(!raw||!Array.isArray(raw.teamMembers))throw new HttpError(500,'사이트 설정을 불러올 수 없습니다.');
+        const index=raw.teamMembers.findIndex((item:any)=>item?.id===memberId);
+        if(index<0)throw new HttpError(404,'팀원 포트폴리오를 찾을 수 없습니다.');
+        raw.teamMembers[index]={...raw.teamMembers[index],...updated,id:member.id,portfolioSlug:member.portfolioSlug,visible:member.visible};
+        if(Buffer.byteLength(JSON.stringify(raw))>maxConfig)throw new HttpError(400,'편집 정보는 최대 10MB입니다.');
+        await putSetting('config',raw);
+        json(res,{ok:true,member:raw.teamMembers[index]});return;
+      }
+    }
+
+    if(route==='/api/team-upload'&&method==='POST'){
+      const input=await body(req);
+      const memberId=typeof input?.memberId==='string'?input.memberId:header(req,'x-viivii-member')||'';
+      if(!memberId||memberId.length>100)throw new HttpError(400,'팀원 정보가 올바르지 않습니다.');
+      await requireMember(req,memberId);
+      const {config}=await currentConfigPair();
+      if(!config?.teamMembers?.some((item:any)=>item?.id===memberId))throw new HttpError(404,'팀원을 찾을 수 없습니다.');
+      const meta=normalizeUpload(input.name,input.type,input.size);
+      const filename=randomUUID()+'.'+meta.ext;
+      const storage=db().storage.from(bucket());
+      const {data,error}=await storage.createSignedUploadUrl(filename);
+      if(error)throw error;
+      const publicUrl=storage.getPublicUrl(filename).data.publicUrl;
+      json(res,{uploadUrl:data.signedUrl,url:publicUrl,method:'PUT',multipart:true,contentType:meta.type});return;
+    }
+
     if(route==='/api/mail'){
       await requireAdmin(req);
       if(method==='GET'){
