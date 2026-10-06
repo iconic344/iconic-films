@@ -4,12 +4,13 @@ import {ArrowUpRight} from 'lucide-react';
 import type {Config,TeamMember} from './defaults';
 import TeamMedia from './team-media';
 
-export default function TeamSection({config,onOpen,order}:{config:Config;onOpen:(member:TeamMember)=>void;order?:number}){
+export default function TeamSection({config,onOpen,order,minHeight=0}:{config:Config;onOpen:(member:TeamMember)=>void;order?:number;minHeight?:number}){
   const visible=(config.teamMembers||[]).filter(member=>member.visible);
   if(!visible.length)return null;
 
   const sectionStyle={
     order,
+    minHeight:minHeight>0?minHeight+'px':undefined,
     '--team-head-x':config.textStyles.teamHeadline.x+'px',
     '--team-head-y':config.textStyles.teamHeadline.y+'px',
     '--team-head-size':config.textStyles.teamHeadline.size+'px',
@@ -54,8 +55,8 @@ export default function TeamSection({config,onOpen,order}:{config:Config;onOpen:
 
   return <section id="team" data-visual-section="team" className="team-section reveal team-stack-section" style={sectionStyle}>
     <div className="team-section-head">
-      <span className="kicker" style={textCss('teamKicker')}>{config.teamKicker||'03 / PORTFOLIO'}</span>
-      <h2 style={textCss('teamHeadline')}>{(config.teamHeadline||'Selected disciplines.').split('\n').map((line,i)=><span key={i}>{line}{i<(config.teamHeadline||'').split('\n').length-1&&<br/>}</span>)}</h2>
+      <span className="kicker" data-visual-text="teamKicker" style={textCss('teamKicker')}>{config.teamKicker||'03 / PORTFOLIO'}</span>
+      <h2 data-visual-text="teamHeadline" style={textCss('teamHeadline')}>{(config.teamHeadline||'Selected disciplines.').split('\n').map((line,i)=><span key={i}>{line}{i<(config.teamHeadline||'').split('\n').length-1&&<br/>}</span>)}</h2>
     </div>
 
     <div className="team-stack-list">
@@ -75,12 +76,12 @@ export default function TeamSection({config,onOpen,order}:{config:Config;onOpen:
           </div>
 
           <div className="team-stack-copy team-stack-copy--portfolio">
-            <h3 style={textCss('teamMemberName')}>{member.name||'Portfolio'}</h3>
+            <h3 data-visual-team-text={member.id+':name'} style={textCss('teamMemberName')}>{member.name||'Portfolio'}</h3>
             {!!member.portfolioSubcategories?.length&&<p className="team-stack-subcategories" style={textCss('teamMemberBio')}>{member.portfolioSubcategories.slice(0,4).join(' · ')}</p>}
           </div>
 
           <div className="team-stack-end">
-            <span className="team-stack-view" style={textCss('teamView')}>View portfolio <ArrowUpRight size={15}/></span>
+            <span className="team-stack-view" data-visual-text="teamViewLabel" style={textCss('teamView')}>{config.teamViewLabel||'View portfolio'} <ArrowUpRight size={15}/></span>
           </div>
         </a>;
       })}
