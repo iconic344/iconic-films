@@ -69,13 +69,11 @@ export default function TeamSection({config,onOpen}:{config:Config;onOpen:(membe
         >
           <div className="team-stack-visual">
             {member.photo
-              ?<TeamMedia src={member.photo} alt={member.name||member.role} className="team-stack-media"/>
-              :<span className="team-stack-placeholder">{String(index+1).padStart(2,'0')}</span>}
-            <span className="team-stack-number">{String(index+1).padStart(2,'0')}</span>
+              ?<TeamMedia src={member.photo} alt={member.name||'Portfolio'} className="team-stack-media"/>
+              :<span className="team-stack-placeholder" aria-hidden="true"/>}
           </div>
 
           <div className="team-stack-copy team-stack-copy--portfolio">
-            <span style={textCss('teamMemberRole')}>PORTFOLIO / {String(member.works?.length||0).padStart(2,'0')}</span>
             <h3 style={textCss('teamMemberName')}>{member.name||'Portfolio'}</h3>
             {!!member.portfolioSubcategories?.length&&<p className="team-stack-subcategories" style={textCss('teamMemberBio')}>{member.portfolioSubcategories.slice(0,4).join(' · ')}</p>}
           </div>
