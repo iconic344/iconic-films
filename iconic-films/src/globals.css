@@ -11025,3 +11025,64 @@ body{
     padding-top:0!important;
   }
 }
+
+
+/* 2026-10-06 switch optical-centering correction */
+/* Final iOS switch geometry: larger thumb, 2px optical inset, no sliver/clipping. */
+.editor [data-slot="switch"]{
+  position:relative!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  width:44px!important;
+  min-width:44px!important;
+  max-width:44px!important;
+  height:26px!important;
+  min-height:26px!important;
+  max-height:26px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:999px!important;
+  overflow:hidden!important;
+  flex:0 0 44px!important;
+}
+.editor [data-slot="switch-thumb"]{
+  position:absolute!important;
+  top:2px!important;
+  left:2px!important;
+  display:block!important;
+  width:22px!important;
+  min-width:22px!important;
+  max-width:22px!important;
+  height:22px!important;
+  min-height:22px!important;
+  max-height:22px!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:50%!important;
+  transform:translate3d(0,0,0)!important;
+  background:#fff!important;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.20),
+    0 2px 7px rgba(0,0,0,.14)!important;
+  transition:
+    transform .24s cubic-bezier(.22,1,.36,1),
+    box-shadow .2s ease!important;
+  will-change:transform;
+}
+.editor [data-slot="switch"][data-state="checked"] [data-slot="switch-thumb"]{
+  transform:translate3d(18px,0,0)!important;
+}
+.editor [data-slot="switch"][data-state="unchecked"] [data-slot="switch-thumb"]{
+  transform:translate3d(0,0,0)!important;
+}
+.editor [data-slot="switch"]:active [data-slot="switch-thumb"]{
+  transform:translate3d(0,0,0) scale(.96)!important;
+}
+.editor [data-slot="switch"][data-state="checked"]:active [data-slot="switch-thumb"]{
+  transform:translate3d(18px,0,0) scale(.96)!important;
+}
+.editor .music-settings .toggle>[data-slot="switch"]{
+  justify-self:end!important;
+  margin-right:0!important;
+}
