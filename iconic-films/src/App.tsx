@@ -99,6 +99,7 @@ export default function Home(){
   return()=>window.removeEventListener('popstate',sync);
  },[]);
  useEffect(()=>{if(login)document.documentElement.dataset.adminLogin='true';else delete document.documentElement.dataset.adminLogin;return()=>{delete document.documentElement.dataset.adminLogin}},[login]);
+ useEffect(()=>{if(admin)document.documentElement.dataset.adminOpen='true';else delete document.documentElement.dataset.adminOpen;return()=>{delete document.documentElement.dataset.adminOpen}},[admin]);
  useEffect(()=>{
   lastScrollY.current=window.scrollY;
   const sync=()=>{

@@ -44,7 +44,7 @@ export default function TeamSection({config,onOpen,order}:{config:Config;onOpen:
   } as CSSProperties;
   const textCss=(key:keyof typeof config.textStyles):CSSProperties=>{
     const s=config.textStyles[key];
-    return {fontFamily:s.font||undefined,fontSize:s.size+'px',color:s.color||undefined,textAlign:s.align,translate:s.x+'px '+s.y+'px'};
+    return {fontFamily:s.font||undefined,fontSize:s.size+'px',color:s.color||undefined,textAlign:s.align,translate:s.x+'px '+s.y+'px',letterSpacing:(s.letterSpacing??0)+'px',fontWeight:s.weight??undefined,opacity:(s.opacity??100)/100,textTransform:s.textTransform&&s.textTransform!=='none'?s.textTransform:undefined};
   };
 
   const open=(event:MouseEvent<HTMLAnchorElement>,member:TeamMember)=>{

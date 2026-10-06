@@ -817,3 +817,19 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
     )!important;
   }
 }
+
+
+/* 2026-10-07 Main visual title — EDIT SITE owns the typography now. */
+.hero-gallery .media-gallery-caption h3{
+  width:100%!important;
+  font-family:var(--hero-caption-font,Arial,Helvetica,sans-serif)!important;
+  font-size:var(--hero-caption-size,24px)!important;
+  color:var(--hero-caption-color,inherit)!important;
+  text-align:var(--hero-caption-align,center)!important;
+  letter-spacing:var(--hero-caption-letter,0px)!important;
+  font-weight:var(--hero-caption-weight,600)!important;
+  opacity:var(--hero-caption-opacity,1)!important;
+  text-transform:var(--hero-caption-transform,none)!important;
+  translate:var(--hero-caption-x,0px) var(--hero-caption-y,0px)!important;
+  line-height:1.08!important;
+}

@@ -8,7 +8,7 @@ type SectionKey=SiteSectionKey;
 type PanelTab='layers'|'content'|'layout'|'style';
 type Point={x:number;y:number};
 type TextStyleKey=keyof Config['textStyles'];
-type TextPatch=Partial<{font:string;size:number;color:string;align:'left'|'center'|'right';x:number;y:number}>;
+type TextPatch=Partial<{font:string;size:number;color:string;align:'left'|'center'|'right';x:number;y:number;letterSpacing:number;weight:number;opacity:number;textTransform:'none'|'uppercase'|'lowercase'|'capitalize'}>;
 export type VisualSelection=SectionKey|`work:${string}`;
 
 const clamp=(n:number,min:number,max:number)=>Math.min(max,Math.max(min,n));
@@ -157,6 +157,7 @@ function SectionEditor({section,config,patch,patchTeam,reorder,removeMenu,restor
 
 function StylePanel({section,config,patch,patchTextStyle,uploadConfig,uploading}:{section:SectionKey;config:Config;patch:<K extends keyof Config>(key:K,value:Config[K])=>void;patchTextStyle:(key:TextStyleKey,value:TextPatch)=>void;uploadConfig:(file:File|undefined,key:keyof Config)=>void;uploading:boolean}){
  const textGroups:Partial<Record<SectionKey,{key:TextStyleKey;label:string}[]>>={
+  hero:[{key:'heroCaption',label:'Hover title'}],
   work:[{key:'workKicker',label:'Small title'},{key:'workHeadline',label:'Headline'},{key:'workAside',label:'Aside'},{key:'workCardTitle',label:'Card title'},{key:'workCardMeta',label:'Card meta'}],
   about:[{key:'aboutKicker',label:'Small title'},{key:'aboutHeadline',label:'Headline'},{key:'aboutBody',label:'Body'},{key:'aboutDisciplines',label:'Disciplines'}],
   team:[{key:'teamKicker',label:'Small title'},{key:'teamHeadline',label:'Headline'},{key:'teamMemberName',label:'Member name'},{key:'teamMemberBio',label:'Member bio'},{key:'teamView',label:'View button'}]
@@ -170,7 +171,19 @@ function StylePanel({section,config,patch,patchTextStyle,uploadConfig,uploading}
  </div>;
 }
 function TextStyleControl({label,value,onChange}:{label:string;value:Config['textStyles'][TextStyleKey];onChange:(value:TextPatch)=>void}){
- return <details className="visual-text-style"><summary>{label}<span>{value.size}px</span></summary><label className="visual-field"><span>Font</span><select value={value.font} onChange={e=>onChange({font:e.target.value})}><option>Arial, Helvetica, sans-serif</option><option>Helvetica Neue, Arial, sans-serif</option><option>Georgia, serif</option><option>Times New Roman, serif</option><option>Verdana, sans-serif</option><option>Courier New, monospace</option><option>system-ui, sans-serif</option></select></label><Range label="Size" value={value.size} min={8} max={180} step={1} suffix="px" onChange={v=>onChange({size:v})}/><Range label="X" value={value.x} min={-300} max={300} step={1} suffix="px" onChange={v=>onChange({x:v})}/><Range label="Y" value={value.y} min={-240} max={240} step={1} suffix="px" onChange={v=>onChange({y:v})}/><label className="visual-color"><span>Color</span><input type="color" value={value.color||'#ffffff'} onChange={e=>onChange({color:e.target.value})}/><b>{value.color||'AUTO'}</b></label><div className="visual-align-buttons">{(['left','center','right'] as const).map(a=><button key={a} className={value.align===a?'is-active':''} onClick={()=>onChange({align:a})}>{a}</button>)}</div></details>;
+ const weight=value.weight??500,opacity=value.opacity??100,letterSpacing=value.letterSpacing??0,textTransform=value.textTransform??'none';
+ return <details className="visual-text-style"><summary>{label}<span>{value.size}px · {weight}</span></summary>
+  <label className="visual-field"><span>Font</span><select value={value.font} onChange={e=>onChange({font:e.target.value})}><option>Arial, Helvetica, sans-serif</option><option>Helvetica Neue, Arial, sans-serif</option><option>Georgia, serif</option><option>Times New Roman, serif</option><option>Verdana, sans-serif</option><option>Trebuchet MS, sans-serif</option><option>Courier New, monospace</option><option>system-ui, sans-serif</option></select></label>
+  <Range label="Size" value={value.size} min={8} max={180} step={1} suffix="px" onChange={v=>onChange({size:v})}/>
+  <Range label="X" value={value.x} min={-600} max={600} step={1} suffix="px" onChange={v=>onChange({x:v})}/>
+  <Range label="Y" value={value.y} min={-420} max={420} step={1} suffix="px" onChange={v=>onChange({y:v})}/>
+  <Range label="Letter spacing" value={letterSpacing} min={-8} max={24} step={.25} suffix="px" onChange={v=>onChange({letterSpacing:v})}/>
+  <Range label="Weight" value={weight} min={100} max={900} step={100} onChange={v=>onChange({weight:v})}/>
+  <Range label="Opacity" value={opacity} min={0} max={100} step={1} suffix="%" onChange={v=>onChange({opacity:v})}/>
+  <label className="visual-color"><span>Color</span><input type="color" value={value.color||'#ffffff'} onChange={e=>onChange({color:e.target.value})}/><b>{value.color||'AUTO'}</b></label>
+  <label className="visual-field"><span>Text case</span><select value={textTransform} onChange={e=>onChange({textTransform:e.target.value as TextPatch['textTransform']})}><option value="none">As typed</option><option value="uppercase">UPPERCASE</option><option value="lowercase">lowercase</option><option value="capitalize">Capitalize</option></select></label>
+  <div className="visual-align-buttons">{(['left','center','right'] as const).map(a=><button key={a} className={value.align===a?'is-active':''} onClick={()=>onChange({align:a})}>{a}</button>)}</div>
+ </details>;
 }
 function WorkEditor({work,patch,onUpload,uploading,onDuplicate,onDelete}:{work:Work;patch:(key:keyof Work,value:Work[keyof Work])=>void;onUpload:(file:File|undefined,field:'poster'|'video')=>void;uploading:boolean;onDuplicate:()=>void;onDelete:()=>void}){
  return <><div className="visual-editor-panel-head"><h3>Work card</h3><div><button type="button" title="복제" onClick={onDuplicate}><Copy size={13}/></button><button type="button" className="is-danger" title="삭제" onClick={onDelete}><Trash2 size={13}/></button></div></div><TextField label="Title" value={work.title} onChange={v=>patch('title',v)}/><TextField label="Category" value={work.category} onChange={v=>patch('category',v)}/><TextField label="Year" value={work.year} onChange={v=>patch('year',v)}/><TextField label="Role" value={work.role} onChange={v=>patch('role',v)}/><TextField label="Description" value={work.description} multi onChange={v=>patch('description',v)}/><label className="visual-toggle"><span>공개</span><input type="checkbox" checked={work.visible} onChange={e=>patch('visible',e.target.checked)}/></label><FileField label="Poster / Image" accept="image/jpeg,image/png,image/webp" disabled={uploading} value={work.poster} onFile={f=>onUpload(f,'poster')} onClear={()=>patch('poster','')}/><FileField label="Video" accept="video/mp4,video/webm" disabled={uploading} value={work.video} onFile={f=>onUpload(f,'video')} onClear={()=>patch('video','')}/></>;
