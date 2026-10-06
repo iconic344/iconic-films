@@ -118,7 +118,7 @@
     left:50%!important;
     right:auto!important;
     bottom:max(10px,calc(env(safe-area-inset-bottom) + 8px))!important;
-    width:min(560px,calc(100vw - 24px))!important;
+    width:min(560px,calc(100vw - 32px))!important;
     transform:translateX(-50%)!important;
     gap:4px!important;
     padding:5px 7px!important;
@@ -218,7 +218,7 @@
     --gallery-card:calc(100vw - 28px)!important;
   }
   .unified-media-dialog .media-gallery-tools{
-    width:calc(100vw - 18px)!important;
+    width:calc(100vw - 28px)!important;
     padding-inline:6px!important;
   }
   .unified-media-dialog .media-gallery-tools button{
