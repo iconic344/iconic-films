@@ -11794,3 +11794,137 @@ body{
   background:radial-gradient(circle,rgba(255,255,255,.20),rgba(255,255,255,.06) 32%,transparent 68%);
   pointer-events:none;
 }
+
+
+/* 2026-10-06 mobile layout reset: header and media must never overlap */
+@media(max-width:820px){
+  html{scroll-padding-top:18px!important}
+  body{overscroll-behavior-x:none}
+  .site>.nav,
+  .team-portfolio-site-nav{
+    position:relative!important;
+    top:auto!important;
+    left:auto!important;
+    right:auto!important;
+    margin-top:max(8px,env(safe-area-inset-top))!important;
+    margin-bottom:12px!important;
+    z-index:60!important;
+  }
+  .hero{
+    position:relative!important;
+    padding-top:0!important;
+  }
+  .hero-top{
+    padding-top:12px!important;
+  }
+  .hero-gallery{
+    position:relative!important;
+    z-index:1!important;
+    margin-top:10px!important;
+  }
+
+  /* Portfolio pages previously stacked the sticky nav and hero in the same grid cell. */
+  .team-portfolio-page{
+    display:block!important;
+  }
+  .team-portfolio-page>.team-portfolio-site-nav,
+  .team-portfolio-page>.team-portfolio-main{
+    grid-area:auto!important;
+    align-self:auto!important;
+  }
+  .team-portfolio-page>.team-portfolio-main{
+    margin-top:0!important;
+  }
+  .team-portfolio-hero{
+    padding-top:28px!important;
+  }
+
+  /* Phone navigation remains complete but has its own layout height. */
+  .nav{
+    width:calc(100% - 16px)!important;
+    height:auto!important;
+    min-height:0!important;
+    padding:10px 12px!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-rows:auto auto!important;
+    align-items:center!important;
+    row-gap:8px!important;
+    column-gap:8px!important;
+  }
+  .nav>.brand{grid-column:1;grid-row:1;min-width:0!important}
+  .nav>.nav-tools{grid-column:2;grid-row:1;justify-self:end}
+  .nav>nav{
+    grid-column:1/-1!important;
+    grid-row:2!important;
+    width:100%!important;
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:2px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    border-top:1px solid var(--line)!important;
+    padding:7px 0 0!important;
+    scrollbar-width:none!important;
+    -webkit-overflow-scrolling:touch;
+  }
+  .nav>nav::-webkit-scrollbar{display:none!important}
+  .nav>nav a,.nav>nav .nav-contact{
+    flex:0 0 auto!important;
+    min-height:36px!important;
+    padding:7px 10px!important;
+    font-size:11px!important;
+    line-height:1!important;
+  }
+
+  /* Main media uses the remaining width and a stable cinematic ratio. */
+  .hero-gallery,
+  .team-portfolio-slider{
+    width:100%!important;
+    max-width:100%!important;
+    margin-left:0!important;
+    margin-right:0!important;
+    overflow:visible!important;
+  }
+  .work-section{
+    overflow:clip!important;
+  }
+  .works-grid{
+    grid-template-columns:1fr!important;
+    gap:34px!important;
+  }
+  .work-card,.work-image{
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .work-image{
+    aspect-ratio:16/10!important;
+  }
+  .work-image>video,.work-image>img{
+    width:100%!important;
+    height:100%!important;
+    object-fit:cover!important;
+  }
+
+  /* Fullscreen/dialog layers always outrank the site header and floating controls. */
+  body:has(.unified-media-dialog) .nav,
+  body:has(.unified-media-dialog) .sound-toggle,
+  body:has(.unified-media-dialog) .scroll-toggle,
+  body:has(.unified-media-dialog) .music-panel{
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+}
+
+@media(max-width:430px){
+  .site>.nav,.team-portfolio-site-nav{
+    margin-bottom:10px!important;
+  }
+  .hero-gallery{margin-top:6px!important}
+  .nav>nav a,.nav>nav .nav-contact{
+    padding-left:8px!important;
+    padding-right:8px!important;
+    font-size:10px!important;
+  }
+}
