@@ -105,7 +105,7 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
         <div className="member-self-security-quick-fields">
           <label>새 비밀번호<input type="password" inputMode="numeric" maxLength={4} placeholder="4자리" value={newPin} onChange={e=>setNewPin(e.target.value.replace(/\D/g,'').slice(0,4))}/></label>
           <label>비밀번호 확인<input type="password" inputMode="numeric" maxLength={4} placeholder="다시 입력" value={confirmPin} onChange={e=>setConfirmPin(e.target.value.replace(/\D/g,'').slice(0,4))}/></label>
-          <button type="button" disabled={pinBusy||newPin.length!==4||confirmPin.length!==4||newPin!==confirmPin} onClick={changeOwnPin}>{pinBusy?'변경 중…':'변경 적용'}</button>
+          <button type="button" className="member-security-confirm" disabled={pinBusy||newPin.length!==4||confirmPin.length!==4||newPin!==confirmPin} onClick={changeOwnPin}><span>{pinBusy?'APPLYING…':'CONFIRM'}</span><small>{pinBusy?'변경 중':'적용'}</small></button>
         </div>
       </section>
       <aside className="member-self-editor-note">
