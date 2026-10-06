@@ -17,7 +17,7 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,preserveItems=f
 function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false}:GalleryProps){
  const [index,setIndex]=useState(Math.min(initialIndex,Math.max(0,items.length-1)));
  const [playing,setPlaying]=useState(()=>!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
- const [muted,setMuted]=useState(()=>!modal),[mediaVolume,setMediaVolume]=useState(1),[volumeOpen,setVolumeOpen]=useState(false),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(modal),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState(''),[landscape,setLandscape]=useState(false);
+ const [muted,setMuted]=useState(()=>!modal),[mediaVolume,setMediaVolume]=useState(1),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(modal),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState(''),[landscape,setLandscape]=useState(false);
  const root=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),drag=useRef<{x:number;y:number}|null>(null),dragged=useRef(false),elapsed=useRef(0),ambient=useRef<HTMLCanvasElement>(null),idleTimer=useRef(0),restoreTime=useRef<number|null>(null);
  const item=items[index],type=item?teamMediaType(item.src):'image',isFullscreen=expanded,showBackdrop=modal||isFullscreen;
  useEffect(()=>{if(modal)root.current?.focus({preventScroll:true})},[modal]);
@@ -74,8 +74,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
  };
  const wake=()=>{
   setIdle(false);window.clearTimeout(idleTimer.current);
-  const finePointer=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-  if(isFullscreen&&type==='video'&&finePointer)idleTimer.current=window.setTimeout(()=>setIdle(true),2400);
+  if(isFullscreen&&type==='video')idleTimer.current=window.setTimeout(()=>setIdle(true),1600);
  };
  useEffect(()=>{wake();return()=>window.clearTimeout(idleTimer.current)},[isFullscreen,type,item?.id]);
  // Sample the playing frame into a small canvas. It is purely visual, muted by
@@ -105,10 +104,10 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
  const gallery=<div ref={root} className={'media-gallery '+(modal?'is-modal ':'')+(expanded?'is-expanded ':'')+(isFullscreen?'is-fullscreen ':'')+(items.length<=1?'is-single ':'')+(type==='video'?'has-video ':'has-image ')+(landscape?'is-landscape':'is-portrait')} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} data-cursor-idle={idle?'true':'false'} onPointerMove={wake} onPointerDown={wake} onFocusCapture={wake} onKeyDown={e=>{wake();key(e)}}>
   {showBackdrop&&<><div className="media-gallery-backdrop" aria-hidden="true">
    {(type==='image'||item.poster)&&<img src={type==='image'?item.src:item.poster} alt=""/>}
-   {type==='video'&&<canvas ref={ambient} style={{opacity:readySrc===item.src?1:0}}/>}
+   {type==='video'&&<canvas ref={ambient} style={{opacity:1}}/>}
   </div><div className="media-gallery-backdrop-glass" aria-hidden="true"/></>}
   {isFullscreen&&<button type="button" className="media-gallery-close" aria-label={modal?'미디어 닫기':'전체 화면 종료'} onClick={()=>{if(modal)onExpand?.();else exitFullscreen()}}><X size={23}/></button>}
-  <div className="media-gallery-viewport" onPointerDown={e=>{if(e.button!==0||(e.target as HTMLElement).closest('button,input,model-viewer'))return;drag.current={x:e.clientX,y:e.clientY};dragged.current=false;e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={e=>{if(!drag.current)return;const dx=e.clientX-drag.current.x,dy=e.clientY-drag.current.y;drag.current=null;if(Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)){dragged.current=true;choose(index+(dx<0?1:-1))}e.currentTarget.releasePointerCapture?.(e.pointerId)}} onPointerCancel={()=>{drag.current=null}}>
+  <div className="media-gallery-viewport" onPointerDown={e=>{if(e.button!==0||(e.target as HTMLElement).closest('button,input,model-viewer'))return;drag.current={x:e.clientX,y:e.clientY};dragged.current=false;e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={e=>{if(!drag.current)return;const dx=e.clientX-drag.current.x,dy=e.clientY-drag.current.y;drag.current=null;const swiped=Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy);if(swiped){dragged.current=true;choose(index+(dx<0?1:-1))}else if(type==='video'&&(modal||isFullscreen)){dragged.current=true;toggle()}e.currentTarget.releasePointerCapture?.(e.pointerId)}} onPointerCancel={()=>{drag.current=null}}>
    <div className="media-gallery-track" style={{'--gallery-index':index} as CSSProperties}>
     {items.map((entry,i)=>{
      const active=i===index,kind=teamMediaType(entry.src);
@@ -120,9 +119,9 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
       {active&&error&&<p className="media-gallery-error" role="status">미디어를 불러오지 못했습니다. <button type="button" onClick={()=>{setError(false);video.current?.load();setPlaying(true)}}>다시 시도</button></p>}
       {active&&kind==='video'&&<div className="media-gallery-tools">
        <button type="button" aria-label={playing?'일시정지':'재생'} onClick={toggle}>{playing?<Pause size={18} fill="currentColor"/>:<Play size={18} fill="currentColor"/>}</button><span>{formatTime(time)}</span><input type="range" aria-label="영상 재생 위치" min={0} max={duration||1} step={.1} value={Math.min(time,duration||0)} onChange={e=>{if(video.current)video.current.currentTime=Number(e.target.value)}}/><span>{formatTime(duration)}</span>
-       <div className={'media-volume-control '+(volumeOpen?'is-open':'')}>
-        <button type="button" aria-label="영상 볼륨 조절" aria-expanded={volumeOpen} onClick={()=>setVolumeOpen(v=>!v)}>{mediaVolume<=0||muted?<VolumeX size={18}/>:<Volume2 size={18}/>}</button>
-        {volumeOpen&&<div className="media-volume-popover" role="group" aria-label="영상 볼륨"><input type="range" aria-label="영상 볼륨" min={0} max={1} step={.01} value={muted?0:mediaVolume} onChange={e=>{const next=Number(e.target.value);setMediaVolume(next);setMuted(next<=0)}}/><span>{Math.round((muted?0:mediaVolume)*100)}</span></div>}
+       <div className="media-volume-control">
+        <button type="button" aria-label="영상 볼륨 조절">{mediaVolume<=0||muted?<VolumeX size={18}/>:<Volume2 size={18}/>}</button>
+        <div className="media-volume-popover" role="group" aria-label="영상 볼륨"><input type="range" aria-label="영상 볼륨" min={0} max={1} step={.01} value={muted?0:mediaVolume} onChange={e=>{const next=Number(e.target.value);setMediaVolume(next);setMuted(next<=0)}}/><span>{Math.round((muted?0:mediaVolume)*100)}</span></div>
        </div>
        {!modal&&<button type="button" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}>{isFullscreen?<Minimize size={17}/>:<Maximize size={17}/>}</button>}
       </div>}
