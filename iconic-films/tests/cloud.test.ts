@@ -36,8 +36,12 @@ test('Vercel/Supabase adapter uses service credentials only on the server and si
     for(const kind of ['works','tracks']){
       const saved=await fetch(`${origin}/api/config/chunk?revision=${revision}&kind=${kind}&index=0`,{method:'POST',headers:credentials,body:JSON.stringify({items:seed[kind]})});assert.equal(saved.status,200);
     }
-    const publication=await fetch(origin+'/api/config',{method:'PUT',headers:credentials,body:JSON.stringify({...seed,works:[],tracks:[],_mediaRevision:revision,_mediaChunks:{works:1,tracks:1}})});
+    const focusItems=[{id:'independent-focus',title:'Uploaded photograph',category:'Lookbook',year:'2026',role:'',description:'',poster:'/uploads/focus.webp',video:'',visible:true}];
+    const publication=await fetch(origin+'/api/config',{method:'PUT',headers:credentials,body:JSON.stringify({...seed,focusItems,works:[],tracks:[],_mediaRevision:revision,_mediaChunks:{works:1,tracks:1}})});
     assert.equal(publication.status,200);assert.equal(tables.iconic_settings.config.value._mediaRevision,revision);
+    const published=(await (await fetch(origin+'/api/config')).json()).config;
+    assert.deepEqual(published.focusItems,focusItems);
+
     const upload=await fetch(origin+'/api/upload',{method:'POST',headers:credentials,body:JSON.stringify({name:'model.glb',type:'',size:1024})});
     assert.equal(upload.status,200);const ticket=await upload.json();assert.equal(ticket.multipart,true);assert.equal(ticket.method,'PUT');assert.equal(ticket.contentType,'model/gltf-binary');
     assert(ticket.uploadUrl.startsWith(storageOrigin+'/storage/v1/object/upload/sign/iconic-media/'));

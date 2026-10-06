@@ -15,12 +15,12 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const memberSwipeStart=useRef<{x:number;y:number}|null>(null);
   const memberSwipeMoved=useRef(false);
   const subcategories=useMemo(()=>member.portfolioSubcategories||[],[member.portfolioSubcategories]);
-  const works=useMemo(()=>{
-    const all=member.works||[];
-    if(subcategory==='All')return all;
-    const labels=member.portfolioWorkCategories||[];
-    return all.filter((_,i)=>(labels[i]||subcategories[0]||'All')===subcategory);
-  },[member.works,member.portfolioWorkCategories,subcategories,subcategory]);
+  const galleryItems=useMemo(()=>(member.works||[]).map((src,i)=>({
+    id:member.id+'-'+i,src,title:member.name||'Portfolio',
+    category:member.portfolioWorkCategories?.[i]||subcategories[0]||'All',
+    kicker:member.portfolioWorkCategories?.[i]||subcategories[0]||'All'
+  })).filter(item=>subcategory==='All'||item.category===subcategory),[member.id,member.name,member.works,member.portfolioWorkCategories,subcategories,subcategory]);
+  const works=useMemo(()=>galleryItems.map(item=>item.src),[galleryItems]);
   const teamMembers=useMemo(()=>(config.teamMembers||[]).filter(item=>item.visible),[config.teamMembers]);
   const memberIndex=Math.max(0,teamMembers.findIndex(item=>item.id===member.id));
   const selectMember=(target:TeamMember,direction:1|-1)=>{if(target&&target.id!==member.id)onSelectMember(target,direction)};
@@ -297,7 +297,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           </button>)}
         </div>}
 
-        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={works.map((src,i)=>({id:member.id+'-'+i,src,title:member.name||'Portfolio',kicker:subcategory==='All'?member.portfolioWorkCategories?.[i]:subcategory}))} initialIndex={index} onIndexChange={setIndex} onExpand={()=>openViewer(index)}/></div>}
+        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={()=>openViewer(index)}/></div>}
       </section>
     </main>
 
@@ -308,6 +308,6 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
 
         <footer className="team-portfolio-footer"><span>© 2026 {config.name}</span><button type="button" onClick={onBack}>Back to team</button></footer>
 
-    <MediaGalleryDialog items={works.map((src,i)=>({id:member.id+'-'+i,src,title:member.name||'Portfolio',kicker:subcategory==='All'?member.portfolioWorkCategories?.[i]:subcategory}))} index={viewerIndex} onClose={closeViewer} onIndexChange={setViewerIndex}/>
+    <MediaGalleryDialog items={galleryItems} index={viewerIndex} onClose={closeViewer} onIndexChange={setViewerIndex}/>
   </div>
 }
