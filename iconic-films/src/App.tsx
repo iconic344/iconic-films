@@ -37,17 +37,32 @@ const accentContrast=(hex:string)=>{
  return lum>.62?'#111111':'#ffffff';
 };
 import {api} from './site-api';
+const SITE_CONFIG_CACHE_KEY='viivii-site-config-v1';
+function cachedConfig(){
+ try{
+  if(typeof window==='undefined')return initial;
+  const raw=localStorage.getItem(SITE_CONFIG_CACHE_KEY);
+  return raw?normalizeConfig(JSON.parse(raw)):initial;
+ }catch{return initial}
+}
+function cachedTheme(fallback:string){
+ try{return typeof window!=='undefined'?(localStorage.getItem('iconic-theme')||fallback):fallback}catch{return fallback}
+}
 function Choice({value,options,onChange}:{value:string;options:string[];onChange:(x:string)=>void}){return <Select value={value} onValueChange={onChange}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{options.map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select>}
 function Btn({label,children,onClick,active=false}:{label:string;children:React.ReactNode;onClick:()=>void;active?:boolean}){return <button title={label} aria-label={label} aria-pressed={active} className={'icon '+(active?'active':'')} onClick={onClick}>{children}</button>}
 export default function Home(){
- const [saved,setSaved]=useState<Config>(initial),[draft,setDraft]=useState<Config>(initial),[theme,setTheme]=useState('light'),[admin,setAdmin]=useState(false),[preview,setPreview]=useState(false),[login,setLogin]=useState(false),[pin,setPin]=useState(''),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[category,setCategory]=useState('All'),[work,setWork]=useState<Work|null>(null),[music,setMusic]=useState(false),[track,setTrack]=useState(0),[playing,setPlaying]=useState(false),[shuffle,setShuffle]=useState(initial.musicShuffle),[repeat,setRepeat]=useState(initial.musicRepeatMode==='one'?1:initial.musicRepeatMode==='all'?2:0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[group,setGroup]=useState('Tracks'),[filter,setFilter]=useState('All'),[volume,setVolume]=useState(60),[newPin,setNewPin]=useState(''),[loaded,setLoaded]=useState(false),[scrollTarget,setScrollTarget]=useState<'top'|'bottom'>('bottom'),[autoplayBlocked,setAutoplayBlocked]=useState(false),[animations,setAnimations]=useState<string[]>([]),[editorTab,setEditorTab]=useState('content'),[contactOpen,setContactOpen]=useState(false),[teamRoute,setTeamRoute]=useState(()=>typeof window==='undefined'?'':decodeURIComponent(window.location.pathname.match(/^\/team\/([^/]+)/)?.[1]||'')),[teamPageClosing,setTeamPageClosing]=useState(false),[adminClosing,setAdminClosing]=useState(false),[ownerMode,setOwnerMode]=useState(false),[memberLogin,setMemberLogin]=useState<TeamMember|null>(null),[memberPin,setMemberPin]=useState(''),[memberEditor,setMemberEditor]=useState<TeamMember|null>(null),[memberDraft,setMemberDraft]=useState<TeamMember|null>(null),[memberBusy,setMemberBusy]=useState(false),[teamPins,setTeamPins]=useState<Record<string,string>>({});
+ const cached=useRef<Config|null>(null);
+ if(cached.current===null)cached.current=cachedConfig();
+ const bootConfig=cached.current;
+ const [saved,setSaved]=useState<Config>(bootConfig),[draft,setDraft]=useState<Config>(bootConfig),[theme,setTheme]=useState(()=>cachedTheme(bootConfig.theme)),[admin,setAdmin]=useState(false),[preview,setPreview]=useState(false),[login,setLogin]=useState(false),[pin,setPin]=useState(''),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[category,setCategory]=useState('All'),[work,setWork]=useState<Work|null>(null),[music,setMusic]=useState(false),[track,setTrack]=useState(0),[playing,setPlaying]=useState(false),[shuffle,setShuffle]=useState(bootConfig.musicShuffle),[repeat,setRepeat]=useState(bootConfig.musicRepeatMode==='one'?1:bootConfig.musicRepeatMode==='all'?2:0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[group,setGroup]=useState('Tracks'),[filter,setFilter]=useState('All'),[volume,setVolume]=useState(bootConfig.volume),[newPin,setNewPin]=useState(''),[loaded,setLoaded]=useState(false),[scrollTarget,setScrollTarget]=useState<'top'|'bottom'>('bottom'),[autoplayBlocked,setAutoplayBlocked]=useState(false),[animations,setAnimations]=useState<string[]>([]),[editorTab,setEditorTab]=useState('content'),[contactOpen,setContactOpen]=useState(false),[teamRoute,setTeamRoute]=useState(()=>typeof window==='undefined'?'':decodeURIComponent(window.location.pathname.match(/^\/team\/([^/]+)/)?.[1]||'')),[teamPageClosing,setTeamPageClosing]=useState(false),[adminClosing,setAdminClosing]=useState(false),[ownerMode,setOwnerMode]=useState(false),[memberLogin,setMemberLogin]=useState<TeamMember|null>(null),[memberPin,setMemberPin]=useState(''),[memberEditor,setMemberEditor]=useState<TeamMember|null>(null),[memberDraft,setMemberDraft]=useState<TeamMember|null>(null),[memberBusy,setMemberBusy]=useState(false),[teamPins,setTeamPins]=useState<Record<string,string>>({});
  const [focusIndex,setFocusIndex]=useState<number|null>(null);
  const musicButton=useRef<HTMLButtonElement>(null),musicPanel=useRef<HTMLElement>(null);
  const startup=useRef(false),audio=useRef<HTMLAudioElement>(null),filmWasPlaying=useRef(false),teamVideoWasPlaying=useRef(false),drag=useRef<{x:number;y:number}|null>(null),frame=useRef<HTMLDivElement>(null),lastScrollY=useRef(0),videoWarm=useRef(new Map<string,HTMLVideoElement>());
  const [compactViewport,setCompactViewport]=useState(()=>typeof window!=='undefined'&&window.matchMedia('(max-width: 820px), (max-width: 1180px) and (any-pointer: coarse)').matches);
  const c=preview?draft:saved, t=c.tracks[track];
- useEffect(()=>{api('/api/config').then(j=>{const v=normalizeConfig(j.config||{});setSaved(v);setDraft(v);setTheme(localStorage.getItem('iconic-theme')||v.theme);setVolume(v.volume);setShuffle(v.musicShuffle);setRepeat(v.musicRepeatMode==='one'?1:v.musicRepeatMode==='all'?2:0);setLoaded(true)}).catch(e=>setNote(e.message));},[]);
+ useEffect(()=>{api('/api/config').then(j=>{const v=normalizeConfig(j.config||{});try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(v))}catch{}setSaved(v);setDraft(v);setTheme(cachedTheme(v.theme));setVolume(v.volume);setShuffle(v.musicShuffle);setRepeat(v.musicRepeatMode==='one'?1:v.musicRepeatMode==='all'?2:0);setLoaded(true)}).catch(e=>{setLoaded(true);setNote(e.message)});},[]);
  useEffect(()=>{document.documentElement.dataset.theme=theme;},[theme]);
+ useEffect(()=>{if(!loaded)return;try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(saved))}catch{}},[loaded,saved]);
  useEffect(()=>{
   const query=window.matchMedia('(max-width: 820px), (max-width: 1180px) and (any-pointer: coarse)');
   const sync=()=>setCompactViewport(query.matches);
