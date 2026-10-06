@@ -11222,3 +11222,77 @@ body{
   align-self:center!important;
   flex:0 0 44px!important;
 }
+
+
+/* 2026-10-06 member portfolio credits row */
+/* Dedicated member hero: credits replace the old role / Instagram / Team-return row. */
+.team-portfolio-credit-row{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px 18px;
+  margin-top:30px;
+  min-width:0;
+  font-family:var(--portfolio-utility-font,Arial,Helvetica,sans-serif);
+  font-size:var(--portfolio-utility-size,11px);
+  color:var(--portfolio-utility-color,var(--soft));
+  text-align:var(--portfolio-utility-align,left);
+  translate:var(--portfolio-utility-x,0px) var(--portfolio-utility-y,0px);
+}
+.team-portfolio-credits{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px 18px;
+  min-width:0;
+  font-family:var(--portfolio-role-font,Arial,Helvetica,sans-serif);
+  font-size:var(--portfolio-role-size,10px);
+  color:var(--portfolio-role-color,var(--soft));
+  text-align:var(--portfolio-role-align,left);
+  translate:var(--portfolio-role-x,0px) var(--portfolio-role-y,0px);
+}
+.team-portfolio-credits>span{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  min-height:20px;
+  letter-spacing:.06em;
+  line-height:1.35;
+  white-space:nowrap;
+}
+.team-portfolio-credits>span:not(:last-child)::after{
+  content:"";
+  width:3px;
+  height:3px;
+  margin-left:18px;
+  border-radius:50%;
+  background:currentColor;
+  opacity:.38;
+}
+.team-portfolio-credit-row .team-portfolio-inline-edit{
+  flex:0 0 auto;
+  margin-left:2px;
+}
+@media(max-width:1180px){
+  .team-portfolio-credit-row,
+  .team-portfolio-credits{
+    translate:0 0!important;
+    text-align:left!important;
+  }
+}
+@media(max-width:760px){
+  .team-portfolio-credit-row{
+    margin-top:24px!important;
+    gap:10px 14px!important;
+  }
+  .team-portfolio-credits{
+    width:100%;
+    gap:7px 12px!important;
+  }
+  .team-portfolio-credits>span{
+    white-space:normal;
+  }
+  .team-portfolio-credits>span:not(:last-child)::after{
+    margin-left:12px;
+  }
+}
