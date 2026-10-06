@@ -51,7 +51,7 @@ export default function TeamSection({config,onOpen}:{config:Config;onOpen:(membe
     onOpen(member);
   };
 
-  return <section id="team" className="team-section reveal team-stack-section" style={sectionStyle}>
+  return <section id="team" data-visual-section="team" className="team-section reveal team-stack-section" style={sectionStyle}>
     <div className="team-section-head">
       <span className="kicker" style={textCss('teamKicker')}>{config.teamKicker||'03 / PORTFOLIO'}</span>
       <h2 style={textCss('teamHeadline')}>{(config.teamHeadline||'Selected disciplines.').split('\n').map((line,i)=><span key={i}>{line}{i<(config.teamHeadline||'').split('\n').length-1&&<br/>}</span>)}</h2>

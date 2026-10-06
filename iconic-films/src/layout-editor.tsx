@@ -48,14 +48,22 @@ export default function LayoutEditor({draft,setDraft}:{draft:Config;setDraft:Dis
     <section className="editor-card">
       <h3>Section position</h3>
       <p>각 공개 영역 전체를 X/Y 방향으로 이동합니다. 세부 글씨 위치는 아래 Typography에서 따로 조절할 수 있습니다.</p>
-      {range('heroOffsetY','메인 영상 세로 위치',-160,180)}
+      {range('heroOffsetX','메인 영상 가로 위치',-260,260)}
+      {range('heroOffsetY','메인 영상 세로 위치',-260,260)}
+      {range('heroScale','메인 영역 크기',.7,1.35,.01,'×')}
       {range('logoOffsetY','반복 로고 세로 위치',-160,180)}
-      {range('workOffsetX','Work 전체 가로 위치',-180,180)}
-      {range('workOffsetY','Work 전체 세로 위치',-180,180)}
-      {range('aboutOffsetX','About 전체 가로 위치',-180,180)}
-      {range('aboutOffsetY','About 전체 세로 위치',-180,180)}
-      {range('teamOffsetX','Team 전체 가로 위치',-180,180)}
-      {range('teamOffsetY','Team 전체 세로 위치',-180,180)}
+      {range('workOffsetX','Work 전체 가로 위치',-260,260)}
+      {range('workOffsetY','Work 전체 세로 위치',-260,260)}
+      {range('workScale','Work 전체 크기',.7,1.35,.01,'×')}
+      {range('aboutOffsetX','About 전체 가로 위치',-260,260)}
+      {range('aboutOffsetY','About 전체 세로 위치',-260,260)}
+      {range('aboutScale','About 전체 크기',.7,1.35,.01,'×')}
+      {range('teamOffsetX','Team 전체 가로 위치',-260,260)}
+      {range('teamOffsetY','Team 전체 세로 위치',-260,260)}
+      {range('teamScale','Team 전체 크기',.7,1.35,.01,'×')}
+      {range('footerOffsetX','Footer 가로 위치',-260,260)}
+      {range('footerOffsetY','Footer 세로 위치',-260,260)}
+      {range('footerScale','Footer 크기',.7,1.35,.01,'×')}
     </section>
 
     <section className="editor-card typography-card">
