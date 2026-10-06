@@ -1,0 +1,91 @@
+/* Desktop-only interaction polish.
+   Keep this layer small and deliberate so desktop refinements do not get buried
+   inside the legacy global stylesheet. */
+
+/* A single image has nothing to paginate. A single video only needs playback. */
+.media-gallery.is-single.has-image .media-gallery-navigation{display:none}
+.media-gallery.is-single.has-video .media-gallery-indicators{display:none}
+.media-gallery.is-single.has-video .media-gallery-navigation{gap:0}
+
+/* Avoid exposing background site chrome while a full-screen media surface is open. */
+body:has(.unified-media-dialog) .sound-toggle,
+body:has(.unified-media-dialog) .scroll-toggle,
+body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:none}
+
+@media (min-width:1025px) and (hover:hover) and (pointer:fine){
+  /* Desktop motion should be quiet, consistent and reversible. */
+  .site>.nav,
+  .team-portfolio-site-nav{
+    transition:
+      background-color .32s ease,
+      border-color .32s ease,
+      box-shadow .32s ease,
+      transform .45s cubic-bezier(.16,1,.3,1);
+  }
+
+  .work-image{
+    overflow:hidden;
+  }
+  .work-image>img,
+  .work-image>video{
+    transition:
+      transform .85s cubic-bezier(.16,1,.3,1),
+      filter .55s ease;
+    will-change:transform;
+  }
+  .work-image:hover>img,
+  .work-image:hover>video{
+    transform:scale(1.012);
+  }
+  .work-play{
+    transition:
+      transform .45s cubic-bezier(.16,1,.3,1),
+      opacity .3s ease,
+      background-color .3s ease,
+      color .3s ease;
+  }
+  .work-image:hover .work-play,
+  .work-image:focus-visible .work-play{
+    transform:scale(1.045);
+  }
+
+  .team-stack-card{
+    transition:
+      background-color .35s ease,
+      border-color .35s ease,
+      transform .5s cubic-bezier(.16,1,.3,1);
+  }
+  .team-stack-visual{
+    transition:transform .7s cubic-bezier(.16,1,.3,1);
+  }
+  .team-stack-card:hover .team-stack-visual{
+    transform:scale(1.018);
+  }
+
+  .focus-card-visual{
+    transform:translateZ(0);
+  }
+  .focus-card-visual>img,
+  .focus-card-visual>video,
+  .focus-card-visual>model-viewer{
+    transition:transform .8s cubic-bezier(.16,1,.3,1);
+  }
+  .focus-card:hover .focus-card-visual>img,
+  .focus-card:hover .focus-card-visual>video,
+  .focus-card:hover .focus-card-visual>model-viewer{
+    transform:scale(1.012);
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .work-image>img,
+  .work-image>video,
+  .team-stack-card,
+  .team-stack-visual,
+  .focus-card-visual>img,
+  .focus-card-visual>video,
+  .focus-card-visual>model-viewer{
+    transition:none!important;
+    transform:none!important;
+  }
+}
