@@ -8,7 +8,7 @@ import TextStyleEditor from './text-style-editor';
 import {uploadFile} from './media-upload';
 import TeamMedia from './team-media';
 
-const blankMember=(draft:Config):TeamMember=>({id:crypto.randomUUID(),codeName:'',memberLabel:'MEMBER',name:'',role:'',bio:'',instagram:'',photo:'',works:[],visible:true,photoRadius:draft.teamMediaRadius,photoSize:draft.teamMediaSize,portfolioSlug:'member-'+Date.now().toString(36),portfolioTitle:'Selected works',portfolioIntro:'',portfolioLayout:'grid',portfolioColumns:3,portfolioGap:14,portfolioRadius:18,portfolioReturnLabel:'VIIVII sara / Team',portfolioProfileSize:430,portfolioNameFont:'Arial, Helvetica, sans-serif',portfolioNameSize:112,portfolioNameColor:'',portfolioNameAlign:'left',portfolioNameX:0,portfolioNameY:0,portfolioRoleFont:'Arial, Helvetica, sans-serif',portfolioRoleSize:10,portfolioRoleColor:'',portfolioRoleAlign:'left',portfolioRoleX:0,portfolioRoleY:0,portfolioBioFont:'Arial, Helvetica, sans-serif',portfolioBioSize:15,portfolioBioColor:'',portfolioBioAlign:'left',portfolioBioX:0,portfolioBioY:0,portfolioTitleFont:'Arial, Helvetica, sans-serif',portfolioTitleSize:76,portfolioTitleColor:'',portfolioTitleAlign:'left',portfolioTitleX:0,portfolioTitleY:0,portfolioIntroFont:'Arial, Helvetica, sans-serif',portfolioIntroSize:14,portfolioIntroColor:'',portfolioIntroAlign:'left',portfolioIntroX:0,portfolioIntroY:0,portfolioUtilityFont:'Arial, Helvetica, sans-serif',portfolioUtilitySize:11,portfolioUtilityColor:'',portfolioUtilityAlign:'left',portfolioUtilityX:0,portfolioUtilityY:0,portfolioReturnX:0,portfolioReturnY:0,portfolioSliderWidth:100,portfolioSliderHeight:760,portfolioGridWidth:100});
+const blankMember=(draft:Config):TeamMember=>({id:crypto.randomUUID(),codeName:'',memberLabel:'MEMBER',name:'',role:'',bio:'',instagram:'',photo:'',works:[],visible:true,photoRadius:draft.teamMediaRadius,photoSize:draft.teamMediaSize,portfolioSlug:'member-'+Date.now().toString(36),portfolioTitle:'Selected works',portfolioIntro:'',portfolioCredits:'',portfolioLayout:'grid',portfolioColumns:3,portfolioGap:14,portfolioRadius:18,portfolioReturnLabel:'VIIVII sara / Team',portfolioProfileSize:430,portfolioNameFont:'Arial, Helvetica, sans-serif',portfolioNameSize:112,portfolioNameColor:'',portfolioNameAlign:'left',portfolioNameX:0,portfolioNameY:0,portfolioRoleFont:'Arial, Helvetica, sans-serif',portfolioRoleSize:10,portfolioRoleColor:'',portfolioRoleAlign:'left',portfolioRoleX:0,portfolioRoleY:0,portfolioBioFont:'Arial, Helvetica, sans-serif',portfolioBioSize:15,portfolioBioColor:'',portfolioBioAlign:'left',portfolioBioX:0,portfolioBioY:0,portfolioTitleFont:'Arial, Helvetica, sans-serif',portfolioTitleSize:76,portfolioTitleColor:'',portfolioTitleAlign:'left',portfolioTitleX:0,portfolioTitleY:0,portfolioIntroFont:'Arial, Helvetica, sans-serif',portfolioIntroSize:14,portfolioIntroColor:'',portfolioIntroAlign:'left',portfolioIntroX:0,portfolioIntroY:0,portfolioUtilityFont:'Arial, Helvetica, sans-serif',portfolioUtilitySize:11,portfolioUtilityColor:'',portfolioUtilityAlign:'left',portfolioUtilityX:0,portfolioUtilityY:0,portfolioReturnX:0,portfolioReturnY:0,portfolioSliderWidth:100,portfolioSliderHeight:760,portfolioGridWidth:100});
 
 export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:Config;setDraft:Dispatch<SetStateAction<Config>>;busy:boolean;setBusy:(v:boolean)=>void;notify:(v:string)=>void}){
   const members=draft.teamMembers||[];
@@ -93,15 +93,15 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
           <label className="field">CODE NAME<input placeholder="X / I / S..." maxLength={8} value={member.codeName||''} onChange={e=>patch(member.id,'codeName',e.target.value.toUpperCase().replace(/\s+/g,'').slice(0,8))}/><span className="uploaded-file">팀원 페이지의 TEAM INDEX에 표시됩니다. 비우면 이름 첫 글자를 사용합니다.</span></label><label className="field">MEMBER 라벨<input placeholder="MEMBER / CREW / ARTIST..." maxLength={24} value={member.memberLabel||'MEMBER'} onChange={e=>patch(member.id,'memberLabel',e.target.value.slice(0,24))}/><span className="uploaded-file">카드 상단의 “01 / MEMBER”에서 MEMBER 부분을 자유롭게 바꿉니다.</span></label>
           <label className="field">역할<input placeholder="Director / Photographer / Make-up / Hair..." value={member.role} onChange={e=>patch(member.id,'role',e.target.value)}/></label>
           <label className="field">소개<textarea placeholder="간단한 소개, 전문 분야, 크레딧 등을 적어주세요." value={member.bio||''} onChange={e=>patch(member.id,'bio',e.target.value)}/></label>
-          <label className="field">Instagram 주소<div className="team-instagram-input"><span className="team-ig-mark" aria-hidden="true">IG</span><input placeholder="https://instagram.com/..." value={member.instagram} onChange={e=>patch(member.id,'instagram',e.target.value)}/></div></label>
+          <label className="field">촬영자 / 참여자 크레딧<textarea placeholder={"PHOTO / xnives\nMODEL / name\nSTYLING / name"} value={member.portfolioCredits||''} onChange={e=>patch(member.id,'portfolioCredits',e.target.value)}/><span className="uploaded-file">한 줄에 하나씩 입력하면 프로필 이름 아래에 크레딧으로 표시됩니다.</span></label>
           <label className="field">포트폴리오 페이지 주소<input placeholder="xnives" value={member.portfolioSlug||''} onChange={e=>patch(member.id,'portfolioSlug',e.target.value.toLowerCase().replace(/[^a-z0-9가-힣-]/g,'-').replace(/-+/g,'-'))}/><span className="uploaded-file">/team/{member.portfolioSlug||'member'}</span></label>
           <label className="field">포트폴리오 제목<input value={member.portfolioTitle||'Selected works'} onChange={e=>patch(member.id,'portfolioTitle',e.target.value)}/></label>
           <label className="field">포트폴리오 소개<textarea placeholder="팀원 전용 포트폴리오 페이지 소개 문구" value={member.portfolioIntro||''} onChange={e=>patch(member.id,'portfolioIntro',e.target.value)}/></label>
-          <label className="field">팀으로 돌아가기 문구<input value={member.portfolioReturnLabel||'VIIVII sara / Team'} onChange={e=>patch(member.id,'portfolioReturnLabel',e.target.value)}/></label>
+          
           <div className="team-portfolio-type-editor team-portfolio-type-editor--primary">
             <h4>Portfolio typography / position</h4>
             <TextStyleEditor label="이름" value={portfolioStyle(member,'Name')} onChange={v=>patchPortfolioStyle(member,'Name',v)}/>
-            <TextStyleEditor label="역할" value={portfolioStyle(member,'Role')} onChange={v=>patchPortfolioStyle(member,'Role',v)}/>
+            <TextStyleEditor label="크레딧" value={portfolioStyle(member,'Role')} onChange={v=>patchPortfolioStyle(member,'Role',v)}/>
             <TextStyleEditor label="소개" value={portfolioStyle(member,'Bio')} onChange={v=>patchPortfolioStyle(member,'Bio',v)}/>
           </div>
         </div>
@@ -115,8 +115,7 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
             <TextStyleEditor label="작품 소개" value={portfolioStyle(member,'Intro')} onChange={v=>patchPortfolioStyle(member,'Intro',v)}/>
             <TextStyleEditor label="기타 문구 / 헤더 / 카운트" value={portfolioStyle(member,'Utility')} onChange={v=>patchPortfolioStyle(member,'Utility',v)}/>
             <div className="team-return-position-pair">
-              {miniRange(member,'portfolioReturnX','돌아가기 문구 가로 위치',-300,300)}
-              {miniRange(member,'portfolioReturnY','돌아가기 문구 세로 위치',-240,240)}
+              
             </div>
           </div>
           <div className="team-portfolio-size-editor">
