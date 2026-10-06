@@ -16,9 +16,9 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,...props}:Galle
 function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,modal=false}:GalleryProps){
  const [index,setIndex]=useState(Math.min(initialIndex,Math.max(0,items.length-1)));
  const [playing,setPlaying]=useState(()=>!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
- const [muted,setMuted]=useState(true),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(false),[nativeFullscreen,setNativeFullscreen]=useState(false),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState('');
+ const [muted,setMuted]=useState(true),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(modal),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState('');
  const root=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),drag=useRef<{x:number;y:number}|null>(null),dragged=useRef(false),elapsed=useRef(0),ambient=useRef<HTMLCanvasElement>(null),idleTimer=useRef(0),restoreTime=useRef<number|null>(null);
- const item=items[index],type=item?teamMediaType(item.src):'image',isFullscreen=expanded||nativeFullscreen,showBackdrop=modal||isFullscreen;
+ const item=items[index],type=item?teamMediaType(item.src):'image',isFullscreen=expanded,showBackdrop=modal||isFullscreen;
  useEffect(()=>{if(modal)root.current?.focus({preventScroll:true})},[modal]);
  useEffect(()=>{if(isFullscreen)root.current?.focus({preventScroll:true})},[isFullscreen]);
  const choose=(n:number)=>{if(!items.length)return;const target=(n+items.length)%items.length;setIndex(target);onIndexChange?.(target)};
@@ -59,25 +59,19 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,modal=fa
  },[type,playing,visible,index,items.length,error]);
  const toggle=()=>setPlaying(v=>!v);
  const exitFullscreen=()=>{
-  if(document.fullscreenElement===root.current)void document.exitFullscreen().catch(()=>{});
-  else {restoreTime.current=video.current?.currentTime??null;setExpanded(false)}
+  restoreTime.current=video.current?.currentTime??null;
+  if(modal){props.onExpand?.();return}
+  setExpanded(false);
  };
  const fullscreen=()=>{
-  const el=root.current;if(!el)return;
-  if(isFullscreen){exitFullscreen();return}
-  const fallback=()=>{restoreTime.current=video.current?.currentTime??null;setExpanded(true)};
-  if(el.requestFullscreen)void el.requestFullscreen().catch(fallback);
-  else fallback();
+  if(modal){props.onExpand?.();return}
+  restoreTime.current=video.current?.currentTime??null;
+  setExpanded(v=>!v);
  };
  const wake=()=>{
   setIdle(false);window.clearTimeout(idleTimer.current);
   if(isFullscreen&&type==='video')idleTimer.current=window.setTimeout(()=>setIdle(true),2400);
  };
- useEffect(()=>{
-  const sync=()=>{setNativeFullscreen(document.fullscreenElement===root.current);setIdle(false)};
-  document.addEventListener('fullscreenchange',sync);
-  return()=>{document.removeEventListener('fullscreenchange',sync);if(document.fullscreenElement===root.current)void document.exitFullscreen().catch(()=>{})};
- },[]);
  useEffect(()=>{wake();return()=>window.clearTimeout(idleTimer.current)},[isFullscreen,type,item?.id]);
  // Sample the playing frame into a small canvas. It is purely visual, muted by
  // glass and blur, and never creates a second stream or audio/video decoder.
@@ -108,7 +102,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,modal=fa
    {(type==='image'||item.poster)&&<img src={type==='image'?item.src:item.poster} alt=""/>}
    {type==='video'&&<canvas ref={ambient} style={{opacity:readySrc===item.src?1:0}}/>}
   </div><div className="media-gallery-backdrop-glass" aria-hidden="true"/></>}
-  {isFullscreen&&<button type="button" className="media-gallery-close" aria-label="전체 화면 종료" onClick={exitFullscreen}><X size={23}/></button>}
+  {isFullscreen&&<button type="button" className="media-gallery-close" aria-label={modal?'미디어 닫기':'전체 화면 종료'} onClick={()=>{if(modal)props.onExpand?.();else exitFullscreen()}}><X size={23}/></button>}
   <div className="media-gallery-viewport" onPointerDown={e=>{if(e.button!==0||(e.target as HTMLElement).closest('button,input,model-viewer'))return;drag.current={x:e.clientX,y:e.clientY};dragged.current=false;e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={e=>{if(!drag.current)return;const dx=e.clientX-drag.current.x,dy=e.clientY-drag.current.y;drag.current=null;if(Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)){dragged.current=true;choose(index+(dx<0?1:-1))}e.currentTarget.releasePointerCapture?.(e.pointerId)}} onPointerCancel={()=>{drag.current=null}}>
    <div className="media-gallery-track" style={{'--gallery-index':index} as CSSProperties}>
     {items.map((entry,i)=>{
@@ -141,5 +135,5 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,modal=fa
 }
 
 export default function MediaGalleryDialog({items,index,onClose,onIndexChange}:{items:GalleryItem[];index:number|null;onClose:()=>void;onIndexChange?:(index:number)=>void}){
- return <Dialog open={index!==null} onOpenChange={open=>{if(!open)onClose()}}><DialogContent className="unified-media-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()} onEscapeKeyDown={e=>{if(document.fullscreenElement||document.querySelector('.media-gallery.is-expanded'))e.preventDefault()}}><DialogTitle className="sr-only">미디어 갤러리</DialogTitle><DialogDescription className="sr-only">좌우 화살표 또는 드래그로 미디어를 넘기고, 아래 버튼으로 재생을 제어하세요.</DialogDescription><button type="button" className="media-gallery-close" aria-label="미디어 닫기" onClick={onClose}><X size={23}/></button>{index!==null&&<MediaGallery items={items} initialIndex={index} onIndexChange={onIndexChange} modal/>}</DialogContent></Dialog>;
+ return <Dialog open={index!==null} onOpenChange={open=>{if(!open)onClose()}}><DialogContent className="unified-media-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}><DialogTitle className="sr-only">미디어 갤러리</DialogTitle><DialogDescription className="sr-only">좌우 화살표 또는 스와이프로 같은 카테고리의 미디어를 넘길 수 있습니다.</DialogDescription>{index!==null&&<MediaGallery items={items} initialIndex={index} onIndexChange={onIndexChange} onExpand={onClose} modal/>}</DialogContent></Dialog>;
 }
