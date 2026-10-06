@@ -11534,6 +11534,9 @@ body{
   padding:0!important;
   border:0!important;
   border-radius:0!important;
+  width:100vw!important;
+  max-width:none!important;
+  margin-inline:calc(50% - 50vw)!important;
 }
 .team-portfolio-hero.has-hero-media{
   background:var(--page);
@@ -11595,7 +11598,8 @@ body{
 .team-portfolio-profile{
   position:relative!important;
   z-index:3!important;
-  width:100%!important;
+  width:min(1540px,88vw)!important;
+  margin-inline:auto!important;
   height:100%!important;
   min-height:inherit!important;
   display:flex!important;
@@ -11678,6 +11682,7 @@ body{
     min-height:clamp(460px,92vw,640px)!important;
   }
   .team-portfolio-profile{
+    width:88vw!important;
     padding:80px 18px 62px!important;
     align-items:flex-end!important;
   }
@@ -11700,6 +11705,7 @@ body{
     min-height:520px!important;
   }
   .team-portfolio-profile{
+    width:calc(100% - 30px)!important;
     padding:74px 16px 54px!important;
   }
   .team-portfolio-copy h1{
@@ -11709,4 +11715,31 @@ body{
   .team-portfolio-credit-row{
     margin-top:18px!important;
   }
+}
+
+/* Overlay the sticky menu on the hero without reserving a blank strip above it.
+   Sharing the main grid row works with both one-row and wrapping mobile menus. */
+.team-portfolio-page{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr);
+  align-content:start;
+}
+.team-portfolio-page>.team-portfolio-site-nav,
+.team-portfolio-page>.team-portfolio-main{
+  grid-area:1 / 1;
+  align-self:start;
+}
+.team-portfolio-page>.team-portfolio-main{
+  justify-self:center;
+  margin-block:0!important;
+  min-width:0;
+}
+@media (max-width:1180px) and (any-pointer:coarse){
+  .team-portfolio-profile{width:min(94vw,1180px)!important}
+}
+@media(max-width:820px){
+  .team-portfolio-profile{width:calc(100% - 36px)!important}
+}
+@media(max-width:430px){
+  .team-portfolio-profile{width:calc(100% - 30px)!important}
 }
