@@ -16,7 +16,7 @@ export default function PointerExperience({enabled=true}:{enabled?:boolean}){
   const hide=()=>{cancelAnimationFrame(raf);raf=0;last=0;visible=false;dirty=false;hit=null;shrinkAt=0;el.dataset.visible='false';document.body.classList.remove('iconic-pointer')};
   const tick=(now:number)=>{
    raf=0;const dt=last?now-last:16;last=now;
-   if(dirty){dirty=false;if(!hit||hit.closest(native)){hide();return}wanted=cursorDiameter[modeFor(hit)];if(!visible){visible=true;diameter=6;targetDiameter=6;el.dataset.visible='true';document.body.classList.add('iconic-pointer')}}
+   if(dirty){dirty=false;if(!hit||hit.closest(native)){hide();return}el.dataset.hero=hit.closest('.team-portfolio-hero.has-hero-media')?'true':'false';wanted=cursorDiameter[modeFor(hit)];if(!visible){visible=true;diameter=6;targetDiameter=6;el.dataset.visible='true';document.body.classList.add('iconic-pointer')}}
    if(!visible)return;
    // Only translation belongs to the anchor. A fixed 64px lens scales about its own center.
    // Moving and resizing can never change the anchor's origin or screen coordinates.

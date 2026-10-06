@@ -21,6 +21,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const [viewerDirection,setViewerDirection]=useState<1|-1>(1);
   const [memberMotion,setMemberMotion]=useState<'idle'|'leaving'|'entering'>('entering');
   const [memberDirection,setMemberDirection]=useState<1|-1>(1);
+  const heroRef=useRef<HTMLElement>(null);
   const dragStart=useRef<number|null>(null);
   const swiped=useRef(false);
   const viewerVideoRef=useRef<HTMLVideoElement>(null);
@@ -293,6 +294,51 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     e.currentTarget.releasePointerCapture?.(e.pointerId);
   };
 
+  useEffect(()=>{
+    const hero=heroRef.current;
+    if(!hero||!member.photo)return;
+    const fine=window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
+    const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+    let frame=0,x=0,y=0;
+    const reset=()=>{
+      if(frame)window.cancelAnimationFrame(frame);
+      frame=0;
+      hero.dataset.pointerActive='false';
+      hero.style.removeProperty('--hero-shift-x');
+      hero.style.removeProperty('--hero-shift-y');
+    };
+    const update=()=>{
+      frame=0;
+      const rect=hero.getBoundingClientRect();
+      if(x<rect.left||x>rect.right||y<rect.top||y>rect.bottom){reset();return}
+      const px=(x-rect.left)/Math.max(rect.width,1);
+      const py=(y-rect.top)/Math.max(rect.height,1);
+      hero.style.setProperty('--hero-light-x',((x-rect.left)/rect.width*100).toFixed(2)+'%');
+      hero.style.setProperty('--hero-light-y',((y-rect.top)/rect.height*100).toFixed(2)+'%');
+      hero.style.setProperty('--hero-shift-x',((px-.5)*20).toFixed(2)+'px');
+      hero.style.setProperty('--hero-shift-y',((py-.5)*14).toFixed(2)+'px');
+      hero.dataset.pointerActive='true';
+    };
+    const move=(event:PointerEvent)=>{
+      if(event.pointerType!=='mouse'||!fine.matches||reduced.matches){reset();return}
+      x=event.clientX;y=event.clientY;
+      if(!frame)frame=window.requestAnimationFrame(update);
+    };
+    window.addEventListener('pointermove',move,{passive:true});
+    window.addEventListener('blur',reset);
+    window.addEventListener('scroll',reset,{passive:true});
+    document.documentElement.addEventListener('pointerleave',reset);
+    fine.addEventListener('change',reset);reduced.addEventListener('change',reset);
+    return()=>{
+      reset();
+      window.removeEventListener('pointermove',move);
+      window.removeEventListener('blur',reset);
+      window.removeEventListener('scroll',reset);
+      document.documentElement.removeEventListener('pointerleave',reset);
+      fine.removeEventListener('change',reset);reduced.removeEventListener('change',reset);
+    };
+  },[member.id,member.photo]);
+
   const reactPointer=(e:ReactPointerEvent<HTMLElement>)=>{
     const el=e.currentTarget;
     const rect=el.getBoundingClientRect();
@@ -410,10 +456,11 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     </header>
 
     <main className="team-portfolio-main">
-      <section className={'team-portfolio-hero'+(member.photo?' has-hero-media':'')}>
+      <section ref={heroRef} className={'team-portfolio-hero'+(member.photo?' has-hero-media':'')}>
         {member.photo&&<div className="team-portfolio-hero-media" aria-hidden="true">
           <TeamMedia src={member.photo} alt="" className="team-portfolio-hero-media-element" autoPlay/>
         </div>}
+        {member.photo&&<div className="team-portfolio-hero-light" aria-hidden="true"/>}
         <div className="team-portfolio-profile">
           <div className="team-portfolio-copy">
             <h1>{member.name||'Portfolio'}</h1>
