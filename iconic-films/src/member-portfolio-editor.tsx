@@ -122,11 +122,11 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
             <label className="field">이름<input value={member.name} onChange={e=>patch('name',e.target.value)}/></label>
             <label className="field">CODE NAME<input maxLength={8} value={member.codeName||''} onChange={e=>patch('codeName',e.target.value.toUpperCase().replace(/\s+/g,'').slice(0,8))}/></label><label className="field">MEMBER 라벨<input maxLength={24} placeholder="MEMBER / CREW / ARTIST..." value={member.memberLabel||'MEMBER'} onChange={e=>patch('memberLabel',e.target.value.slice(0,24))}/></label>
             <label className="field">역할<input value={member.role} onChange={e=>patch('role',e.target.value)}/></label>
-            <label className="field">Instagram 주소<input value={member.instagram} onChange={e=>patch('instagram',e.target.value)}/></label>
+            <label className="field">촬영자 / 참여자 크레딧<textarea placeholder={"PHOTO / xnives\nMODEL / name\nSTYLING / name"} value={member.portfolioCredits||''} onChange={e=>patch('portfolioCredits',e.target.value)}/></label>
             <label className="field">소개<textarea value={member.bio||''} onChange={e=>patch('bio',e.target.value)}/></label>
             <label className="field">포트폴리오 제목<input value={member.portfolioTitle||'Selected works'} onChange={e=>patch('portfolioTitle',e.target.value)}/></label>
             <label className="field">포트폴리오 소개<textarea value={member.portfolioIntro||''} onChange={e=>patch('portfolioIntro',e.target.value)}/></label>
-            <label className="field">팀으로 돌아가기 문구<input value={member.portfolioReturnLabel||'VIIVII sara / Team'} onChange={e=>patch('portfolioReturnLabel',e.target.value)}/></label>
+
           </div>
         </section>
 
@@ -134,7 +134,7 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
           <div className="team-editor-card-head"><div><span className="kicker">TYPOGRAPHY</span><h3>Portfolio typography / position</h3></div></div>
           <div className="team-portfolio-type-editor">
             <TextStyleEditor label="이름" value={portfolioStyle('Name')} onChange={v=>patchPortfolioStyle('Name',v)}/>
-            <TextStyleEditor label="역할" value={portfolioStyle('Role')} onChange={v=>patchPortfolioStyle('Role',v)}/>
+            <TextStyleEditor label="크레딧" value={portfolioStyle('Role')} onChange={v=>patchPortfolioStyle('Role',v)}/>
             <TextStyleEditor label="소개" value={portfolioStyle('Bio')} onChange={v=>patchPortfolioStyle('Bio',v)}/>
             <TextStyleEditor label="작품 제목" value={portfolioStyle('Title')} onChange={v=>patchPortfolioStyle('Title',v)}/>
             <TextStyleEditor label="작품 소개" value={portfolioStyle('Intro')} onChange={v=>patchPortfolioStyle('Intro',v)}/>
@@ -166,10 +166,7 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
           {member.portfolioLayout!=='slider'&&miniRange('portfolioColumns','포트폴리오 열 수',1,4,1,'')}
           {miniRange('portfolioGap','포트폴리오 간격',4,48)}
           {miniRange('portfolioRadius','포트폴리오 모서리',0,48)}
-          <div className="team-return-position-pair">
-            {miniRange('portfolioReturnX','돌아가기 문구 가로 위치',-300,300)}
-            {miniRange('portfolioReturnY','돌아가기 문구 세로 위치',-240,240)}
-          </div>
+
         </section>
       </div>
     </div>
