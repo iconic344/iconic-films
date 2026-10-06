@@ -70,7 +70,8 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
  };
  const wake=()=>{
   setIdle(false);window.clearTimeout(idleTimer.current);
-  if(isFullscreen&&type==='video')idleTimer.current=window.setTimeout(()=>setIdle(true),2400);
+  const finePointer=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+  if(isFullscreen&&type==='video'&&finePointer)idleTimer.current=window.setTimeout(()=>setIdle(true),2400);
  };
  useEffect(()=>{wake();return()=>window.clearTimeout(idleTimer.current)},[isFullscreen,type,item?.id]);
  // Sample the playing frame into a small canvas. It is purely visual, muted by
