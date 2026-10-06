@@ -8943,3 +8943,540 @@ body{
     min-height:42px!important;
   }
 }
+
+
+/* 2026-10-06 Apple Liquid Glass editor system */
+/*
+  Current Apple Liquid Glass direction:
+  - glass is a functional layer for navigation / controls, not a blur on every content card
+  - regular glass for text-heavy toolbars, clearer glass for compact controls
+  - monochrome labels, restrained tint, adaptive light/dark luminosity
+  - avoid nested backdrop filters for both fidelity and performance
+*/
+.editor{
+  --lg-page:
+    radial-gradient(1200px 620px at 8% -8%,rgba(132,171,255,.10),transparent 55%),
+    radial-gradient(900px 520px at 92% 2%,rgba(255,168,214,.07),transparent 54%),
+    radial-gradient(850px 680px at 68% 92%,rgba(160,220,218,.06),transparent 58%),
+    #f3f3f5;
+  --lg-text:#171719;
+  --lg-secondary:rgba(38,38,42,.56);
+  --lg-line:rgba(60,60,67,.12);
+  --lg-line-strong:rgba(60,60,67,.18);
+  --lg-content:rgba(255,255,255,.58);
+  --lg-content-strong:rgba(255,255,255,.74);
+  --lg-control:rgba(255,255,255,.50);
+  --lg-control-hover:rgba(255,255,255,.68);
+  --lg-control-pressed:rgba(230,230,235,.66);
+  --lg-input:rgba(255,255,255,.42);
+  --lg-shadow:0 20px 55px rgba(50,50,55,.07);
+  --lg-shadow-small:0 8px 24px rgba(50,50,55,.06);
+  --lg-highlight:rgba(255,255,255,.78);
+  --lg-iridescent:
+    radial-gradient(90% 140% at 3% 0%,rgba(255,255,255,.34),transparent 40%),
+    radial-gradient(65% 120% at 100% 0%,rgba(176,205,255,.12),transparent 48%),
+    radial-gradient(80% 120% at 50% 118%,rgba(255,199,230,.07),transparent 52%);
+  color:var(--lg-text)!important;
+  background:var(--lg-page)!important;
+  background-attachment:fixed!important;
+  isolation:isolate;
+}
+:root[data-theme=dark] .editor{
+  --lg-page:
+    radial-gradient(1100px 600px at 4% -10%,rgba(72,105,158,.12),transparent 56%),
+    radial-gradient(900px 520px at 96% 0%,rgba(125,75,110,.09),transparent 56%),
+    radial-gradient(760px 620px at 70% 100%,rgba(72,118,116,.07),transparent 58%),
+    #0d0d0f;
+  --lg-text:rgba(248,248,250,.96);
+  --lg-secondary:rgba(235,235,245,.50);
+  --lg-line:rgba(235,235,245,.11);
+  --lg-line-strong:rgba(235,235,245,.17);
+  --lg-content:rgba(30,30,33,.60);
+  --lg-content-strong:rgba(34,34,38,.76);
+  --lg-control:rgba(44,44,48,.48);
+  --lg-control-hover:rgba(58,58,63,.62);
+  --lg-control-pressed:rgba(68,68,74,.65);
+  --lg-input:rgba(26,26,29,.52);
+  --lg-shadow:0 24px 64px rgba(0,0,0,.24);
+  --lg-shadow-small:0 10px 28px rgba(0,0,0,.20);
+  --lg-highlight:rgba(255,255,255,.13);
+  --lg-iridescent:
+    radial-gradient(90% 140% at 3% 0%,rgba(255,255,255,.09),transparent 40%),
+    radial-gradient(65% 120% at 100% 0%,rgba(130,170,235,.08),transparent 48%),
+    radial-gradient(80% 120% at 50% 118%,rgba(210,120,175,.045),transparent 52%);
+}
+
+/* Functional glass layer: editor toolbar. */
+.editor .editor-header{
+  top:10px!important;
+  width:calc(100% - 20px)!important;
+  margin:10px auto 0!important;
+  padding:15px 18px!important;
+  border:1px solid var(--lg-line)!important;
+  border-radius:24px!important;
+  background:
+    var(--lg-iridescent),
+    color-mix(in srgb,var(--lg-content-strong) 86%,transparent)!important;
+  color:var(--lg-text)!important;
+  box-shadow:
+    inset 0 1px 0 var(--lg-highlight),
+    inset 0 -1px 0 color-mix(in srgb,var(--lg-line) 70%,transparent),
+    var(--lg-shadow)!important;
+  -webkit-backdrop-filter:blur(34px) saturate(1.45) brightness(1.03)!important;
+  backdrop-filter:blur(34px) saturate(1.45) brightness(1.03)!important;
+}
+:root[data-theme=dark] .editor .editor-header{
+  -webkit-backdrop-filter:blur(34px) saturate(1.30) brightness(.94)!important;
+  backdrop-filter:blur(34px) saturate(1.30) brightness(.94)!important;
+}
+.editor .editor-header .kicker,
+.editor .kicker{
+  color:var(--lg-secondary)!important;
+}
+.editor .editor-header h2{
+  color:var(--lg-text)!important;
+}
+
+/* Main admin tab strip behaves like a floating iOS toolbar. */
+.editor .editor-tabs{
+  padding-top:20px!important;
+}
+.editor .editor-tabs>[data-slot=tabs-list]{
+  position:sticky;
+  top:94px;
+  z-index:4;
+  width:max-content!important;
+  max-width:100%!important;
+  margin:0 0 22px!important;
+  padding:5px!important;
+  gap:4px!important;
+  border:1px solid var(--lg-line)!important;
+  border-radius:999px!important;
+  background:
+    var(--lg-iridescent),
+    color-mix(in srgb,var(--lg-control) 88%,transparent)!important;
+  box-shadow:
+    inset 0 1px 0 var(--lg-highlight),
+    var(--lg-shadow-small)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(1.38)!important;
+  backdrop-filter:blur(28px) saturate(1.38)!important;
+}
+.editor .editor-tabs>[data-slot=tabs-list]>button{
+  min-height:36px!important;
+  height:36px!important;
+  padding:0 15px!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:transparent!important;
+  color:var(--lg-secondary)!important;
+  box-shadow:none!important;
+  font-size:12px!important;
+  font-weight:560!important;
+  transition:
+    color .2s ease,
+    background .25s ease,
+    transform .28s cubic-bezier(.16,1,.3,1),
+    box-shadow .25s ease!important;
+}
+.editor .editor-tabs>[data-slot=tabs-list]>button[data-state="active"]{
+  color:var(--lg-text)!important;
+  background:color-mix(in srgb,var(--lg-content-strong) 86%,transparent)!important;
+  box-shadow:
+    inset 0 1px 0 var(--lg-highlight),
+    0 3px 12px rgba(0,0,0,.06)!important;
+}
+@media(hover:hover) and (pointer:fine){
+  .editor .editor-tabs>[data-slot=tabs-list]>button:hover{
+    color:var(--lg-text)!important;
+    background:color-mix(in srgb,var(--lg-control-hover) 78%,transparent)!important;
+  }
+}
+
+/* Content layer: standard translucent material, deliberately no nested blur. */
+.editor .editor-card,
+.editor .media-library,
+.editor .team-editor-card,
+.editor .member-self-security-quick,
+.editor .member-self-editor-note,
+.editor .contact-inbox,
+.editor .library-groups,
+.editor .library-list,
+.editor .library-detail{
+  border-color:var(--lg-line)!important;
+}
+.editor .editor-card,
+.editor .media-library,
+.editor .team-editor-card{
+  position:relative;
+  overflow:hidden;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb,var(--lg-content-strong) 94%,transparent),
+      color-mix(in srgb,var(--lg-content) 94%,transparent)
+    )!important;
+  border:1px solid var(--lg-line)!important;
+  border-radius:26px!important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb,var(--lg-highlight) 70%,transparent),
+    var(--lg-shadow-small)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+.editor .editor-card::before,
+.editor .media-library::before,
+.editor .team-editor-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius:inherit;
+  background:
+    radial-gradient(75% 45% at 12% 0%,color-mix(in srgb,var(--lg-highlight) 24%,transparent),transparent 70%);
+  opacity:.42;
+}
+.editor .editor-card>*,
+.editor .media-library>*,
+.editor .team-editor-card>*{
+  position:relative;
+  z-index:1;
+}
+
+/* Inputs use a recessed standard material instead of black/white boxes. */
+.editor .field input:not([type=file]):not([type=color]),
+.editor .field textarea,
+.editor .library-search,
+.editor .playlist-create,
+.editor .bulk-edit,
+.editor .bulk-edit input,
+.editor .team-security-row>input,
+.editor .member-self-security-quick-fields input,
+.editor [data-slot=select-trigger]{
+  color:var(--lg-text)!important;
+  caret-color:var(--lg-text)!important;
+  border:1px solid var(--lg-line)!important;
+  border-radius:14px!important;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb,var(--lg-input) 94%,transparent),
+      color-mix(in srgb,var(--lg-content) 72%,transparent)
+    )!important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb,var(--lg-highlight) 46%,transparent),
+    inset 0 1px 7px rgba(0,0,0,.025)!important;
+  outline:none!important;
+  transition:
+    border-color .2s ease,
+    background .2s ease,
+    box-shadow .25s ease!important;
+}
+.editor .field input:not([type=file]):not([type=color]):focus,
+.editor .field textarea:focus,
+.editor .team-security-row>input:focus,
+.editor .member-self-security-quick-fields input:focus,
+.editor [data-slot=select-trigger]:focus-visible{
+  border-color:color-mix(in srgb,var(--lg-text) 28%,transparent)!important;
+  background:color-mix(in srgb,var(--lg-content-strong) 82%,transparent)!important;
+  box-shadow:
+    inset 0 1px 0 var(--lg-highlight),
+    0 0 0 3px color-mix(in srgb,var(--lg-text) 7%,transparent)!important;
+}
+.editor input::placeholder,
+.editor textarea::placeholder{
+  color:color-mix(in srgb,var(--lg-secondary) 72%,transparent)!important;
+}
+
+/* File wells become soft material surfaces, not old dashed upload boxes. */
+.editor .file-upload,
+.editor .audio-upload{
+  border:1px solid var(--lg-line)!important;
+  border-radius:18px!important;
+  background:
+    linear-gradient(145deg,
+      color-mix(in srgb,var(--lg-control) 84%,transparent),
+      color-mix(in srgb,var(--lg-content) 66%,transparent)
+    )!important;
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--lg-highlight) 62%,transparent)!important;
+}
+.editor input[type=file]::file-selector-button{
+  margin-right:12px;
+  padding:9px 13px;
+  border:1px solid var(--lg-line)!important;
+  border-radius:999px!important;
+  background:color-mix(in srgb,var(--lg-control-hover) 86%,transparent)!important;
+  color:var(--lg-text)!important;
+  box-shadow:inset 0 1px 0 var(--lg-highlight)!important;
+  font:inherit;
+  font-size:11px;
+  font-weight:600;
+}
+
+/* Controls: clear/regular glass, monochrome, with restrained tint. */
+.editor button:not(.icon):not([data-slot=tabs-trigger]),
+.editor .upload-button,
+.editor .secondary-button,
+.editor .add,
+.editor .security>button,
+.editor .team-security-row>button{
+  border:1px solid var(--lg-line)!important;
+  background:
+    var(--lg-iridescent),
+    color-mix(in srgb,var(--lg-control) 90%,transparent)!important;
+  color:var(--lg-text)!important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb,var(--lg-highlight) 82%,transparent),
+    0 5px 16px rgba(0,0,0,.045)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+.editor .icon{
+  color:var(--lg-text)!important;
+  border:1px solid transparent!important;
+  background:transparent!important;
+}
+@media(hover:hover) and (pointer:fine){
+  .editor button:not(:disabled):not(.icon):not([data-slot=tabs-trigger]):hover,
+  .editor .upload-button:hover,
+  .editor .secondary-button:hover,
+  .editor .add:hover,
+  .editor .security>button:hover,
+  .editor .team-security-row>button:hover{
+    background:
+      var(--lg-iridescent),
+      color-mix(in srgb,var(--lg-control-hover) 94%,transparent)!important;
+    color:var(--lg-text)!important;
+    border-color:var(--lg-line-strong)!important;
+    box-shadow:
+      inset 0 1px 0 var(--lg-highlight),
+      0 8px 22px rgba(0,0,0,.07)!important;
+    transform:translateY(-1px);
+  }
+  .editor .icon:hover{
+    border-color:var(--lg-line)!important;
+    background:color-mix(in srgb,var(--lg-control-hover) 78%,transparent)!important;
+  }
+}
+.editor button:disabled{
+  opacity:.46!important;
+  filter:saturate(.7)!important;
+}
+
+/* Primary actions are subtly emphasized, never hard black/white. */
+.editor .editor-header .save,
+.editor .member-security-confirm,
+.editor .member-self-security-apply,
+.editor .upload-button{
+  color:var(--lg-text)!important;
+  border-color:var(--lg-line-strong)!important;
+  background:
+    radial-gradient(100% 180% at 0% 0%,rgba(255,255,255,.22),transparent 54%),
+    linear-gradient(135deg,
+      color-mix(in srgb,var(--lg-control-hover) 96%,transparent),
+      color-mix(in srgb,var(--lg-control) 88%,transparent)
+    )!important;
+  box-shadow:
+    inset 0 1px 0 var(--lg-highlight),
+    0 7px 22px rgba(0,0,0,.07)!important;
+}
+:root[data-theme=dark] .editor .editor-header .save,
+:root[data-theme=dark] .editor .member-security-confirm,
+:root[data-theme=dark] .editor .member-self-security-apply,
+:root[data-theme=dark] .editor .upload-button{
+  background:
+    radial-gradient(100% 180% at 0% 0%,rgba(255,255,255,.08),transparent 54%),
+    linear-gradient(135deg,rgba(72,72,78,.78),rgba(40,40,44,.72))!important;
+}
+
+/* Segmented / selected controls stay glassy rather than inverting to pure black/white. */
+.editor .filters button.selected,
+.editor .group-chips button.selected,
+.editor .library-groups>button.selected,
+.editor .team-layout-choice button.active,
+.editor .team-layout-choice button.selected,
+.editor .media-row.focused{
+  background:
+    var(--lg-iridescent),
+    color-mix(in srgb,var(--lg-content-strong) 94%,transparent)!important;
+  color:var(--lg-text)!important;
+  border-color:var(--lg-line-strong)!important;
+  box-shadow:inset 0 1px 0 var(--lg-highlight)!important;
+}
+
+/* Lists / rows. */
+.editor .media-library{
+  overflow:hidden!important;
+}
+.editor .library-toolbar,
+.editor .library-groups,
+.editor .library-list,
+.editor .library-detail,
+.editor .media-row,
+.editor .contact-message-card,
+.editor .team-security-row{
+  border-color:var(--lg-line)!important;
+}
+.editor .library-groups,
+.editor .library-list,
+.editor .library-detail{
+  background:transparent!important;
+}
+.editor .media-row,
+.editor .contact-message-card,
+.editor .team-security-row{
+  background:color-mix(in srgb,var(--lg-content) 60%,transparent)!important;
+}
+.editor .media-row.focused,
+.editor .contact-message-card.is-selected{
+  background:color-mix(in srgb,var(--lg-content-strong) 88%,transparent)!important;
+}
+
+/* Slider styling closer to current iOS controls. */
+.editor [data-slot=slider-track]{
+  height:4px!important;
+  border-radius:999px!important;
+  background:color-mix(in srgb,var(--lg-text) 13%,transparent)!important;
+}
+.editor [data-slot=slider-range]{
+  border-radius:999px!important;
+  background:color-mix(in srgb,var(--lg-text) 72%,transparent)!important;
+}
+.editor [data-slot=slider-thumb]{
+  width:17px!important;
+  height:17px!important;
+  border:1px solid var(--lg-line)!important;
+  background:color-mix(in srgb,var(--lg-content-strong) 96%,transparent)!important;
+  box-shadow:
+    inset 0 1px 0 var(--lg-highlight),
+    0 3px 10px rgba(0,0,0,.12)!important;
+}
+
+/* Member top utility bar: one glass container per functional group, no nested blur. */
+.editor .member-self-security-quick,
+.editor .member-self-topbar .member-self-editor-note{
+  border-color:var(--lg-line)!important;
+  background:
+    linear-gradient(150deg,
+      color-mix(in srgb,var(--lg-content-strong) 92%,transparent),
+      color-mix(in srgb,var(--lg-content) 88%,transparent)
+    )!important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb,var(--lg-highlight) 70%,transparent),
+    var(--lg-shadow-small)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+.editor .member-self-security-quick-fields .member-security-confirm{
+  color:var(--lg-text)!important;
+  border-color:var(--lg-line-strong)!important;
+  background:
+    var(--lg-iridescent),
+    color-mix(in srgb,var(--lg-control-hover) 92%,transparent)!important;
+  box-shadow:inset 0 1px 0 var(--lg-highlight),0 5px 16px rgba(0,0,0,.06)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+.editor .member-self-security-quick-fields .member-security-confirm span{
+  color:var(--lg-text)!important;
+}
+.editor .member-self-security-quick-fields .member-security-confirm small{
+  color:var(--lg-secondary)!important;
+}
+
+/* Preview banner / toast are true floating glass. */
+.editor .preview-banner,
+.toast{
+  border:1px solid var(--lg-line)!important;
+  background:
+    var(--lg-iridescent),
+    color-mix(in srgb,var(--lg-content-strong) 82%,transparent)!important;
+  color:var(--lg-text)!important;
+  box-shadow:
+    inset 0 1px 0 var(--lg-highlight),
+    var(--lg-shadow)!important;
+  -webkit-backdrop-filter:blur(30px) saturate(1.4)!important;
+  backdrop-filter:blur(30px) saturate(1.4)!important;
+}
+
+/* Footer material and misc text. */
+.editor .editor-bottom{
+  color:var(--lg-secondary)!important;
+  border-top:1px solid var(--lg-line)!important;
+  background:color-mix(in srgb,var(--lg-content) 38%,transparent)!important;
+}
+.editor .field,
+.editor .editor-card p,
+.editor .uploaded-file,
+.editor .val,
+.editor .small,
+.editor .team-security-name small,
+.editor .member-self-security-copy{
+  color:var(--lg-secondary)!important;
+}
+.editor h2,.editor h3,.editor h4,
+.editor strong,.editor label{
+  color:var(--lg-text);
+}
+
+/* Reduce-transparency / contrast fallbacks and keep the system usable. */
+@media(prefers-contrast:more){
+  .editor{
+    --lg-line:color-mix(in srgb,var(--lg-text) 28%,transparent);
+    --lg-line-strong:color-mix(in srgb,var(--lg-text) 40%,transparent);
+    --lg-content:color-mix(in srgb,var(--page) 92%,var(--lg-text) 8%);
+    --lg-content-strong:color-mix(in srgb,var(--page) 96%,var(--lg-text) 4%);
+  }
+  .editor .editor-header,
+  .editor .editor-tabs>[data-slot=tabs-list],
+  .editor .preview-banner,
+  .toast{
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .editor *,
+  .editor *::before,
+  .editor *::after{
+    transition-duration:.01ms!important;
+    animation-duration:.01ms!important;
+  }
+}
+
+/* iPad and phone layout: preserve comfortable Apple spacing without crowding. */
+@media(max-width:1180px){
+  .editor .editor-header{
+    top:max(8px,env(safe-area-inset-top))!important;
+    width:calc(100% - 16px)!important;
+    margin:8px auto 0!important;
+  }
+  .editor .editor-tabs>[data-slot=tabs-list]{
+    top:calc(max(8px,env(safe-area-inset-top)) + 82px);
+  }
+}
+@media(max-width:760px){
+  .editor .editor-header{
+    padding:13px 14px!important;
+    border-radius:22px!important;
+  }
+  .editor .editor-header h2{
+    font-size:24px!important;
+  }
+  .editor .editor-tabs{
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+  .editor .editor-tabs>[data-slot=tabs-list]{
+    top:calc(max(8px,env(safe-area-inset-top)) + 76px);
+    width:100%!important;
+    flex-wrap:nowrap!important;
+    overflow-x:auto!important;
+    justify-content:flex-start!important;
+  }
+  .editor .editor-card,
+  .editor .media-library,
+  .editor .team-editor-card{
+    border-radius:22px!important;
+  }
+  .editor .member-self-topbar{
+    gap:10px!important;
+  }
+}
