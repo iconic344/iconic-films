@@ -226,7 +226,7 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
 
 /* 2026-10-07 aspect-aware fullscreen media */
 .media-gallery.is-fullscreen.is-landscape .media-gallery-artwork>video{
-  object-fit:cover!important;
+  object-fit:contain!important;
   object-position:center!important;
 }
 .media-gallery.is-fullscreen.is-landscape .media-gallery-backdrop,
@@ -291,17 +291,17 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
 .unified-media-dialog .media-gallery.is-fullscreen.is-landscape .media-gallery-artwork>video{
   position:absolute!important;
   inset:0!important;
-  width:100vw!important;
-  min-width:100vw!important;
-  max-width:none!important;
-  height:100dvh!important;
-  min-height:100dvh!important;
-  max-height:none!important;
-  margin:0!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:100%!important;
+  margin:auto!important;
   padding:0!important;
   border:0!important;
   border-radius:0!important;
-  object-fit:cover!important;
+  object-fit:contain!important;
   object-position:center!important;
   transform:none!important;
 }

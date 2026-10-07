@@ -233,3 +233,23 @@
 @media (prefers-reduced-motion:reduce){
   .media-gallery-track{transition:none!important}
 }
+
+
+/* Mobile modal video must preserve the source aspect ratio. 16:9 stays 16:9
+   inside the portrait viewport instead of being enlarged/cropped to 9:16. */
+@media(max-width:820px){
+  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-artwork>video{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    margin:auto!important;
+    object-fit:contain!important;
+    object-position:center!important;
+    transform:none!important;
+  }
+}
