@@ -423,6 +423,18 @@ function cleanMemberUpdate(current:any,input:any){
     if(!Array.isArray(input.portfolioWorkCategories)||input.portfolioWorkCategories.length>240||input.portfolioWorkCategories.some((v:any)=>typeof v!=='string'||v.length>40))throw new HttpError(400,'작품 세부 카테고리 정보가 올바르지 않습니다.');
     next.portfolioWorkCategories=[...input.portfolioWorkCategories];
   }
+  if(input.portfolioWorkTitles!==undefined){
+    if(!Array.isArray(input.portfolioWorkTitles)||input.portfolioWorkTitles.length>240||input.portfolioWorkTitles.some((v:any)=>typeof v!=='string'||v.length>160))throw new HttpError(400,'작품 제목 정보가 올바르지 않습니다.');
+    next.portfolioWorkTitles=[...input.portfolioWorkTitles];
+  }
+  if(input.portfolioWorkInfo!==undefined){
+    if(!Array.isArray(input.portfolioWorkInfo)||input.portfolioWorkInfo.length>240||input.portfolioWorkInfo.some((v:any)=>typeof v!=='string'||v.length>3000))throw new HttpError(400,'작품 정보 텍스트가 올바르지 않습니다.');
+    next.portfolioWorkInfo=[...input.portfolioWorkInfo];
+  }
+  if(input.portfolioWorkCredits!==undefined){
+    if(!Array.isArray(input.portfolioWorkCredits)||input.portfolioWorkCredits.length>240||input.portfolioWorkCredits.some((v:any)=>typeof v!=='string'||v.length>3000))throw new HttpError(400,'작품 크레딧 정보가 올바르지 않습니다.');
+    next.portfolioWorkCredits=[...input.portfolioWorkCredits];
+  }
   if(input.portfolioWorkRatios!==undefined){
     const allowed=new Set(['auto','16:9','4:5','4:3','3:2','1:1','9:16']);
     if(!Array.isArray(input.portfolioWorkRatios)||input.portfolioWorkRatios.length>240||input.portfolioWorkRatios.some((v:any)=>typeof v!=='string'||!allowed.has(v)))throw new HttpError(400,'작품 표시 비율 정보가 올바르지 않습니다.');
