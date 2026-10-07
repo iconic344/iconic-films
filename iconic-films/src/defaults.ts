@@ -47,6 +47,9 @@ const defaultPortfolioSection=():PortfolioSectionLayout=>({visible:true,x:0,y:0,
 
 export function normalizeConfig(value:unknown={}){
  const stored=value as Partial<Config>&{mainLogo?:Partial<LogoSettings>};
+ const rawName=typeof stored.name==='string'?stored.name.trim():'';
+ const sanitizedName=(rawName.replace(/^(?:\s*©\s*\d{4}\s*)+/,'').trim()||rawName||original.name);
+ const repairBrokenEditSession=rawName!==''&&sanitizedName!==rawName;
  const aboutLighting=stored.aboutLighting?{...defaultModelLighting,...stored.aboutLighting}:{...defaultModelLighting,exposure:stored.modelExposure??defaultModelLighting.exposure};
  const storedLogo:Partial<LogoSettings>=stored.mainLogo||{};
  const storedAboutModel=typeof stored.aboutModel==='string'?stored.aboutModel.trim():'';
@@ -216,10 +219,56 @@ export function normalizeConfig(value:unknown={}){
  const heroPatternOpacity=Math.min(100,Math.max(0,Number(stored.heroPatternOpacity??original.heroPatternOpacity)));
  const storedText=(stored.textStyles||{}) as Partial<SiteTextStyles>;
  const textStyles=Object.fromEntries(Object.entries(defaultTextStyles).map(([key,value])=>[key,{...value,...((storedText as any)[key]||{})}])) as SiteTextStyles;
+ if(repairBrokenEditSession){
+  for(const key of ['aboutKicker','aboutHeadline','aboutBody','aboutDisciplines','footerCopyright'] as const){
+   textStyles[key]={...textStyles[key],x:0,y:0};
+  }
+ }
  const hasNewPlaybackDefaults=typeof stored.musicShuffle==='boolean'||stored.musicRepeatMode==='none'||stored.musicRepeatMode==='all'||stored.musicRepeatMode==='one';
  const musicAutoplay=hasNewPlaybackDefaults?(stored.musicAutoplay??true):true;
  const musicShuffle=stored.musicShuffle??true;
  const musicRepeatMode=stored.musicRepeatMode==='none'||stored.musicRepeatMode==='one'||stored.musicRepeatMode==='all'?stored.musicRepeatMode:'all';
- return {...original,...stored,aboutModel:resolvedAboutModel,navOrder,sectionOrder,sectionHeights,sectionDividers,pageBlocks,heroMediaFit,heroMediaPositionX,heroMediaPositionY,heroPattern,heroPatternSize,heroPatternColor,heroPatternOpacity,heroFadeTopSize:Math.min(40,Math.max(0,Number(stored.heroFadeTopSize??original.heroFadeTopSize))),heroFadeBottomSize:Math.min(40,Math.max(0,Number(stored.heroFadeBottomSize??original.heroFadeBottomSize))),heroFadeDensity:Math.min(100,Math.max(0,Number(stored.heroFadeDensity??original.heroFadeDensity))),heroFadeOpacity:Math.min(100,Math.max(0,Number(stored.heroFadeOpacity??original.heroFadeOpacity))),heroFadeBlur:Math.min(60,Math.max(0,Number(stored.heroFadeBlur??original.heroFadeBlur))),focusItems:Array.isArray(stored.focusItems)?stored.focusItems:[],musicAutoplay,musicShuffle,musicRepeatMode,textStyles,aboutLighting,hdriEnvironments:stored.hdriEnvironments||[],teamMembers,mainLogo:{...defaultLogo,...storedLogo,modelLighting:logoLighting}} as Config;
+ return {...original,...stored,
+  name:sanitizedName,
+  aboutModel:resolvedAboutModel,
+  navOrder,
+  sectionOrder,
+  sectionHeights:repairBrokenEditSession?{...sectionHeights,about:0,footer:0}:sectionHeights,
+  sectionDividers,
+  pageBlocks,
+  heroMediaFit,
+  heroMediaPositionX,
+  heroMediaPositionY,
+  heroPattern,
+  heroPatternSize,
+  heroPatternColor,
+  heroPatternOpacity,
+  heroFadeTopSize:Math.min(40,Math.max(0,Number(stored.heroFadeTopSize??original.heroFadeTopSize))),
+  heroFadeBottomSize:Math.min(40,Math.max(0,Number(stored.heroFadeBottomSize??original.heroFadeBottomSize))),
+  heroFadeDensity:Math.min(100,Math.max(0,Number(stored.heroFadeDensity??original.heroFadeDensity))),
+  heroFadeOpacity:Math.min(100,Math.max(0,Number(stored.heroFadeOpacity??original.heroFadeOpacity))),
+  heroFadeBlur:Math.min(60,Math.max(0,Number(stored.heroFadeBlur??original.heroFadeBlur))),
+  focusItems:Array.isArray(stored.focusItems)?stored.focusItems:[],
+  musicAutoplay,
+  musicShuffle,
+  musicRepeatMode,
+  textStyles,
+  aboutOffsetX:repairBrokenEditSession?0:Number(stored.aboutOffsetX??original.aboutOffsetX),
+  aboutOffsetY:repairBrokenEditSession?0:Number(stored.aboutOffsetY??original.aboutOffsetY),
+  aboutScale:repairBrokenEditSession?1:Number(stored.aboutScale??original.aboutScale),
+  footerOffsetX:0,
+  footerOffsetY:0,
+  footerScale:1,
+  modelOffsetX:repairBrokenEditSession?0:Number(stored.modelOffsetX??original.modelOffsetX),
+  modelOffsetY:repairBrokenEditSession?0:Number(stored.modelOffsetY??original.modelOffsetY),
+  modelRotateX:repairBrokenEditSession?0:Number(stored.modelRotateX??original.modelRotateX),
+  modelRotateY:repairBrokenEditSession?0:Number(stored.modelRotateY??original.modelRotateY),
+  modelRotateZ:repairBrokenEditSession?0:Number(stored.modelRotateZ??original.modelRotateZ),
+  modelAutoRotate:repairBrokenEditSession?false:(stored.modelAutoRotate??original.modelAutoRotate),
+  aboutLighting,
+  hdriEnvironments:stored.hdriEnvironments||[],
+  teamMembers,
+  mainLogo:{...defaultLogo,...storedLogo,modelLighting:logoLighting}
+ } as Config;
 }
 export const initial:Config=normalizeConfig(snapshot);
