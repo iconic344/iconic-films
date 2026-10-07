@@ -203,19 +203,42 @@ export default function VisualSiteEditor({
  },[config,setConfig,setSelection]);
  const beginChromeDrag=(e:PointerEvent<HTMLElement>,kind:'toolbar'|'panel')=>{
   if(e.button!==0)return;
+  const origin=e.target as HTMLElement|null;
+  if(origin?.closest('button,a,input,textarea,select,label,summary,[role="button"],[contenteditable="true"]'))return;
   const selector=kind==='toolbar'?'.visual-editor-topbar':'.visual-editor-panel';
-  const node=(e.currentTarget as HTMLElement).closest<HTMLElement>(selector);if(!node)return;
+  const node=(e.currentTarget as HTMLElement).closest<HTMLElement>(selector);
+  if(!node)return;
   e.preventDefault();
   const r=node.getBoundingClientRect(),sx=e.clientX,sy=e.clientY;
   const setPos=kind==='toolbar'?setToolbarPos:setPanelPos;
   const storageKey=kind==='toolbar'?'viivii-visual-toolbar-pos':'viivii-visual-panel-pos';
+  const xVar=kind==='toolbar'?'--ve-toolbar-x':'--ve-panel-x';
+  const yVar=kind==='toolbar'?'--ve-toolbar-y':'--ve-panel-y';
+  let x=r.left,y=r.top,raf=0;
+  node.classList.add('is-free','is-dragging');
+  document.documentElement.classList.add('visual-chrome-dragging');
+  const paint=()=>{raf=0;node.style.setProperty(xVar,x+'px');node.style.setProperty(yVar,y+'px')};
+  paint();
   const move=(ev:globalThis.PointerEvent)=>{
-   const x=clamp(r.left+ev.clientX-sx,8,Math.max(8,window.innerWidth-r.width-8));
-   const y=clamp(r.top+ev.clientY-sy,8,Math.max(8,window.innerHeight-r.height-8));
-   setPos({x:Math.round(x),y:Math.round(y)});
+   x=r.left+(ev.clientX-sx);
+   y=r.top+(ev.clientY-sy);
+   if(!raf)raf=requestAnimationFrame(paint);
   };
-  const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);requestAnimationFrame(()=>{const el=document.querySelector<HTMLElement>(selector);if(!el)return;const rr=el.getBoundingClientRect();const p={x:Math.round(rr.left),y:Math.round(rr.top)};setPos(p);try{localStorage.setItem(storageKey,JSON.stringify(p))}catch{}})};
-  window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
+  const finish=()=>{
+   if(raf){cancelAnimationFrame(raf);raf=0}
+   paint();
+   window.removeEventListener('pointermove',move);
+   window.removeEventListener('pointerup',finish);
+   window.removeEventListener('pointercancel',finish);
+   node.classList.remove('is-dragging');
+   document.documentElement.classList.remove('visual-chrome-dragging');
+   const p={x:Math.round(x),y:Math.round(y)};
+   setPos(p);
+   try{localStorage.setItem(storageKey,JSON.stringify(p))}catch{}
+  };
+  window.addEventListener('pointermove',move,{passive:true});
+  window.addEventListener('pointerup',finish,{once:true});
+  window.addEventListener('pointercancel',finish,{once:true});
  };
  const resetChrome=(kind:'toolbar'|'panel')=>{if(kind==='toolbar'){setToolbarPos(null);try{localStorage.removeItem('viivii-visual-toolbar-pos')}catch{}}else{setPanelPos(null);try{localStorage.removeItem('viivii-visual-panel-pos')}catch{}}};
 
@@ -248,8 +271,8 @@ export default function VisualSiteEditor({
  const panelStyle=panelPos?{'--ve-panel-x':panelPos.x+'px','--ve-panel-y':panelPos.y+'px'} as CSSProperties:undefined;
 
  return <div className={'visual-editor-ui is-panel-'+panelSide} data-visual-editor="true">
-  <div style={toolbarStyle} className={'visual-editor-topbar '+(toolbarPos?'is-free ':toolbarBottom?'is-bottom ':'is-top ')}>
-   <div className="visual-editor-title visual-editor-drag-zone" onPointerDown={e=>beginChromeDrag(e,'toolbar')} onDoubleClick={()=>resetChrome('toolbar')}><Grip size={14}/><Settings2 size={16}/><strong>VISUAL EDIT</strong><span>드래그 이동 · 화면에서 선택 · 크기 · 콘텐츠 · 스타일</span></div>
+  <div style={toolbarStyle} className={'visual-editor-topbar '+(toolbarPos?'is-free ':toolbarBottom?'is-bottom ':'is-top ')} onPointerDown={e=>beginChromeDrag(e,'toolbar')}>
+   <div className="visual-editor-title visual-editor-drag-zone" onDoubleClick={()=>resetChrome('toolbar')}><Grip size={14}/><Settings2 size={16}/><strong>VISUAL EDIT</strong><span>드래그 이동 · 화면에서 선택 · 크기 · 콘텐츠 · 스타일</span></div>
    <div className="visual-editor-toolbar-tools">
     <button type="button" className="visual-toolbar-icon" title="패널 위치 전환" onClick={()=>{setPanelPos(null);setPanelSide(v=>v==='right'?'left':'right')}}>{panelSide==='right'?<PanelLeft size={15}/>:<PanelRight size={15}/>}</button>
     <button type="button" className="visual-toolbar-icon" title={panelOpen?'패널 접기':'패널 열기'} onClick={()=>setPanelOpen(v=>!v)}><SlidersHorizontal size={15}/></button>
@@ -257,8 +280,8 @@ export default function VisualSiteEditor({
    </div>
   </div>
 
-  {panelOpen?<aside style={panelStyle} className={'visual-editor-panel is-'+panelSide+(panelPos?' is-free':'')+(tab==='settings'?' is-full-settings':'')}>
-   <div className="visual-panel-head"><div className="visual-panel-drag-zone" onPointerDown={e=>beginChromeDrag(e,'panel')} onDoubleClick={()=>resetChrome('panel')}><Grip size={13}/><span><strong>{selectionLabel}</strong><small>{selectedTextDef||selectedWorkText||selectedTeamText?'텍스트를 직접 선택해 편집 중':selectedDivider?'독립 구분선 레이어':'끌어서 패널 이동 · 더블클릭 위치 초기화'}</small></span></div><button type="button" aria-label="편집 패널 접기" onClick={()=>setPanelOpen(false)}><X size={15}/></button></div>
+  {panelOpen?<aside style={panelStyle} className={'visual-editor-panel is-'+panelSide+(panelPos?' is-free':'')+(tab==='settings'?' is-full-settings':'')} onPointerDown={e=>beginChromeDrag(e,'panel')}>
+   <div className="visual-panel-head"><div className="visual-panel-drag-zone" onDoubleClick={()=>resetChrome('panel')}><Grip size={13}/><span><strong>{selectionLabel}</strong><small>{selectedTextDef||selectedWorkText||selectedTeamText?'텍스트를 직접 선택해 편집 중':selectedDivider?'독립 구분선 레이어':'끌어서 패널 이동 · 더블클릭 위치 초기화'}</small></span></div><button type="button" aria-label="편집 패널 접기" onClick={()=>setPanelOpen(false)}><X size={15}/></button></div>
    <div className="visual-editor-primary-tabs" role="tablist" aria-label="Edit Site 주요 메뉴"><button className={tab==='layers'?'is-active':''} onClick={()=>setTab('layers')}><Layers3 size={14}/><span>페이지 구성</span></button><button className={tab==='content'||tab==='layout'||tab==='style'?'is-active':''} onClick={()=>setTab('content')}><Type size={14}/><span>선택 항목</span></button><button className={tab==='settings'?'is-active':''} onClick={()=>setTab('settings')}><Settings2 size={14}/><span>사이트 설정</span></button></div>
    {(tab==='content'||tab==='layout'||tab==='style')&&<div className="visual-editor-subtabs" role="tablist" aria-label="선택 항목 편집"><button className={tab==='content'?'is-active':''} onClick={()=>setTab('content')}>내용</button><button className={tab==='layout'?'is-active':''} onClick={()=>setTab('layout')}><Maximize2 size={12}/>배치</button><button className={tab==='style'?'is-active':''} onClick={()=>setTab('style')}><SlidersHorizontal size={12}/>디자인</button></div>}
    {tab==='layers'&&<LayersPanel config={config} selection={selection} select={selectLayer} isVisible={isVisible} hide={removeSection} restore={restoreSection} reorderSection={reorderSection} moveWork={moveWork} reorderWork={reorderWork} patchWork={patchWork} deleteWork={deleteWork} addWork={addWork} addDivider={addDivider} patchDivider={patchDivider} deleteDivider={deleteDivider}/>}
