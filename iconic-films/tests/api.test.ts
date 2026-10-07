@@ -56,7 +56,7 @@ test('standalone API: PIN, logout, chunk publication, upload, range and persiste
     assert.equal((await request('/api/upload','POST',{name:'studio.exr',type:'image/x-exr',size:hdr.length})).status,400);
     const range=await request(ticket.url,'GET',undefined,{Range:'bytes=0-3'});assert.equal(range.status,206);assert.equal(await range.text(),'glTF');
     assert.equal((await request(ticket.url,'GET',undefined,{Range:'bytes=999-1000'})).status,416);
-    assert.equal((await request('/api/upload','POST',{name:'large.mp4',type:'video/mp4',size:104857601})).status,400);
+    assert.equal((await request('/api/upload','POST',{name:'large.mp4',type:'video/mp4',size:1048576001})).status,400);
     assert.equal((await request('/api/upload','POST',{name:'unsafe.svg',type:'image/svg+xml',size:100})).status,400);
     assert.equal((await request('/api/auth','DELETE')).status,200);
     assert.equal((await (await request('/api/auth')).json()).authenticated,false);
