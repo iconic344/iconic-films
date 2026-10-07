@@ -86,6 +86,7 @@ export function normalizeConfig(value:unknown={}){
    offsetY:Number.isFinite(Number(divider?.offsetY))?Math.min(800,Math.max(-800,Number(divider.offsetY))):0,
    color:typeof divider?.color==='string'?divider.color:''
   })):[];
+  const legacyPortfolioMedia=!['cinema','standard','square','photo'].includes((member as any)?.portfolioSliderAspect);
   return {...member,
     name,
     codeName:typeof member?.codeName==='string'&&member.codeName.trim()?member.codeName.trim().slice(0,8).toUpperCase():((name.trim().slice(0,1)||String(index+1)).toUpperCase()),
@@ -146,9 +147,9 @@ export function normalizeConfig(value:unknown={}){
     portfolioUtilitySize:Number.isFinite(member?.portfolioUtilitySize)?Math.min(26,Math.max(8,member.portfolioUtilitySize)):11,
     portfolioReturnX:Number.isFinite(member?.portfolioReturnX)?Math.min(300,Math.max(-300,member.portfolioReturnX)):0,
     portfolioReturnY:Number.isFinite(member?.portfolioReturnY)?Math.min(240,Math.max(-240,member.portfolioReturnY)):0,
-    portfolioSliderWidth:Number.isFinite(member?.portfolioSliderWidth)?Math.min(100,Math.max(45,member.portfolioSliderWidth)):100,
-    portfolioSliderHeight:Number.isFinite(member?.portfolioSliderHeight)?Math.min(1100,Math.max(320,member.portfolioSliderHeight)):760,
-     portfolioSliderAspect:['cinema','standard','square','photo'].includes((member as any)?.portfolioSliderAspect)?(member as any).portfolioSliderAspect:'cinema',
+    portfolioSliderWidth:legacyPortfolioMedia?100:(Number.isFinite(member?.portfolioSliderWidth)?Math.min(100,Math.max(45,member.portfolioSliderWidth)):100),
+    portfolioSliderHeight:legacyPortfolioMedia?760:(Number.isFinite(member?.portfolioSliderHeight)?Math.min(1100,Math.max(320,member.portfolioSliderHeight)):760),
+    portfolioSliderAspect:['cinema','standard','square','photo'].includes((member as any)?.portfolioSliderAspect)?(member as any).portfolioSliderAspect:'cinema',
     portfolioGridWidth:Number.isFinite(member?.portfolioGridWidth)?Math.min(100,Math.max(45,member.portfolioGridWidth)):100,
     portfolioSections,
     portfolioDividers
