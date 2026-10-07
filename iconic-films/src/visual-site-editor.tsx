@@ -484,6 +484,33 @@ function TeamTextEditor({member,field,patch,style,patchStyle}:{member:Config['te
  return <><div className="visual-editor-panel-head"><h3>{label}</h3><span className="visual-direct-badge">팀 텍스트</span></div><TextField label={label} value={String((member as any)[field]??'')} multi={field==='bio'} onChange={v=>patch(field,v)}/><InspectorGroup title="Shared team typography" open><TextStyleControl label={label} value={style} onChange={patchStyle}/></InspectorGroup></>;
 }
 
+function PageBlockContent({block,config,setConfig,patch,remove,upload,uploading,busy,setBusy,notify}:{block:PageBlock;config:Config;setConfig:Dispatch<SetStateAction<Config>>;patch:(value:Partial<PageBlock>)=>void;remove:()=>void;upload:(file?:File)=>void;uploading:boolean;busy:boolean;setBusy:(value:boolean)=>void;notify:(value:string)=>void}){
+ const label=block.type==='slider'?'슬라이더':block.type==='text'?'텍스트 블록':block.type==='media'?'미디어 블록':'여백';
+ return <><div className="visual-editor-panel-head"><h3>{label}</h3><button type="button" className="is-danger" onClick={remove}><Trash2 size={13}/>삭제</button></div>
+  <label className="visual-field"><span>배치 위치</span><select value={block.after} onChange={e=>patch({after:e.target.value as SiteSectionKey})}>{sectionDefs.map(section=><option key={section.key} value={section.key}>{section.label} 뒤</option>)}</select></label>
+  <label className="visual-toggle"><span>화면에 표시</span><input type="checkbox" checked={block.visible} onChange={e=>patch({visible:e.target.checked})}/></label>
+  {block.type==='slider'&&<><TextField label="슬라이더 제목 · 비우면 숨김" value={block.title} onChange={title=>patch({title})}/><p className="visual-help">아래 미디어가 이 슬라이더에 표시됩니다. 여러 장을 올리면 첫 장부터 마지막 장까지 가장자리에서도 카드 묶음이 중앙에 오도록 정렬됩니다.</p><div className="visual-block-library"><MediaLibrary kind="focusItems" draft={config} setDraft={setConfig} busy={busy} setBusy={setBusy} notify={notify}/></div></>}
+  {block.type==='text'&&<><TextField label="제목" value={block.title} onChange={title=>patch({title})}/><TextField label="본문" value={block.text} multi onChange={text=>patch({text})}/></>}
+  {block.type==='media'&&<><TextField label="제목 · 비우면 숨김" value={block.title} onChange={title=>patch({title})}/><FileField label="이미지 · 영상 · 3D 파일" accept="image/*,video/*,.glb,.gltf" disabled={uploading} value={block.media} onFile={upload} onClear={()=>patch({media:''})}/></>}
+  {block.type==='spacer'&&<p className="visual-help">페이지 사이의 여백을 만드는 요소입니다. ‘배치’에서 높이를 조절하면 바로 화면에 반영됩니다.</p>}
+ </>;
+}
+function PageBlockLayout({block,patch}:{block:PageBlock;patch:(value:Partial<PageBlock>)=>void}){
+ return <><div className="visual-editor-panel-head"><strong>{block.type==='spacer'?'여백 크기':'요소 위치·크기'}</strong><button type="button" onClick={()=>patch({offsetY:0,width:100})}><RotateCcw size={13}/>Reset</button></div>
+  {block.type!=='spacer'&&<Range label="너비" value={block.width} min={20} max={100} step={1} suffix="%" onChange={width=>patch({width})}/>}
+  <Range label={block.type==='spacer'?'여백 높이':'영역 높이'} value={block.height} min={block.type==='spacer'?24:180} max={1200} step={block.type==='spacer'?4:10} suffix="px" onChange={height=>patch({height})}/>
+  <NumberField label="세로 위치 · 제한 없음" value={block.offsetY} suffix="px" onChange={offsetY=>patch({offsetY})}/>
+  {block.type==='slider'&&<Range label="카드 간격" value={block.gap} min={0} max={80} step={1} suffix="px" onChange={gap=>patch({gap})}/>}
+ </>;
+}
+function PageBlockStyle({block,patch}:{block:PageBlock;patch:(value:Partial<PageBlock>)=>void}){
+ return <><div className="visual-editor-panel-head"><strong>요소 디자인</strong></div>
+  {block.type!=='spacer'&&<Range label="모서리" value={block.radius} min={0} max={80} step={1} suffix="px" onChange={radius=>patch({radius})}/>}
+  {block.type==='text'&&<><Range label="글자 크기" value={block.fontSize} min={8} max={180} step={1} suffix="px" onChange={fontSize=>patch({fontSize})}/><label className="visual-field"><span>정렬</span><select value={block.align} onChange={e=>patch({align:e.target.value as PageBlock['align']})}><option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option></select></label><label className="visual-color"><span>글자 색상</span><input type="color" value={block.color||'#ffffff'} onChange={e=>patch({color:e.target.value})}/><b>{block.color||'AUTO'}</b></label></>}
+  {block.type!=='spacer'&&<><label className="visual-color"><span>배경색</span><input type="color" value={block.background||'#000000'} onChange={e=>patch({background:e.target.value})}/><b>{block.background||'AUTO'}</b></label><button type="button" className="visual-secondary-button" onClick={()=>patch({background:''})}>배경 자동 / 투명</button></>}
+ </>;
+}
+
 function DividerContent({divider,patch,remove}:{divider:SectionDivider;patch:(value:Partial<SectionDivider>)=>void;remove:()=>void}){
  return <><div className="visual-editor-panel-head"><h3>구분선</h3><button type="button" className="is-danger" onClick={remove}><Trash2 size={13}/>삭제</button></div><InspectorGroup title="배치" open><label className="visual-field"><span>배치할 영역</span><select value={divider.after} onChange={e=>patch({after:e.target.value as SiteSectionKey})}>{sectionDefs.map(section=><option key={section.key} value={section.key}>{section.label}</option>)}</select></label><label className="visual-toggle"><span>구분선 표시</span><input type="checkbox" checked={divider.visible} onChange={e=>patch({visible:e.target.checked})}/></label></InspectorGroup><p className="visual-help">Layers에서 독립 요소처럼 선택·삭제할 수 있고, Position/Style에서 세밀하게 조절합니다.</p></>;
 }
