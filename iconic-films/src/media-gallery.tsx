@@ -8,19 +8,20 @@ import {scopeGallery} from './gallery-scope';
 export type GalleryItem={id:string;src:string;poster?:string;title:string;description?:string;kicker?:string;category?:string};
 const formatTime=(n:number)=>`${Math.floor(n/60)}:${String(Math.floor(n%60)).padStart(2,'0')}`;
 
-type GalleryProps={items:GalleryItem[];initialIndex?:number;onIndexChange?:(index:number)=>void;onExpand?:()=>void;onReady?:()=>void;modal?:boolean;preserveItems?:boolean;captionTitleStyle?:CSSProperties;captionVisualText?:string;balanceEdges?:boolean;cleanPreview?:boolean;mediaFit?:'contain'|'cover';mediaPositionX?:number;mediaPositionY?:number};
+type GalleryProps={items:GalleryItem[];initialIndex?:number;onIndexChange?:(index:number)=>void;onExpand?:()=>void;onReady?:()=>void;modal?:boolean;preserveItems?:boolean;captionTitleStyle?:CSSProperties;captionVisualText?:string;balanceEdges?:boolean;cleanPreview?:boolean;mediaFit?:'contain'|'cover';mediaPositionX?:number;mediaPositionY?:number;autoPlay?:boolean};
 export function MediaGallery({items,initialIndex=0,onIndexChange,preserveItems=false,...props}:GalleryProps){
  if(preserveItems)return <ScopedMediaGallery {...props} items={items} initialIndex={initialIndex} onIndexChange={onIndexChange}/>;
  const scoped=scopeGallery(items,initialIndex);
  return <ScopedMediaGallery {...props} items={scoped.items} initialIndex={scoped.index} onIndexChange={index=>onIndexChange?.(scoped.sourceIndices[index])}/>;
 }
-function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false,captionTitleStyle,captionVisualText,balanceEdges=false,cleanPreview=false,mediaFit='contain',mediaPositionX=50,mediaPositionY=50}:GalleryProps){
+function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false,captionTitleStyle,captionVisualText,balanceEdges=false,cleanPreview=false,mediaFit='contain',mediaPositionX=50,mediaPositionY=50,autoPlay=true}:GalleryProps){
  const [index,setIndex]=useState(Math.min(initialIndex,Math.max(0,items.length-1)));
- const [playing,setPlaying]=useState(()=>!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+ const [playing,setPlaying]=useState(()=>autoPlay&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
  const [muted,setMuted]=useState(()=>!modal),[mediaVolume,setMediaVolume]=useState(1),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(modal),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState(''),[landscape,setLandscape]=useState(false);
  const root=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),drag=useRef<{x:number;y:number}|null>(null),dragged=useRef(false),elapsed=useRef(0),ambient=useRef<HTMLCanvasElement>(null),idleTimer=useRef(0),restoreTime=useRef<number|null>(null);
  const item=items[index],type=item?teamMediaType(item.src):'image',isFullscreen=expanded,showBackdrop=modal||isFullscreen;
  useEffect(()=>{if(modal)root.current?.focus({preventScroll:true})},[modal]);
+ useEffect(()=>{if(!modal)setPlaying(autoPlay&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)},[autoPlay]);
  useEffect(()=>{if(modal)setMuted(mediaVolume<=0)},[modal,item?.id]);
  useEffect(()=>{const v=video.current;if(!v)return;v.volume=Math.max(0,Math.min(1,mediaVolume));v.muted=mediaVolume<=0?true:muted},[mediaVolume,muted,item?.id]);
  useEffect(()=>{if(isFullscreen)root.current?.focus({preventScroll:true})},[isFullscreen]);
