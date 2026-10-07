@@ -14593,3 +14593,43 @@ html.visual-direct-dragging .site.visual-editing [data-visual-divider-id]{
     font-size:10px!important;
   }
 }
+
+
+/* 2026-10-07 unrestricted chrome drag performance pass.
+   Drag follows the pointer directly via rAF/CSS vars: no viewport clamps, no React rerender per move. */
+.visual-editor-topbar,
+.visual-editor-panel,
+.portfolio-visual-editor .visual-editor-panel{
+  contain:layout paint style;
+}
+.visual-editor-topbar.is-dragging,
+.visual-editor-panel.is-dragging,
+.portfolio-visual-editor .visual-editor-panel.is-dragging{
+  transition:none!important;
+  will-change:left,top;
+  cursor:grabbing!important;
+}
+html.visual-chrome-dragging,
+html.visual-chrome-dragging body{
+  user-select:none!important;
+  -webkit-user-select:none!important;
+}
+html.visual-chrome-dragging *,
+html.visual-chrome-dragging *::before,
+html.visual-chrome-dragging *::after{
+  cursor:grabbing!important;
+}
+.visual-editor-topbar,
+.visual-editor-panel{
+  cursor:default;
+}
+.visual-editor-topbar>.visual-editor-title,
+.visual-editor-panel>.visual-panel-head,
+.visual-editor-panel>.visual-editor-primary-tabs,
+.visual-editor-panel>.visual-editor-subtabs{
+  cursor:grab;
+}
+.visual-editor-topbar.is-dragging,
+.visual-editor-panel.is-dragging{
+  pointer-events:auto!important;
+}
