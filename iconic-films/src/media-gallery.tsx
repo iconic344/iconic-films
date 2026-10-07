@@ -103,7 +103,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   if(type==='video'||!playing||!visible||!item||error)return;
   let last=performance.now();
   const autoplayMs=Math.max(1200,Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gallery-autoplay-ms'))||6500);
-  const timer=window.setInterval(()=>{const now=performance.now();elapsed.current+=now-last;last=now;setProgress(Math.min(1,elapsed.current/autoplayMs));if(elapsed.current>=autoplayMs)advance()},50);
+  const timer=window.setInterval(()=>{const now=performance.now();elapsed.current+=now-last;last=now;setProgress(Math.min(1,elapsed.current/autoplayMs));if(elapsed.current>=autoplayMs)advance()},120);
   return()=>window.clearInterval(timer);
  },[type,playing,visible,index,items.length,error]);
  const toggle=()=>setPlaying(v=>!v);
@@ -130,8 +130,8 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)return;
   let frame=0,last=0;
   const draw=(now:number)=>{
-   if(v.readyState>=2&&now-last>=66){
-    const width=480,height=Math.round(width*(v.videoHeight||9)/(v.videoWidth||16));
+   if(v.readyState>=2&&now-last>=100){
+    const width=360,height=Math.round(width*(v.videoHeight||9)/(v.videoWidth||16));
     if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height}
     ctx.drawImage(v,0,0,width,height);last=now;
    }
@@ -148,12 +148,14 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
  };
  if(!item)return null;
  const balancedPreview=balanceEdges&&!modal&&!isFullscreen&&items.length>=1;
+ const showLeadingSlot=balancedPreview&&items.length<5;
+ const showTrailingSlot=balancedPreview&&items.length<4;
  const previewItems:Array<{entry:GalleryItem|null;sourceIndex:number;ghost:boolean;key:string}>=balancedPreview?[
-  {entry:null,sourceIndex:-1,ghost:true,key:'ghost-pre'},
+  ...(showLeadingSlot?[{entry:null,sourceIndex:-1,ghost:true,key:'ghost-pre'}]:[]),
   ...items.map((entry,sourceIndex)=>({entry,sourceIndex,ghost:false,key:'main-'+entry.id})),
-  {entry:null,sourceIndex:-1,ghost:true,key:'ghost-post'}
+  ...(showTrailingSlot?[{entry:null,sourceIndex:-1,ghost:true,key:'ghost-post'}]:[])
  ]:items.map((entry,sourceIndex)=>({entry,sourceIndex,ghost:false,key:'main-'+entry.id}));
- const displayIndex=balancedPreview?index+1:index;
+ const displayIndex=balancedPreview?index+(showLeadingSlot?1:0):index;
  const gallery=<div ref={root} className={'media-gallery '+(balancedPreview?'is-balanced-preview ':'')+(cleanPreview&&!isFullscreen&&!modal?'is-clean-preview ':'')+(modal?'is-modal ':'')+(expanded?'is-expanded ':'')+(isFullscreen?'is-fullscreen ':'')+(items.length<=1?'is-single ':'')+(type==='video'?'has-video ':'has-image ')+(landscape?'is-landscape':'is-portrait')+' is-frame-'+frame.mode} style={{'--gallery-media-fit':mediaFit,'--gallery-media-position':mediaPositionX+'% '+mediaPositionY+'%','--gallery-frame-ratio':String(frame.ratio)} as CSSProperties} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} data-native-cursor={cleanPreview&&!isFullscreen&&!modal?'true':undefined} data-cursor-idle={idle?'true':'false'} onPointerMove={wake} onPointerDown={wake} onFocusCapture={wake} onKeyDown={e=>{wake();key(e)}}>
   {showBackdrop&&<><div className="media-gallery-backdrop" aria-hidden="true">
    {(type==='image'||item.poster)&&<img src={type==='image'?item.src:item.poster} alt=""/>}
