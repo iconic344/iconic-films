@@ -154,9 +154,9 @@ export function normalizeConfig(value:unknown={}){
     portfolioSliderWidth:Number.isFinite(member?.portfolioSliderWidth)?Math.min(100,Math.max(45,member.portfolioSliderWidth)):100,
     portfolioSliderHeight:Number.isFinite(member?.portfolioSliderHeight)?Math.min(1400,Math.max(240,member.portfolioSliderHeight)):760,
     portfolioSliderAutoplay:member?.portfolioSliderAutoplay!==false,
-    portfolioSliderAutoplayMs:Number.isFinite(member?.portfolioSliderAutoplayMs)?Math.min(20000,Math.max(1200,member.portfolioSliderAutoplayMs)):6500,
-    portfolioSliderTransitionMs:Number.isFinite(member?.portfolioSliderTransitionMs)?Math.min(2400,Math.max(120,member.portfolioSliderTransitionMs)):820,
-    portfolioSliderEasing:['smooth','soft','snappy','linear'].includes(member?.portfolioSliderEasing)?member.portfolioSliderEasing:'smooth',
+    portfolioSliderAutoplayMs:Number.isFinite(Number(member?.portfolioSliderAutoplayMs))?Math.min(20000,Math.max(1200,Number(member?.portfolioSliderAutoplayMs))):6500,
+    portfolioSliderTransitionMs:Number.isFinite(Number(member?.portfolioSliderTransitionMs))?Math.min(2400,Math.max(120,Number(member?.portfolioSliderTransitionMs))):820,
+    portfolioSliderEasing:['smooth','soft','snappy','linear'].includes(String(member?.portfolioSliderEasing))?member?.portfolioSliderEasing as 'smooth'|'soft'|'snappy'|'linear':'smooth',
     portfolioGridWidth:Number.isFinite(member?.portfolioGridWidth)?Math.min(100,Math.max(45,member.portfolioGridWidth)):100,
     portfolioSections,
     portfolioDividers
