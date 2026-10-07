@@ -299,6 +299,47 @@ export default function VisualSiteEditor({
     window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
     return;
    }
+   const mediaEl=target.closest<HTMLElement>('[data-visual-media]');
+   if(mediaEl){
+    const mediaKey=mediaEl.dataset.visualMedia||'';
+    if(mediaKey==='hero'||mediaKey.startsWith('block:')){
+     event.preventDefault();event.stopPropagation();
+     const rect=mediaEl.getBoundingClientRect(),sx=event.clientX,sy=event.clientY,pointerId=event.pointerId;
+     const isHero=mediaKey==='hero';
+     const blockId=isHero?'':mediaKey.slice(6);
+     const block=!isHero?config.pageBlocks.find(item=>item.id===blockId):null;
+     if(!isHero&&!block)return;
+     if(isHero)setSelection('hero');else setSelection(('block:'+blockId) as VisualSelection);
+     const baseX=isHero?Number(config.heroMediaPositionX||50):Number(block!.mediaPositionX||50);
+     const baseY=isHero?Number(config.heroMediaPositionY||50):Number(block!.mediaPositionY||50);
+     const width=Math.max(1,rect.width),height=Math.max(1,rect.height);
+     let active=false,raf=0,pendingX=sx,pendingY=sy;
+     try{mediaEl.setPointerCapture(pointerId)}catch{}
+     const commit=()=>{
+      raf=0;
+      const nextX=Math.round((baseX+((pendingX-sx)/width)*100)*10)/10;
+      const nextY=Math.round((baseY+((pendingY-sy)/height)*100)*10)/10;
+      if(isHero)setConfig(d=>({...d,heroMediaPositionX:nextX,heroMediaPositionY:nextY}));
+      else patchBlock(blockId,{mediaPositionX:nextX,mediaPositionY:nextY});
+     };
+     const move=(ev:globalThis.PointerEvent)=>{
+      if(ev.pointerId!==pointerId)return;
+      if(!active&&Math.hypot(ev.clientX-sx,ev.clientY-sy)<3)return;
+      active=true;document.documentElement.classList.add('visual-direct-dragging','visual-media-dragging');
+      pendingX=ev.clientX;pendingY=ev.clientY;showGuides(ev.clientX,ev.clientY);
+      if(!raf)raf=requestAnimationFrame(commit);
+     };
+     const finish=(ev:globalThis.PointerEvent)=>{
+      if(ev.pointerId!==pointerId)return;
+      if(active){pendingX=ev.clientX;pendingY=ev.clientY;if(raf)cancelAnimationFrame(raf);commit();refresh()}
+      document.documentElement.classList.remove('visual-direct-dragging','visual-media-dragging');hideGuides();
+      try{if(mediaEl.hasPointerCapture(pointerId))mediaEl.releasePointerCapture(pointerId)}catch{}
+      window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',finish);window.removeEventListener('pointercancel',finish);
+     };
+     window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',finish);window.addEventListener('pointercancel',finish);
+     return;
+    }
+   }
    const modelEl=target.closest<HTMLElement>('[data-visual-model="about"]');
    if(modelEl&&config.aboutMediaType==='3d'){
     setSelection('about');event.preventDefault();event.stopPropagation();
