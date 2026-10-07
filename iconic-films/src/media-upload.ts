@@ -1,8 +1,8 @@
 import {adminHeaders} from './admin-session';
 const inferredMime=(name:string,type:string)=>{
-  if(type)return type;
   const ext=name.split('.').pop()?.toLowerCase();
-  return ({mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',m4v:'video/x-m4v',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',mp3:'audio/mpeg',m4a:'audio/mp4',wav:'audio/wav',ogg:'audio/ogg',flac:'audio/flac',aac:'audio/aac'} as Record<string,string>)[ext||'']||type;
+  const inferred=({mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',m4v:'video/x-m4v',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',avif:'image/avif',mp3:'audio/mpeg',m4a:'audio/mp4',wav:'audio/wav',ogg:'audio/ogg',flac:'audio/flac',aac:'audio/aac'} as Record<string,string>)[ext||''];
+  return !type||type==='application/octet-stream'||type==='binary/octet-stream'?inferred||type:type;
 };
 
 type UploadTicket={uploadUrl:string;url:string;method:string;multipart?:boolean;contentType?:string;resumable?:boolean;tusEndpoint?:string;token?:string;bucketName?:string;objectName?:string};
@@ -15,19 +15,26 @@ const b64=(value:string)=>btoa(unescape(encodeURIComponent(value)));
 
 function signedUpload(ticket:UploadTicket,file:File,progress?:(percent:number)=>void,signal?:AbortSignal):Promise<string>{
   return new Promise((resolve,reject)=>{
-    if(!ticket.token||!ticket.bucketName||!ticket.objectName||!ticket.tusEndpoint){reject(Error('서명 업로드 정보를 만들지 못했습니다.'));return}
-    const storageRoot=ticket.tusEndpoint.replace(/\/upload\/resumable\/?$/,'');
-    const objectPath=[ticket.bucketName,...ticket.objectName.split('/')].map(encodeURIComponent).join('/');
-    const url=storageRoot+'/object/upload/sign/'+objectPath+'?token='+encodeURIComponent(ticket.token);
+    if(!ticket.uploadUrl){reject(Error('서명 업로드 주소를 만들지 못했습니다.'));return}
     const xhr=new XMLHttpRequest(),abort=()=>xhr.abort(),cleanup=()=>signal?.removeEventListener('abort',abort);
-    xhr.open('PUT',url);xhr.responseType='json';xhr.setRequestHeader('x-upsert','false');
+    xhr.open('PUT',ticket.uploadUrl);xhr.responseType='json';xhr.setRequestHeader('x-upsert','false');
     xhr.upload.onprogress=e=>{if(e.lengthComputable)progress?.(Math.round(e.loaded/e.total*100))};
-    xhr.onload=()=>{cleanup();if(xhr.status>=200&&xhr.status<300){progress?.(100);resolve(ticket.url)}else if(xhr.status===413)reject(Error('파일 크기가 현재 Supabase Storage 한도를 초과했습니다. Storage의 Global/Bucket 파일 크기 제한을 확인해 주세요.'));else reject(Error(xhr.response?.error||xhr.response?.message||'업로드에 실패했습니다.'))};
-    xhr.onerror=()=>{cleanup();reject(Error('연결이 끊겼습니다. 다시 시도해 주세요.'))};
+    xhr.onload=()=>{
+      cleanup();
+      if(xhr.status>=200&&xhr.status<300){progress?.(100);resolve(ticket.url);return}
+      const message=xhr.response?.message||xhr.response?.error||'';
+      if(xhr.status===413||/payload too large|entity too large/i.test(message)){reject(Error('Supabase Storage의 실제 파일 크기 제한을 초과했습니다. 사이트 업로더는 1GB까지 열려 있으므로 Supabase Storage의 Global/Bucket 제한도 파일 크기 이상이어야 합니다.'));return}
+      if(/Invalid Compact JWS/i.test(message)){reject(Error('Supabase 서명 업로드 토큰 검증에 실패했습니다. 새 업로드 주소로 다시 시도해 주세요.'));return}
+      reject(Error(message||('업로드에 실패했습니다. HTTP '+xhr.status)));
+    };
+    xhr.onerror=()=>{cleanup();reject(Error('Storage 연결이 끊겼습니다. 다시 시도해 주세요.'))};
     xhr.onabort=()=>{cleanup();reject(new DOMException('업로드 중지','AbortError'))};
     signal?.addEventListener('abort',abort,{once:true});
     if(signal?.aborted){cleanup();reject(new DOMException('업로드 중지','AbortError'));return}
-    const body=new FormData();body.append('cacheControl','86400');body.append('',new File([file],file.name,{type:ticket.contentType||file.type||'application/octet-stream'}));xhr.send(body);
+    const body=new FormData();
+    body.append('cacheControl','86400');
+    body.append('',new File([file],file.name,{type:ticket.contentType||file.type||'application/octet-stream'}));
+    xhr.send(body);
   });
 }
 
@@ -99,30 +106,11 @@ export async function uploadFile(file:File,progress?:(percent:number)=>void,sign
   if(signal?.aborted)throw new DOMException('업로드 중지','AbortError');
   const response=await fetch('/api/upload',{method:'POST',signal,headers:{...adminHeaders(),'Content-Type':'application/json'},body:JSON.stringify({name:file.name,type:file.type,size:file.size})});
   const ticket=await response.json() as UploadTicket&{error?:string};if(!response.ok)throw Error(ticket.error||'업로드에 실패했습니다.');
-  const imageUpload=/^image\//.test(file.type);
-  if(imageUpload)return signedUpload(ticket,file,progress,signal);
-  if(file.size>6*1024*1024&&ticket.resumable){
-    try{return await resumableUpload(ticket,file,progress,signal)}
-    catch(error){
-      if(/Invalid Compact JWS/i.test((error as Error).message||''))return signedUpload(ticket,file,progress,signal);
-      throw error;
-    }
-  }
-  return new Promise((resolve,reject)=> {
-    const xhr=new XMLHttpRequest(),abort=()=>xhr.abort(),cleanup=()=>signal?.removeEventListener('abort',abort);
-    xhr.open(ticket.method,ticket.uploadUrl);xhr.responseType='json';
-    // Signed cloud upload goes directly to Storage; never send admin credentials to it.
-    if(!ticket.multipart)for(const [name,value] of Object.entries(adminHeaders()))xhr.setRequestHeader(name,value);
-    xhr.upload.onprogress=e=>{if(e.lengthComputable)progress?.(Math.round(e.loaded/e.total*100))};
-    xhr.onload=()=>{cleanup();if(xhr.status>=200&&xhr.status<300)resolve(ticket.url);else if(xhr.status===413)reject(Error('파일 크기가 현재 Supabase Storage 한도를 초과했습니다. Storage의 Global/Bucket 파일 크기 제한을 확인해 주세요.'));else reject(Error(xhr.response?.error||xhr.response?.message||'업로드에 실패했습니다.'))};
-    xhr.onerror=()=>{cleanup();reject(Error('연결이 끊겼습니다. 다시 시도해 주세요.'))};
-    xhr.onabort=()=>{cleanup();reject(new DOMException('업로드 중지','AbortError'))};
-    signal?.addEventListener('abort',abort,{once:true});
-    if(signal?.aborted){cleanup();reject(new DOMException('업로드 중지','AbortError'));return;}
-    if(ticket.multipart) {
-      const body=new FormData();body.append('cacheControl','86400');
-      body.append('',new File([file],file.name,{type:ticket.contentType||file.type}));xhr.send(body);
-    } else {xhr.setRequestHeader('Content-Type',ticket.contentType||file.type||'application/octet-stream');xhr.send(file);}
-  });
+  // Signed standard uploads support large objects directly and avoid the current
+  // x-signature/TUS JWS failure seen on this Storage project. The request still
+  // goes browser -> Supabase Storage, never through Vercel, so app request-size
+  // limits do not apply.
+  return signedUpload(ticket,file,progress,signal);
+}
 }
 export function videoPoster(file:File):Promise<File|null>{return new Promise(resolve=>{const video=document.createElement('video');video.muted=true;video.playsInline=true;const url=URL.createObjectURL(file);let done=false;const finish=(f:File|null)=>{if(done)return;done=true;clearTimeout(timer);video.removeAttribute('src');video.load();URL.revokeObjectURL(url);resolve(f)};const timer=setTimeout(()=>finish(null),5000);const capture=()=>{try{if(!video.videoWidth)return;const canvas=document.createElement('canvas');canvas.width=960;canvas.height=Math.round(960*video.videoHeight/video.videoWidth);canvas.getContext('2d')!.drawImage(video,0,0,canvas.width,canvas.height);canvas.toBlob(b=>finish(b?new File([b],'cover.jpg',{type:'image/jpeg'}):null),'image/jpeg',.82)}catch{finish(null)}};video.onloadeddata=()=>{if(Number.isFinite(video.duration)&&video.duration>1)video.currentTime=Math.min(1,video.duration/3);else capture()};video.onseeked=capture;video.onerror=()=>finish(null);video.src=url;video.load()})}
