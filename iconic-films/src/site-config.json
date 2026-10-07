@@ -2,7 +2,7 @@
   "mainLogo": {
     "type": "3d",
     "image": "",
-    "model": "",
+    "model": "/media/viivii-sara-metallic.gltf",
     "size": 1,
     "height": 300,
     "mobileHeight": 140,
@@ -37,14 +37,14 @@
     "modelAutoRotate": false,
     "modelSpeed": -41,
     "modelZoom": false,
-    "modelAnimate": true,
+    "modelAnimate": false,
     "modelAnimation": "attention",
     "modelExposure": 1,
     "modelLighting": {
       "enabled": true,
       "environment": "neutral",
-      "exposure": 1,
-      "shadowIntensity": 0.35,
+      "exposure": 1.12,
+      "shadowIntensity": 0.28,
       "shadowSoftness": 1,
       "toneMapping": "auto"
     },

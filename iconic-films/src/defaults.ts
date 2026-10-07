@@ -1,5 +1,6 @@
 import snapshot from './site-config.json';
 import {defaultLogo,defaultModelLighting,type EnvironmentMap,type LogoSettings,type ModelLighting} from './logo-settings';
+const VIIVII_SARA_MAIN_MODEL='/media/viivii-sara-metallic.gltf';
 export type TextAlign='left'|'center'|'right';
 export type TextStyle={font:string;size:number;color:string;align:TextAlign;x:number;y:number;letterSpacing?:number;weight?:number;opacity?:number;textTransform?:'none'|'uppercase'|'lowercase'|'capitalize'};
 export type SiteTextStyles={heroCaption:TextStyle;workKicker:TextStyle;workHeadline:TextStyle;workAside:TextStyle;workCardTitle:TextStyle;workCardMeta:TextStyle;aboutKicker:TextStyle;aboutHeadline:TextStyle;aboutBody:TextStyle;aboutDisciplines:TextStyle;teamKicker:TextStyle;teamHeadline:TextStyle;teamMemberRole:TextStyle;teamMemberName:TextStyle;teamMemberBio:TextStyle;teamView:TextStyle};
@@ -35,6 +36,8 @@ export function normalizeConfig(value:unknown={}){
  const stored=value as Partial<Config>&{mainLogo?:Partial<LogoSettings>};
  const aboutLighting=stored.aboutLighting?{...defaultModelLighting,...stored.aboutLighting}:{...defaultModelLighting,exposure:stored.modelExposure??defaultModelLighting.exposure};
  const storedLogo:Partial<LogoSettings>=stored.mainLogo||{};
+ const currentMainLogoModel=typeof storedLogo.model==='string'?storedLogo.model.trim():'';
+ const resolvedMainLogoModel=!currentMainLogoModel?VIIVII_SARA_MAIN_MODEL:currentMainLogoModel;
  const logoLighting=storedLogo.modelLighting?{...defaultModelLighting,...storedLogo.modelLighting}:{...defaultModelLighting,exposure:storedLogo.modelExposure??defaultModelLighting.exposure};
  const teamMembers=Array.isArray(stored.teamMembers)?stored.teamMembers.map((member,index)=>{
   const legacyName=typeof member?.name==='string'?member.name:'';
@@ -136,6 +139,6 @@ export function normalizeConfig(value:unknown={}){
  const musicAutoplay=hasNewPlaybackDefaults?(stored.musicAutoplay??true):true;
  const musicShuffle=stored.musicShuffle??true;
  const musicRepeatMode=stored.musicRepeatMode==='none'||stored.musicRepeatMode==='one'||stored.musicRepeatMode==='all'?stored.musicRepeatMode:'all';
- return {...original,...stored,navOrder,sectionOrder,sectionHeights,sectionDividers,heroFadeTopSize:Math.min(40,Math.max(0,Number(stored.heroFadeTopSize??original.heroFadeTopSize))),heroFadeBottomSize:Math.min(40,Math.max(0,Number(stored.heroFadeBottomSize??original.heroFadeBottomSize))),heroFadeDensity:Math.min(100,Math.max(0,Number(stored.heroFadeDensity??original.heroFadeDensity))),heroFadeOpacity:Math.min(100,Math.max(0,Number(stored.heroFadeOpacity??original.heroFadeOpacity))),heroFadeBlur:Math.min(60,Math.max(0,Number(stored.heroFadeBlur??original.heroFadeBlur))),focusItems:Array.isArray(stored.focusItems)?stored.focusItems:[],musicAutoplay,musicShuffle,musicRepeatMode,textStyles,aboutLighting,hdriEnvironments:stored.hdriEnvironments||[],teamMembers,mainLogo:{...defaultLogo,...storedLogo,modelLighting:logoLighting}} as Config;
+ return {...original,...stored,navOrder,sectionOrder,sectionHeights,sectionDividers,heroFadeTopSize:Math.min(40,Math.max(0,Number(stored.heroFadeTopSize??original.heroFadeTopSize))),heroFadeBottomSize:Math.min(40,Math.max(0,Number(stored.heroFadeBottomSize??original.heroFadeBottomSize))),heroFadeDensity:Math.min(100,Math.max(0,Number(stored.heroFadeDensity??original.heroFadeDensity))),heroFadeOpacity:Math.min(100,Math.max(0,Number(stored.heroFadeOpacity??original.heroFadeOpacity))),heroFadeBlur:Math.min(60,Math.max(0,Number(stored.heroFadeBlur??original.heroFadeBlur))),focusItems:Array.isArray(stored.focusItems)?stored.focusItems:[],musicAutoplay,musicShuffle,musicRepeatMode,textStyles,aboutLighting,hdriEnvironments:stored.hdriEnvironments||[],teamMembers,mainLogo:{...defaultLogo,...storedLogo,type:'3d',model:resolvedMainLogoModel,modelLighting:logoLighting}} as Config;
 }
 export const initial:Config=normalizeConfig(snapshot);
