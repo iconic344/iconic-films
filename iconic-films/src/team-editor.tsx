@@ -1,14 +1,16 @@
 'use client';
 import type {Dispatch,SetStateAction} from 'react';
-import {Plus,Trash2,ChevronUp,ChevronDown} from 'lucide-react';
+import {ArrowLeft,ArrowRight,Plus,Trash2,ChevronUp,ChevronDown} from 'lucide-react';
 import {Switch} from '@/components/ui/switch';
 import {Slider} from '@/components/ui/slider';
-import type {Config,TeamMember,TextStyle} from './defaults';
+import type {Config,PortfolioMediaRatio,TeamMember,TextStyle} from './defaults';
 import TextStyleEditor from './text-style-editor';
 import {uploadFile} from './media-upload';
 import TeamMedia from './team-media';
 
-const blankMember=(draft:Config):TeamMember=>({id:crypto.randomUUID(),codeName:'',memberLabel:'MEMBER',name:'',role:'',bio:'',instagram:'',photo:'',works:[],visible:true,photoRadius:draft.teamMediaRadius,photoSize:draft.teamMediaSize,portfolioSlug:'member-'+Date.now().toString(36),portfolioTitle:'Selected works',portfolioIntro:'',portfolioCredits:'',portfolioCreditsVisible:true,portfolioTeamIndexLabel:'CATEGORY INDEX',portfolioSubcategories:['Fashion Show','Lookbook','Campaign','Editorial'],portfolioWorkCategories:[],portfolioLayout:'grid',portfolioColumns:3,portfolioGap:14,portfolioRadius:18,portfolioReturnLabel:'VIIVII sara / Team',portfolioProfileSize:430,portfolioNameFont:'Arial, Helvetica, sans-serif',portfolioNameSize:112,portfolioNameColor:'',portfolioNameAlign:'left',portfolioNameX:0,portfolioNameY:0,portfolioRoleFont:'Arial, Helvetica, sans-serif',portfolioRoleSize:10,portfolioRoleColor:'',portfolioRoleAlign:'left',portfolioRoleX:0,portfolioRoleY:0,portfolioBioFont:'Arial, Helvetica, sans-serif',portfolioBioSize:15,portfolioBioColor:'',portfolioBioAlign:'left',portfolioBioX:0,portfolioBioY:0,portfolioTitleFont:'Arial, Helvetica, sans-serif',portfolioTitleSize:76,portfolioTitleColor:'',portfolioTitleAlign:'left',portfolioTitleX:0,portfolioTitleY:0,portfolioIntroFont:'Arial, Helvetica, sans-serif',portfolioIntroSize:14,portfolioIntroColor:'',portfolioIntroAlign:'left',portfolioIntroX:0,portfolioIntroY:0,portfolioUtilityFont:'Arial, Helvetica, sans-serif',portfolioUtilitySize:11,portfolioUtilityColor:'',portfolioUtilityAlign:'left',portfolioUtilityX:0,portfolioUtilityY:0,portfolioReturnX:0,portfolioReturnY:0,portfolioSliderWidth:100,portfolioSliderHeight:760,portfolioGridWidth:100,portfolioSections:{nav:{visible:true,x:0,y:0,scale:1,minHeight:0,opacity:100,background:'',radius:0},hero:{visible:true,x:0,y:0,scale:1,minHeight:0,opacity:100,background:'',radius:0},index:{visible:true,x:0,y:0,scale:1,minHeight:0,opacity:100,background:'',radius:0},work:{visible:true,x:0,y:0,scale:1,minHeight:0,opacity:100,background:'',radius:0},switcher:{visible:true,x:0,y:0,scale:1,minHeight:0,opacity:100,background:'',radius:0},footer:{visible:true,x:0,y:0,scale:1,minHeight:0,opacity:100,background:'',radius:0}},portfolioDividers:[]});
+const blankMember=(draft:Config):TeamMember=>({id:crypto.randomUUID(),codeName:'',memberLabel:'MEMBER',name:'',role:'',bio:'',instagram:'',photo:'',works:[],visible:true,photoRadius:draft.teamMediaRadius,photoSize:draft.teamMediaSize,portfolioSlug:'member-'+Date.now().toString(36),portfolioTitle:'Selected works',portfolioIntro:'',portfolioCredits:'',portfolioCreditsVisible:true,portfolioTeamIndexLabel:'CATEGORY INDEX',portfolioSubcategories:['Fashion Show','Lookbook','Campaign','Editorial'],portfolioWorkCategories:[],portfolioWorkRatios:[],portfolioLayout:'grid',portfolioColumns:3,portfolioGap:14,portfolioRadius:18,portfolioReturnLabel:'VIIVII sara / Team',portfolioProfileSize:430,portfolioNameFont:'Arial, Helvetica, sans-serif',portfolioNameSize:112,portfolioNameColor:'',portfolioNameAlign:'left',portfolioNameX:0,portfolioNameY:0,portfolioRoleFont:'Arial, Helvetica, sans-serif',portfolioRoleSize:10,portfolioRoleColor:'',portfolioRoleAlign:'left',portfolioRoleX:0,portfolioRoleY:0,portfolioBioFont:'Arial, Helvetica, sans-serif',portfolioBioSize:15,portfolioBioColor:'',portfolioBioAlign:'left',portfolioBioX:0,portfolioBioY:0,portfolioTitleFont:'Arial, Helvetica, sans-serif',portfolioTitleSize:76,portfolioTitleColor:'',portfolioTitleAlign:'left',portfolioTitleX:0,portfolioTitleY:0,portfolioIntroFont:'Arial, Helvetica, sans-serif',portfolioIntroSize:14,portfolioIntroColor:'',portfolioIntroAlign:'left',portfolioIntroX:0,portfolioIntroY:0,portfolioUtilityFont:'Arial, Helvetica, sans-serif',portfolioUtilitySize:11,portfolioUtilityColor:'',portfolioUtilityAlign:'left',portfolioUtilityX:0,portfolioUtilityY:0,portfolioReturnX:0,portfolioReturnY:0,portfolioSliderWidth:100,portfolioSliderHeight:760,portfolioGridWidth:100,portfolioSections:{nav:{visible:true,x:0,y:0,scale:1,minHeight:0,opacity:100,background:'',radius:0},hero:{visible:true,x:0,y:0,scale:1,minHeight:0,opacity:100,background:'',radius:0},index:{visible:true,x:0,y:0,scale:1,minHeight:0,opacity:100,background:'',radius:0},work:{visible:true,x:0,y:0,scale:1,minHeight:0,opacity:100,background:'',radius:0},switcher:{visible:true,x:0,y:0,scale:1,minHeight:0,opacity:100,background:'',radius:0},footer:{visible:true,x:0,y:0,scale:1,minHeight:0,opacity:100,background:'',radius:0}},portfolioDividers:[]});
+
+const ratioOptions:{value:PortfolioMediaRatio;label:string}[]=[{value:'auto',label:'원본 / 자동'},{value:'16:9',label:'16:9'},{value:'4:5',label:'4:5'},{value:'4:3',label:'4:3'},{value:'3:2',label:'3:2'},{value:'1:1',label:'1:1'},{value:'9:16',label:'9:16'}];
 
 export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:Config;setDraft:Dispatch<SetStateAction<Config>>;busy:boolean;setBusy:(v:boolean)=>void;notify:(v:string)=>void}){
   const members=draft.teamMembers||[];
@@ -26,10 +28,23 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
     labels[index]=value;
     return {...m,portfolioWorkCategories:labels};
   })}));
+  const setWorkRatio=(id:string,index:number,value:PortfolioMediaRatio)=>setDraft(d=>({...d,teamMembers:(d.teamMembers||[]).map(m=>{
+    if(m.id!==id)return m;
+    const ratios=[...(m.portfolioWorkRatios||m.works.map(()=>'auto' as PortfolioMediaRatio))];while(ratios.length<m.works.length)ratios.push('auto');ratios[index]=value;
+    return {...m,portfolioWorkRatios:ratios};
+  })}));
+  const movePortfolioWork=(id:string,index:number,dir:number)=>setDraft(d=>({...d,teamMembers:(d.teamMembers||[]).map(m=>{
+    if(m.id!==id)return m;const target=index+dir;if(target<0||target>=m.works.length)return m;
+    const works=[...m.works],categories=[...(m.portfolioWorkCategories||[])],ratios=[...(m.portfolioWorkRatios||m.works.map(()=>'auto' as PortfolioMediaRatio))];
+    while(categories.length<works.length)categories.push((m.portfolioSubcategories||[])[0]||'All');while(ratios.length<works.length)ratios.push('auto');
+    [works[index],works[target]]=[works[target],works[index]];[categories[index],categories[target]]=[categories[target],categories[index]];[ratios[index],ratios[target]]=[ratios[target],ratios[index]];
+    return {...m,works,portfolioWorkCategories:categories,portfolioWorkRatios:ratios};
+  })}));
   const removeWork=(id:string,index:number)=>setDraft(d=>({...d,teamMembers:(d.teamMembers||[]).map(m=>m.id===id?{
     ...m,
     works:(m.works||[]).filter((_,i)=>i!==index),
-    portfolioWorkCategories:(m.portfolioWorkCategories||[]).filter((_,i)=>i!==index)
+    portfolioWorkCategories:(m.portfolioWorkCategories||[]).filter((_,i)=>i!==index),
+    portfolioWorkRatios:(m.portfolioWorkRatios||m.works.map(()=>'auto' as PortfolioMediaRatio)).filter((_,i)=>i!==index)
   }:m)}));
   const setConfig=<K extends keyof Config>(key:K,value:Config[K])=>setDraft(d=>({...d,[key]:value}));
   const setGlobalStyle=(key:keyof Config['textStyles'],value:TextStyle)=>setDraft(d=>({...d,textStyles:{...d.textStyles,[key]:value}}));
@@ -68,9 +83,19 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
       setDraft(d=>({...d,teamMembers:(d.teamMembers||[]).map(m=>{
         if(m.id!==id)return m;
         const fallback=(m.portfolioSubcategories||[])[0]||'All';
-        return {...m,works:[...(m.works||[]),...urls],portfolioWorkCategories:[...(m.portfolioWorkCategories||[]),...urls.map(()=>fallback)]};
+        return {...m,works:[...(m.works||[]),...urls],portfolioWorkCategories:[...(m.portfolioWorkCategories||[]),...urls.map(()=>fallback)],portfolioWorkRatios:[...(m.portfolioWorkRatios||m.works.map(()=>'auto' as PortfolioMediaRatio)),...urls.map(()=>'auto' as PortfolioMediaRatio)]};
       })}));
       notify('포트폴리오 미디어 업로드 완료. 세부 카테고리를 지정한 뒤 저장 & 적용을 눌러 주세요.');
+    }catch(e){notify((e as Error).message)}finally{setBusy(false)}
+  }
+  async function replaceWork(id:string,index:number,file:File|undefined){
+    if(!file)return;
+    try{
+      setBusy(true);const url=await uploadFile(file);
+      setDraft(d=>({...d,teamMembers:(d.teamMembers||[]).map(m=>{
+        if(m.id!==id)return m;const works=[...m.works];works[index]=url;const ratios=[...(m.portfolioWorkRatios||m.works.map(()=>'auto' as PortfolioMediaRatio))];while(ratios.length<works.length)ratios.push('auto');ratios[index]='auto';return {...m,works,portfolioWorkRatios:ratios};
+      })}));
+      notify('작품을 교체했습니다. 표시 비율은 원본 비율로 초기화했습니다.');
     }catch(e){notify((e as Error).message)}finally{setBusy(false)}
   }
   return <div className="team-editor-stack">
@@ -155,7 +180,7 @@ export default function TeamEditor({draft,setDraft,busy,setBusy,notify}:{draft:C
           <label className="toggle">사이트에 표시<Switch checked={member.visible} onCheckedChange={v=>patch(member.id,'visible',v)}/></label>
         </div>
       </div>
-      {!!member.works?.length&&<div className="team-editor-works team-editor-works--categorized">{member.works.map((url,i)=><div key={url+i} className="team-editor-work-card"><TeamMedia src={url} alt="작품 미리보기" className="team-editor-work-media" interactive/><div className="team-editor-work-meta"><span>{String(i+1).padStart(2,'0')}</span><select aria-label="세부 카테고리" value={(member.portfolioWorkCategories||[])[i]||(member.portfolioSubcategories||[])[0]||'All'} onChange={e=>setWorkCategory(member.id,i,e.target.value)}>{(member.portfolioSubcategories||[]).map(label=><option key={label} value={label}>{label}</option>)}{!(member.portfolioSubcategories||[]).length&&<option value="All">All</option>}</select></div><button type="button" aria-label="작품 삭제" onClick={()=>removeWork(member.id,i)}><Trash2 size={14}/></button></div>)}</div>}
+      {!!member.works?.length&&<div className="team-editor-works team-editor-works--categorized">{member.works.map((url,i)=><div key={url+i} className="team-editor-work-card"><TeamMedia src={url} alt="작품 미리보기" className="team-editor-work-media" interactive/><div className="team-editor-work-meta"><span>{String(i+1).padStart(2,'0')}</span><select aria-label="세부 카테고리" value={(member.portfolioWorkCategories||[])[i]||(member.portfolioSubcategories||[])[0]||'All'} onChange={e=>setWorkCategory(member.id,i,e.target.value)}>{(member.portfolioSubcategories||[]).map(label=><option key={label} value={label}>{label}</option>)}{!(member.portfolioSubcategories||[]).length&&<option value="All">All</option>}</select><select aria-label="표시 비율" value={member.portfolioWorkRatios?.[i]||'auto'} onChange={e=>setWorkRatio(member.id,i,e.target.value as PortfolioMediaRatio)}>{ratioOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></div><div className="team-editor-work-actions"><button type="button" aria-label="왼쪽으로 이동" disabled={i===0} onClick={()=>movePortfolioWork(member.id,i,-1)}><ArrowLeft size={14}/></button><button type="button" aria-label="오른쪽으로 이동" disabled={i===member.works.length-1} onClick={()=>movePortfolioWork(member.id,i,1)}><ArrowRight size={14}/></button><label className="team-editor-work-replace">교체<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>{replaceWork(member.id,i,e.target.files?.[0]);e.currentTarget.value=''}}/></label><button type="button" aria-label="작품 삭제" onClick={()=>removeWork(member.id,i)}><Trash2 size={14}/></button></div></div>)}</div>}
     </section>)}
     {!members.length&&<section className="editor-card team-editor-empty">아직 등록된 포트폴리오 카테고리가 없습니다. ‘카테고리 추가’로 시작하세요.</section>}
       </div>
