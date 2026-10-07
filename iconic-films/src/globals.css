@@ -5653,7 +5653,7 @@ html{scrollbar-gutter:stable}
   .team-portfolio-grid-item{min-height:0!important}
   .team-portfolio-grid-item .team-portfolio-work-media{
     width:100%!important;height:auto!important;min-height:0!important;
-    aspect-ratio:4/5!important;object-fit:cover!important;
+    aspect-ratio:var(--portfolio-item-ratio,4/5)!important;object-fit:cover!important;
   }
   .team-portfolio-slider{width:100%!important}
   .team-portfolio-slide-stage{
@@ -15639,5 +15639,69 @@ html.visual-axis-guides::after{
   }
   .site>footer[data-visual-section="footer"]>.footer-copy{
     max-width:calc(100vw - 130px)!important;
+  }
+}
+
+
+/* PROJECT 07 — portfolio media management controls. */
+.editor .team-editor-work-meta{
+  grid-template-columns:auto minmax(0,1fr) minmax(92px,.72fr)!important;
+  padding:9px 10px!important;
+}
+.editor .team-editor-work-actions{
+  display:grid;
+  grid-template-columns:32px 32px minmax(64px,1fr) 32px;
+  gap:6px;
+  align-items:center;
+  padding:0 10px 10px;
+}
+.editor .team-editor-work-actions>button,
+.editor .team-editor-work-replace{
+  position:static!important;
+  width:auto!important;
+  min-width:0!important;
+  height:32px!important;
+  min-height:32px!important;
+  margin:0!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border:1px solid var(--lg-line)!important;
+  border-radius:10px!important;
+  background:color-mix(in srgb,var(--lg-control) 90%,transparent)!important;
+  color:var(--lg-secondary)!important;
+  box-shadow:none!important;
+}
+.editor .team-editor-work-actions>button:disabled{opacity:.28}
+.editor .team-editor-work-replace{
+  position:relative!important;
+  cursor:pointer;
+  font-size:10px;
+  font-weight:650;
+}
+.editor .team-editor-work-replace>input{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
+}
+.portfolio-media-order-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.portfolio-media-order-actions>.visual-secondary-button{
+  margin-top:0!important;
+  min-width:0;
+}
+@media(max-width:700px){
+  .editor .team-editor-work-meta{
+    grid-template-columns:auto minmax(0,1fr)!important;
+  }
+  .editor .team-editor-work-meta>select:last-child{
+    grid-column:2;
+  }
+  .portfolio-media-order-actions{
+    grid-template-columns:1fr;
   }
 }
