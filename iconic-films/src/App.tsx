@@ -58,6 +58,7 @@ export default function Home(){
  const [saved,setSaved]=useState<Config>(bootConfig),[draft,setDraft]=useState<Config>(bootConfig),[theme,setTheme]=useState(()=>cachedTheme(bootConfig.theme)),[admin,setAdmin]=useState(false),[preview,setPreview]=useState(false),[login,setLogin]=useState(false),[loginTarget,setLoginTarget]=useState<'admin'|'visual'>('admin'),[pin,setPin]=useState(''),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[category,setCategory]=useState('All'),[work,setWork]=useState<Work|null>(null),[music,setMusic]=useState(false),[track,setTrack]=useState(0),[playing,setPlaying]=useState(false),[shuffle,setShuffle]=useState(bootConfig.musicShuffle),[repeat,setRepeat]=useState(bootConfig.musicRepeatMode==='one'?1:bootConfig.musicRepeatMode==='all'?2:0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[group,setGroup]=useState('Tracks'),[filter,setFilter]=useState('All'),[volume,setVolume]=useState(bootConfig.volume),[newPin,setNewPin]=useState(''),[loaded,setLoaded]=useState(false),[scrollTarget,setScrollTarget]=useState<'top'|'bottom'>('bottom'),[autoplayBlocked,setAutoplayBlocked]=useState(false),[animations,setAnimations]=useState<string[]>([]),[editorTab,setEditorTab]=useState('content'),[contactOpen,setContactOpen]=useState(false),[teamRoute,setTeamRoute]=useState(()=>typeof window==='undefined'?'':decodeURIComponent(window.location.pathname.match(/^\/team\/([^/]+)/)?.[1]||'')),[teamPageClosing,setTeamPageClosing]=useState(false),[adminClosing,setAdminClosing]=useState(false),[ownerMode,setOwnerMode]=useState(false),[memberLogin,setMemberLogin]=useState<TeamMember|null>(null),[memberPin,setMemberPin]=useState(''),[memberEditor,setMemberEditor]=useState<TeamMember|null>(null),[memberDraft,setMemberDraft]=useState<TeamMember|null>(null),[memberBusy,setMemberBusy]=useState(false),[teamPins,setTeamPins]=useState<Record<string,string>>({});
  const [focusIndex,setFocusIndex]=useState<number|null>(null);
  const [visualEdit,setVisualEdit]=useState(false),[visualSelection,setVisualSelection]=useState<VisualSelection>('hero');
+ const draftRef=useRef<Config>(bootConfig),visualUndoStack=useRef<Config[]>([]),visualLastMutationAt=useRef(0);
  const navDragItemRef=useRef<NavItemKey|null>(null);
  const [navDraggingItem,setNavDraggingItem]=useState<NavItemKey|null>(null),[navDropItem,setNavDropItem]=useState<NavItemKey|null>(null);
  const musicButton=useRef<HTMLButtonElement>(null),musicPanel=useRef<HTMLElement>(null);
@@ -78,6 +79,8 @@ export default function Home(){
  useEffect(()=>{api('/api/config').then(j=>{const v=normalizeConfig(j.config||{});try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(v))}catch{}setSaved(v);setDraft(v);setTheme(cachedTheme(v.theme));setVolume(v.volume);setShuffle(v.musicShuffle);setRepeat(v.musicRepeatMode==='one'?1:v.musicRepeatMode==='all'?2:0);setLoaded(true)}).catch(e=>{setLoaded(true);setNote(e.message)});},[]);
  useEffect(()=>{document.documentElement.dataset.theme=theme;},[theme]);
  useEffect(()=>{if(!loaded)return;try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(saved))}catch{}},[loaded,saved]);
+ useEffect(()=>{draftRef.current=draft},[draft]);
+ useEffect(()=>{if(!visualEdit)return;const onKey=(e:KeyboardEvent)=>{if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'){e.preventDefault();undoVisualEdit()}};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey)},[visualEdit]);
  useEffect(()=>{
   const query=window.matchMedia('(max-width: 820px), (max-width: 1180px) and (any-pointer: coarse)');
   const sync=()=>setCompactViewport(query.matches);
@@ -200,6 +203,31 @@ export default function Home(){
  if(saved.musicAutoplay){window.addEventListener('pointerdown',unlock);window.addEventListener('keydown',key);timer=setTimeout(attempt,100)}return()=>{cancelled=true;if(timer)clearTimeout(timer);remove()};},[loaded]);
  useEffect(()=>{if(!music)return;const panel=musicPanel.current;const focus=requestAnimationFrame(()=>panel?.querySelector<HTMLButtonElement>('button')?.focus({preventScroll:true}));const close=()=>{setMusic(false);musicButton.current?.focus({preventScroll:true})};const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();close()}};const outside=(e:PointerEvent)=>{const node=e.target as Node;if(panel&&!panel.contains(node)&&!musicButton.current?.contains(node))setMusic(false)};window.addEventListener('keydown',key);window.addEventListener('pointerdown',outside);return()=>{cancelAnimationFrame(focus);window.removeEventListener('keydown',key);window.removeEventListener('pointerdown',outside)}},[music]);
  const set=(key:keyof Config,value:unknown)=>setDraft(d=>({...d,[key]:value}));
+ function resetVisualHistory(base?:Config){
+  visualUndoStack.current=[];
+  visualLastMutationAt.current=0;
+  if(base)draftRef.current=base;
+ }
+ function setVisualDraft(action:React.SetStateAction<Config>){
+  const current=draftRef.current;
+  const next=typeof action==='function'?(action as (value:Config)=>Config)(current):action;
+  if(next===current)return;
+  const now=Date.now();
+  if(now-visualLastMutationAt.current>240){
+   visualUndoStack.current=[...visualUndoStack.current.slice(-79),structuredClone(current)];
+  }
+  visualLastMutationAt.current=now;
+  draftRef.current=next;
+  setDraft(next);
+ }
+ function undoVisualEdit(){
+  const previous=visualUndoStack.current.pop();
+  if(!previous)return;
+  visualLastMutationAt.current=0;
+  const restored=structuredClone(previous);
+  draftRef.current=restored;
+  setDraft(restored);
+ }
  function closeAdmin(){
   if(adminClosing)return;
   setAdminClosing(true);
@@ -216,13 +244,14 @@ export default function Home(){
   setLoginTarget('visual');setPin('');setAdmin(false);setPreview(false);setVisualEdit(false);
   setLogin(true);
  }
- function cancelVisualEdit(){setDraft(structuredClone(saved));setVisualEdit(false);setVisualSelection('hero')}
+ function cancelVisualEdit(){const base=structuredClone(saved);draftRef.current=base;setDraft(base);resetVisualHistory(base);setVisualEdit(false);setVisualSelection('hero')}
  async function saveVisualEdit(){
   try{
    setBusy(true);
-   const next=normalizeConfig(draft);
+   const next=normalizeConfig(draftRef.current);
    await api('/api/config','PUT',next);
-   setSaved(structuredClone(next));setDraft(structuredClone(next));
+   const applied=structuredClone(next);
+   setSaved(applied);draftRef.current=applied;setDraft(applied);resetVisualHistory(applied);
    try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(next))}catch{}
    setNote('비주얼 편집 저장 완료. 모든 기기에 적용됩니다.');
   }catch(e){setNote((e as Error).message)}
@@ -231,7 +260,7 @@ export default function Home(){
  function openAdminFromVisual(){setVisualEdit(false);setAdminClosing(false);setPreview(false);setLogin(false);setAdmin(true)}
  function reorderVisualNav(from:NavItemKey,to:NavItemKey){
   if(!visualEdit||from===to)return;
-  setDraft(d=>{
+  setVisualDraft(d=>{
    const navOrder=[...d.navOrder],fromIndex=navOrder.indexOf(from),toIndex=navOrder.indexOf(to);
    if(fromIndex<0||toIndex<0)return d;
    const [moved]=navOrder.splice(fromIndex,1);
@@ -298,7 +327,7 @@ export default function Home(){
   if(!ownerMode)return;
   setDraft(saved);setEditorTab('inbox');setPreview(false);setLogin(false);setAdminClosing(false);setAdmin(true);
  }
- async function unlock(v:string){const clean=v.replace(/\D/g,'');setPin(clean);if(clean.length===4){try{setBusy(true);const epoch=getAdminVisitEpoch();const j=await api('/api/auth','POST',{pin:clean});if(epoch!==getAdminVisitEpoch())return;rememberAdminVisit(j.visitKey);setOwnerMode(true);setLogin(false);setDraft(structuredClone(saved));setPin('');if(loginTarget==='visual'){setVisualSelection('hero');setVisualEdit(true);setAdmin(false)}else{setVisualEdit(false);setAdmin(true)}}catch(e){setNote((e as Error).message);setPin('')}finally{setBusy(false)}}}
+ async function unlock(v:string){const clean=v.replace(/\D/g,'');setPin(clean);if(clean.length===4){try{setBusy(true);const epoch=getAdminVisitEpoch();const j=await api('/api/auth','POST',{pin:clean});if(epoch!==getAdminVisitEpoch())return;rememberAdminVisit(j.visitKey);setOwnerMode(true);setLogin(false);const base=structuredClone(saved);draftRef.current=base;setDraft(base);setPin('');if(loginTarget==='visual'){resetVisualHistory(base);setVisualSelection('hero');setVisualEdit(true);setAdmin(false)}else{setVisualEdit(false);setAdmin(true)}}catch(e){setNote((e as Error).message);setPin('')}finally{setBusy(false)}}}
  async function save(){try{setBusy(true);await api('/api/config','PUT',draft);setSaved(structuredClone(draft));setPreview(false);setAdmin(true);setVolume(draft.volume);setShuffle(draft.musicShuffle);setRepeat(draft.musicRepeatMode==='one'?1:draft.musicRepeatMode==='all'?2:0);setNote('저장 완료. 모든 기기에 적용됩니다.')}catch(e){setNote((e as Error).message)}finally{setBusy(false)}}
  async function upload(f:File|undefined,done:(url:string)=>void){if(!f)return;try{setBusy(true);const url=await uploadFile(f);done(url);setNote('업로드 완료. 변경 사항을 저장하세요.')}catch(e){setNote((e as Error).message)}finally{setBusy(false)}}
  function toggle(){if(!t){setMusic(true);setNote('아직 등록된 음악이 없습니다. admin에서 음악을 추가하세요.');return}if(playing)audio.current?.pause();else audio.current?.play().catch(()=>setNote('음악을 재생할 수 없습니다. 파일 주소를 확인하세요.'))}
@@ -429,7 +458,7 @@ export default function Home(){
  </Fragment>:item==='about'?<Fragment key="about">{c.showAbout&&<section id="about" data-visual-section="about" className="about reveal" style={sectionStyle('about')}><span className="kicker" data-visual-text="aboutKicker" style={textCss('aboutKicker')}>{c.aboutKicker}</span><div className="about-copy"><h2 data-visual-text="aboutHeadline" style={textCss('aboutHeadline')}>{c.aboutHeadline.split('\n').map((line,i)=><span key={i}>{line}<br/></span>)}</h2><p data-visual-text="about" style={textCss('aboutBody')}>{c.about}</p><div className="disciplines" data-visual-text="aboutDisciplines" style={textCss('aboutDisciplines')}>{c.aboutDisciplines.split('\n').filter(Boolean).map((line,i)=><span key={i}>{line}</span>)}</div></div><div className={'about-visual '+(c.aboutMediaType==='3d'?'is-model':'')}>{c.aboutMediaType==='3d'&&c.aboutModel?<ModelScene config={c}/>:<img src={c.aboutImage||c.heroPoster} alt="ICONIC creative direction"/>}</div></section>}</Fragment>:item==='team'?<Fragment key="team">{c.showTeam&&<TeamSection config={c} onOpen={openTeamPortfolio} order={sectionRank('team')} minHeight={c.sectionHeights?.team||0}/>}</Fragment>:null)}{c.sectionDividers.filter(divider=>divider.visible).map(divider=><div key={divider.id} data-visual-divider-id={divider.id} className="site-divider" style={dividerStyle(divider)} aria-hidden="true"/>)}</main>
  {c.showFooter&&<footer data-visual-section="footer" style={sectionStyle('footer')}><span className="footer-copy" data-visual-text="footerCopyright">© {new Date().getFullYear()} {c.name}</span><button data-visual-text="footerAdminLabel" onClick={enter}>{c.footerAdminLabel}</button></footer>}</>}
  {!admin&&!login&&!teamPage&&!visualEdit&&<button type="button" className="visual-edit-launch glass" onClick={startVisualEdit}><Settings2 size={15}/> EDIT SITE</button>}
- {visualEdit&&<VisualSiteEditor config={draft} setConfig={setDraft} selection={visualSelection} setSelection={setVisualSelection} onSave={saveVisualEdit} onCancel={cancelVisualEdit} onOpenAdmin={openAdminFromVisual} busy={busy}/>}
+ {visualEdit&&<VisualSiteEditor config={draft} setConfig={setVisualDraft} selection={visualSelection} setSelection={setVisualSelection} onSave={saveVisualEdit} onCancel={cancelVisualEdit} onOpenAdmin={openAdminFromVisual} onUndo={undoVisualEdit} canUndo={visualUndoStack.current.length>0} busy={busy}/>}
   <button type="button" className={'scroll-toggle glass '+(c.showMusic?'':'scroll-toggle--solo')} aria-label={scrollTarget==='top'?'맨 위로 이동':'맨 아래로 이동'} title={scrollTarget==='top'?'맨 위로':'맨 아래로'} onClick={jumpScroll}><span key={scrollTarget} className={'scroll-toggle-icon '+(scrollTarget==='top'?'is-up':'is-down')} aria-hidden="true">{scrollTarget==='top'?<ChevronUp size={18} strokeWidth={1.35}/>:<ChevronDown size={18} strokeWidth={1.35}/>}</span></button>
  {c.showMusic&&<><button ref={musicButton} type="button" className={'sound-toggle glass '+(playing?'is-playing ':'')+(music?'is-open':'')} aria-label={music?'음악 플레이어 접기':'음악 플레이어 펼치기'} aria-expanded={music} aria-controls="iconic-music-panel" onClick={()=>setMusic(v=>!v)}><span className="sound-label" aria-hidden="true">{music?'CLOSE':'SOUND'}</span><span className="sound-wave" aria-hidden="true">{[3,7,12,5,15,8,13,5,10,6,3].map((h,i)=><i key={i} style={{'--bar-height':h+'px','--bar-delay':i*.09+'s'} as CSSProperties}/>)}</span></button>
  <aside ref={musicPanel} id="iconic-music-panel" className="music-panel glass" data-open={music} aria-hidden={!music} inert={!music} aria-label="음악 플레이어"><div className="panel-top"><span>LISTENING ROOM</span></div><div className="now-playing"><div className={'album '+(playing?'spinning':'')}>{t?.cover?<img src={t.cover} alt="앨범 커버"/>:<Disc3 size={48}/>}</div><div><h3>{t?.title||'Your soundtrack.'}</h3><p>{t?.artist||'음악을 등록해 나만의 무드를 만드세요.'}</p>{autoplayBlocked&&<small className="autoplay-hint">클릭·터치하면 음악이 시작됩니다.</small>}</div></div><Slider aria-label="재생 위치" value={[time]} max={duration||1} onValueChange={v=>{if(audio.current)audio.current.currentTime=v[0];setTime(v[0])}}/><div className="times"><span>{fmt(time)}</span><span>{fmt(duration)}</span></div><div className="transport"><Btn label="셔플" active={shuffle} onClick={()=>setShuffle(!shuffle)}><Shuffle size={18}/></Btn><Btn label="이전 곡" onClick={()=>next(-1)}><SkipBack size={20}/></Btn><Btn label={playing?'일시정지':'재생'} onClick={toggle}>{playing?<Pause size={25} fill="currentColor"/>:<Play size={25} fill="currentColor"/>}</Btn><Btn label="다음 곡" onClick={()=>next()}><SkipForward size={20}/></Btn><Btn label={repeat===0?'전체 반복 켜기':repeat===2?'한 곡 반복 켜기':'반복 끄기'} active={repeat>0} onClick={()=>setRepeat(repeat===0?2:repeat===2?1:0)}>{repeat===1?<Repeat1 size={18}/>:<Repeat size={18}/>}</Btn></div><p className="repeat-label">{shuffle?'셔플 · ':''}{repeat===1?'한 곡 반복':repeat===2?'전체 반복':'반복 없음'}</p><label className="volume"><Volume2 size={16}/><Slider aria-label="음량" value={[volume]} onValueChange={v=>setVolume(v[0])}/><span>{volume}%</span></label><Tabs value={group} onValueChange={v=>{setGroup(v);setFilter('All')}}><TabsList>{['Tracks','Artists','Albums','Playlists'].map(g=><TabsTrigger value={g} key={g}>{g}</TabsTrigger>)}</TabsList><TabsContent value={group}>{group!=='Tracks'&&<div className="group-chips">{['All',...new Set(group==='Playlists'?[...(c.musicPlaylists||[]),...c.tracks.flatMap(playlistsOf)]:c.tracks.map(t=>group==='Artists'?t.artist:t.album).filter(Boolean))].map(v=><button key={v} className={filter===v?'selected':''} onClick={()=>setFilter(v)}>{v}</button>)}</div>}<div className="track-list">{list.map(({x,i})=><button key={x.id} className={track===i?'current':''} onClick={()=>selectTrack(i)}><span>{String(i+1).padStart(2,'0')}</span><div><strong>{x.title}</strong><small>{x.artist} / {x.album}</small></div>{track===i&&playing?<span className="equalizer">▥</span>:<Play size={14}/>}</button>)}{!c.tracks.length&&<p className="empty-music">등록된 음악이 없습니다.<br/>admin → 음악에서 파일을 추가하세요.</p>}</div></TabsContent></Tabs></aside>

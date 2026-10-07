@@ -127,7 +127,7 @@ export function normalizeConfig(value:unknown={}){
   inset:Math.min(240,Math.max(0,Number(divider?.inset??0))),
   marginTop:Math.min(240,Math.max(0,Number(divider?.marginTop??0))),
   marginBottom:Math.min(240,Math.max(0,Number(divider?.marginBottom??0))),
-  offsetY:Math.min(800,Math.max(-800,Number(divider?.offsetY??0))),
+  offsetY:Number.isFinite(Number(divider?.offsetY))?Number(divider?.offsetY):0,
   color:typeof divider?.color==='string'?divider.color:''
  })):[];
  const storedText=(stored.textStyles||{}) as Partial<SiteTextStyles>;

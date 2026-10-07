@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useRef,useState,type CSSProperties,type Dispatch,type PointerEvent,type SetStateAction} from 'react';
-import {ArrowDown,ArrowUp,Copy,Eye,EyeOff,Grip,Layers3,Maximize2,PanelLeft,PanelRight,Plus,RotateCcw,Save,Settings2,SlidersHorizontal,Trash2,Type,X} from 'lucide-react';
+import {ArrowDown,ArrowUp,Copy,Eye,EyeOff,Grip,Layers3,Maximize2,PanelLeft,PanelRight,Plus,RotateCcw,Save,Settings2,SlidersHorizontal,Trash2,Type,Undo2,X} from 'lucide-react';
 import type {Config,NavItemKey,SiteSectionKey,Work,SectionDivider} from './defaults';
 import {uploadFile} from './media-upload';
 
@@ -45,15 +45,15 @@ const pointFromStorage=(key:string):Point|null=>{
 };
 
 export default function VisualSiteEditor({
- config,setConfig,selection,setSelection,onSave,onCancel,onOpenAdmin,busy
+ config,setConfig,selection,setSelection,onSave,onCancel,onOpenAdmin,onUndo,canUndo,busy
 }:{
  config:Config;setConfig:Dispatch<SetStateAction<Config>>;selection:VisualSelection;setSelection:(value:VisualSelection)=>void;
- onSave:()=>void|Promise<void>;onCancel:()=>void;onOpenAdmin:()=>void;busy:boolean;
+ onSave:()=>void|Promise<void>;onCancel:()=>void;onOpenAdmin:()=>void;onUndo:()=>void;canUndo:boolean;busy:boolean;
 }){
  const [rect,setRect]=useState<DOMRect|null>(null),[uploading,setUploading]=useState(false),[panelSide,setPanelSide]=useState<'left'|'right'>('right'),[panelOpen,setPanelOpen]=useState(true),[tab,setTab]=useState<PanelTab>('layers');
  const [toolbarPos,setToolbarPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-toolbar-pos'));
  const [panelPos,setPanelPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-panel-pos'));
- const dragState=useRef<{y:number;baseY:number}|null>(null),resizeState=useRef<{x:number;y:number;base:number}|null>(null),heightState=useRef<{y:number;base:number}|null>(null),textDragState=useRef<{x:number;y:number;baseX:number;baseY:number}|null>(null),dividerDragState=useRef<{y:number;base:number}|null>(null);
+ const dragState=useRef<{y:number;baseY:number}|null>(null),resizeState=useRef<{x:number;y:number;base:number}|null>(null),heightState=useRef<{y:number;base:number}|null>(null),textDragState=useRef<{x:number;y:number;baseX:number;baseY:number}|null>(null),textSizeState=useRef<{x:number;y:number;base:number}|null>(null),dividerDragState=useRef<{y:number;base:number}|null>(null);
  const selectedWorkId=selection.startsWith('work:')?selection.slice(5):'';
  const selectedWork=selectedWorkId?config.works.find(w=>w.id===selectedWorkId)||null:null;
  const selectedDividerId=selection.startsWith('divider:')?selection.slice(8):'';
@@ -99,7 +99,7 @@ export default function VisualSiteEditor({
   if(!meta||selectedWork||selectedDivider||selectedTextDef||selectedWorkText||selectedTeamText)return;e.preventDefault();e.stopPropagation();
   dragState.current={y:e.clientY,baseY:Number(config[meta.y])};
   setConfig(d=>({...d,[meta.x]:0}));
-  const move=(event:globalThis.PointerEvent)=>{const start=dragState.current;if(!start)return;setConfig(d=>({...d,[meta.x]:0,[meta.y]:clamp(Math.round(start.baseY+event.clientY-start.y),-500,500)}))};
+  const move=(event:globalThis.PointerEvent)=>{const start=dragState.current;if(!start)return;setConfig(d=>({...d,[meta.x]:0,[meta.y]:Math.round(start.baseY+event.clientY-start.y)}))};
   const up=()=>{dragState.current=null;setConfig(d=>({...d,[meta.x]:0}));window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
   window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
  };
@@ -122,17 +122,83 @@ export default function VisualSiteEditor({
   if(!selectedTextDef?.styleKey)return;e.preventDefault();e.stopPropagation();
   const style=config.textStyles[selectedTextDef.styleKey];
   textDragState.current={x:e.clientX,y:e.clientY,baseX:style.x,baseY:style.y};
-  const move=(event:globalThis.PointerEvent)=>{const start=textDragState.current;if(!start)return;patchTextStyle(selectedTextDef.styleKey!,{x:clamp(Math.round(start.baseX+event.clientX-start.x),-600,600),y:clamp(Math.round(start.baseY+event.clientY-start.y),-420,420)})};
+  const move=(event:globalThis.PointerEvent)=>{const start=textDragState.current;if(!start)return;patchTextStyle(selectedTextDef.styleKey!,{x:Math.round(start.baseX+event.clientX-start.x),y:Math.round(start.baseY+event.clientY-start.y)})};
   const up=()=>{textDragState.current=null;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
   window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
  };
  const beginDividerMove=(e:PointerEvent<HTMLButtonElement>)=>{
   if(!selectedDivider)return;e.preventDefault();e.stopPropagation();
   dividerDragState.current={y:e.clientY,base:selectedDivider.offsetY||0};
-  const move=(event:globalThis.PointerEvent)=>{const start=dividerDragState.current;if(!start)return;patchDivider(selectedDivider.id,{offsetY:clamp(Math.round(start.base+event.clientY-start.y),-800,800)})};
+  const move=(event:globalThis.PointerEvent)=>{const start=dividerDragState.current;if(!start)return;patchDivider(selectedDivider.id,{offsetY:Math.round(start.base+event.clientY-start.y)})};
   const up=()=>{dividerDragState.current=null;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
   window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
  };
+ const beginTextResize=(e:PointerEvent<HTMLButtonElement>)=>{
+  if(!selectedTextDef?.styleKey)return;e.preventDefault();e.stopPropagation();
+  const style=config.textStyles[selectedTextDef.styleKey];
+  textSizeState.current={x:e.clientX,y:e.clientY,base:style.size};
+  const move=(event:globalThis.PointerEvent)=>{const start=textSizeState.current;if(!start)return;const delta=((event.clientX-start.x)+(event.clientY-start.y))*.28;patchTextStyle(selectedTextDef.styleKey!,{size:Math.max(4,Math.round((start.base+delta)*10)/10)})};
+  const up=()=>{textSizeState.current=null;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
+  window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
+ };
+ useEffect(()=>{
+  const down=(event:globalThis.PointerEvent)=>{
+   if(event.button!==0)return;
+   const target=event.target as HTMLElement|null;
+   if(!target||target.closest('[data-visual-editor="true"]')||target.closest('[data-visual-nav-key]'))return;
+   const textEl=target.closest<HTMLElement>('[data-visual-text]');
+   if(textEl){
+    const key=textEl.dataset.visualText||'';
+    const def=directTextDefs[key];
+    if(!def)return;
+    setSelection(('text:'+key) as VisualSelection);
+    if(!def.styleKey)return;
+    event.preventDefault();event.stopPropagation();
+    const style=config.textStyles[def.styleKey],sx=event.clientX,sy=event.clientY,startScroll=window.scrollY;
+    let active=false;
+    const move=(ev:globalThis.PointerEvent)=>{
+     const dx=ev.clientX-sx,dy=ev.clientY-sy+(window.scrollY-startScroll);
+     if(!active&&Math.hypot(dx,dy)<3)return;
+     active=true;document.documentElement.classList.add('visual-direct-dragging');
+     patchTextStyle(def.styleKey!,{x:Math.round(style.x+dx),y:Math.round(style.y+dy)});
+     if(ev.clientY<54)window.scrollBy(0,-18);else if(ev.clientY>window.innerHeight-54)window.scrollBy(0,18);
+    };
+    const up=()=>{document.documentElement.classList.remove('visual-direct-dragging');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
+    window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
+    return;
+   }
+   const dividerEl=target.closest<HTMLElement>('[data-visual-divider-id]');
+   if(dividerEl){
+    const id=dividerEl.dataset.visualDividerId||'',divider=config.sectionDividers.find(item=>item.id===id);
+    if(!divider)return;
+    setSelection(('divider:'+id) as VisualSelection);event.preventDefault();event.stopPropagation();
+    const sy=event.clientY,startScroll=window.scrollY,base=divider.offsetY||0;
+    const move=(ev:globalThis.PointerEvent)=>{document.documentElement.classList.add('visual-direct-dragging');patchDivider(id,{offsetY:Math.round(base+ev.clientY-sy+(window.scrollY-startScroll))});if(ev.clientY<54)window.scrollBy(0,-18);else if(ev.clientY>window.innerHeight-54)window.scrollBy(0,18)};
+    const up=()=>{document.documentElement.classList.remove('visual-direct-dragging');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
+    window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
+    return;
+   }
+   if(target.closest('[data-visual-work-id]')||target.closest('[data-visual-work-text]')||target.closest('[data-visual-team-text]')||target.closest('input,textarea,select,button,a,video,audio'))return;
+   const sectionEl=target.closest<HTMLElement>('[data-visual-section]');
+   const key=sectionEl?.dataset.visualSection as SectionKey|undefined;
+   const keys=key?layoutKeys(key):null;
+   if(!sectionEl||!key||!keys)return;
+   setSelection(key);event.preventDefault();event.stopPropagation();
+   const sy=event.clientY,startScroll=window.scrollY,base=Number(config[keys.y]);
+   let active=false;
+   const move=(ev:globalThis.PointerEvent)=>{
+    const dy=ev.clientY-sy+(window.scrollY-startScroll);
+    if(!active&&Math.abs(dy)<3)return;
+    active=true;document.documentElement.classList.add('visual-direct-dragging');
+    setConfig(d=>({...d,[keys.x]:0,[keys.y]:Math.round(base+dy)}));
+    if(ev.clientY<54)window.scrollBy(0,-18);else if(ev.clientY>window.innerHeight-54)window.scrollBy(0,18);
+   };
+   const up=()=>{document.documentElement.classList.remove('visual-direct-dragging');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
+   window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
+  };
+  document.addEventListener('pointerdown',down,true);
+  return()=>{document.removeEventListener('pointerdown',down,true);document.documentElement.classList.remove('visual-direct-dragging')};
+ },[config,setConfig,setSelection]);
  const beginChromeDrag=(e:PointerEvent<HTMLElement>,kind:'toolbar'|'panel')=>{
   if(e.button!==0)return;
   const selector=kind==='toolbar'?'.visual-editor-topbar':'.visual-editor-panel';
@@ -185,7 +251,7 @@ export default function VisualSiteEditor({
    <div className="visual-editor-toolbar-tools">
     <button type="button" className="visual-toolbar-icon" title="패널 위치 전환" onClick={()=>{setPanelPos(null);setPanelSide(v=>v==='right'?'left':'right')}}>{panelSide==='right'?<PanelLeft size={15}/>:<PanelRight size={15}/>}</button>
     <button type="button" className="visual-toolbar-icon" title={panelOpen?'패널 접기':'패널 열기'} onClick={()=>setPanelOpen(v=>!v)}><SlidersHorizontal size={15}/></button>
-    <div className="visual-editor-actions"><button type="button" onClick={onOpenAdmin}>ADMIN</button><button type="button" onClick={onCancel}><X size={15}/><span>취소</span></button><button type="button" className="is-primary" disabled={busy} onClick={onSave}><Save size={15}/><span>{busy?'저장 중':'저장'}</span></button></div>
+    <div className="visual-editor-actions"><button type="button" disabled={!canUndo} title="직전 수정 되돌리기 · Ctrl+Z" onClick={onUndo}><Undo2 size={15}/><span>되돌리기</span></button><button type="button" onClick={onOpenAdmin}>ADMIN</button><button type="button" onClick={onCancel}><X size={15}/><span>취소</span></button><button type="button" className="is-primary" disabled={busy} onClick={onSave}><Save size={15}/><span>{busy?'저장 중':'저장'}</span></button></div>
    </div>
   </div>
 
@@ -203,8 +269,8 @@ export default function VisualSiteEditor({
    </div>}
    {tab==='layout'&&<div className="visual-editor-layout">
     {selectedDivider?<DividerLayout divider={selectedDivider} patch={value=>patchDivider(selectedDivider.id,value)}/>:
-     selectedTextDef?.styleKey?<><div className="visual-editor-panel-head"><strong>텍스트 위치</strong><button type="button" onClick={()=>patchTextStyle(selectedTextDef.styleKey!,{x:0,y:0})}><RotateCcw size={13}/>Reset</button></div><Range label="X position" value={config.textStyles[selectedTextDef.styleKey].x} min={-600} max={600} step={1} suffix="px" onChange={v=>patchTextStyle(selectedTextDef.styleKey!,{x:v})}/><Range label="세로 위치" value={config.textStyles[selectedTextDef.styleKey].y} min={-420} max={420} step={1} suffix="px" onChange={v=>patchTextStyle(selectedTextDef.styleKey!,{y:v})}/></>:
-     <><div className="visual-editor-panel-head"><strong>영역 위치·크기</strong>{meta&&!selectedWork&&<button type="button" onClick={resetLayout}><RotateCcw size={13}/>Reset</button>}</div>{meta&&!selectedWork&&!selectedWorkText&&!selectedTeamText&&<><div className="visual-axis-lock"><span>가로 위치</span><b>중앙 고정 · 0px</b><button onClick={()=>patch(meta.x,0 as never)}>중앙 복귀</button></div><Range label="세로 위치" value={Number(config[meta.y])} min={-500} max={500} step={1} suffix="px" onChange={v=>patch(meta.y,v as never)}/><Range label="크기" value={Math.round(Number(config[meta.scale])*100)} min={65} max={145} step={1} suffix="%" onChange={v=>patch(meta.scale,(v/100) as never)}/><Range label="영역 높이 · 0 = 자동" value={config.sectionHeights?.[sectionSelection]||0} min={0} max={1600} step={10} suffix="px" onChange={v=>patch('sectionHeights',{...config.sectionHeights,[sectionSelection]:v})}/></>}{sectionSelection==='work'&&!selectedWorkText&&<Range label="그리드 열 개수" value={config.columns} min={1} max={4} step={1} onChange={v=>patch('columns',v)}/>} {sectionSelection==='team'&&!selectedTeamText&&<><Range label="미디어 크기" value={config.teamMediaSize} min={120} max={520} step={1} suffix="px" onChange={v=>patch('teamMediaSize',v)}/><Range label="행 간격" value={config.teamRowGap} min={12} max={180} step={1} suffix="px" onChange={v=>patch('teamRowGap',v)}/></>}<Range label="전체 영역 간격" value={config.spacing} min={28} max={180} step={1} suffix="px" onChange={v=>patch('spacing',v)}/>{!selectedWork&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-editor-danger" onClick={()=>removeSection(sectionSelection)}><EyeOff size={14}/> 이 영역 숨기기</button>}</>}
+     selectedTextDef?.styleKey?<><div className="visual-editor-panel-head"><strong>텍스트 위치</strong><button type="button" onClick={()=>patchTextStyle(selectedTextDef.styleKey!,{x:0,y:0})}><RotateCcw size={13}/>Reset</button></div><NumberField label="가로 위치" value={config.textStyles[selectedTextDef.styleKey].x} suffix="px" onChange={v=>patchTextStyle(selectedTextDef.styleKey!,{x:v})}/><NumberField label="세로 위치" value={config.textStyles[selectedTextDef.styleKey].y} suffix="px" onChange={v=>patchTextStyle(selectedTextDef.styleKey!,{y:v})}/></>:
+     <><div className="visual-editor-panel-head"><strong>영역 위치·크기</strong>{meta&&!selectedWork&&<button type="button" onClick={resetLayout}><RotateCcw size={13}/>Reset</button>}</div>{meta&&!selectedWork&&!selectedWorkText&&!selectedTeamText&&<><div className="visual-axis-lock"><span>가로 위치</span><b>중앙 고정 · 0px</b><button onClick={()=>patch(meta.x,0 as never)}>중앙 복귀</button></div><NumberField label="세로 위치 · 제한 없음" value={Number(config[meta.y])} suffix="px" onChange={v=>patch(meta.y,v as never)}/><Range label="크기" value={Math.round(Number(config[meta.scale])*100)} min={65} max={145} step={1} suffix="%" onChange={v=>patch(meta.scale,(v/100) as never)}/><Range label="영역 높이 · 0 = 자동" value={config.sectionHeights?.[sectionSelection]||0} min={0} max={1600} step={10} suffix="px" onChange={v=>patch('sectionHeights',{...config.sectionHeights,[sectionSelection]:v})}/></>}{sectionSelection==='work'&&!selectedWorkText&&<Range label="그리드 열 개수" value={config.columns} min={1} max={4} step={1} onChange={v=>patch('columns',v)}/>} {sectionSelection==='team'&&!selectedTeamText&&<><Range label="미디어 크기" value={config.teamMediaSize} min={120} max={520} step={1} suffix="px" onChange={v=>patch('teamMediaSize',v)}/><Range label="행 간격" value={config.teamRowGap} min={12} max={180} step={1} suffix="px" onChange={v=>patch('teamRowGap',v)}/></>}<Range label="전체 영역 간격" value={config.spacing} min={28} max={180} step={1} suffix="px" onChange={v=>patch('spacing',v)}/>{!selectedWork&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-editor-danger" onClick={()=>removeSection(sectionSelection)}><EyeOff size={14}/> 이 영역 숨기기</button>}</>}
    </div>}
    {tab==='style'&&(
     selectedDivider?<DividerStyle divider={selectedDivider} patch={value=>patchDivider(selectedDivider.id,value)}/>:
@@ -220,6 +286,7 @@ export default function VisualSiteEditor({
    {selectedDivider&&<button type="button" className="visual-divider-drag-handle" aria-label="구분선 세로 이동" title="구분선을 위아래로 드래그" onPointerDown={beginDividerMove}><span/></button>}
    {meta&&!selectedWork&&!selectedDivider&&!selectedTextDef&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-move-handle" aria-label="영역 세로 이동" title="세로 이동 · X축은 자동 중앙 고정" onPointerDown={beginMove}><Grip size={16}/></button>}
    {selectedTextDef?.styleKey&&<button type="button" className="visual-move-handle is-text" aria-label="텍스트 이동" title="텍스트 자유 이동" onPointerDown={beginTextMove}><Grip size={16}/></button>}
+   {selectedTextDef?.styleKey&&<button type="button" className="visual-resize-handle is-text-size" aria-label="텍스트 크기 조절" title="드래그해서 글자 크기 조절" onPointerDown={beginTextResize}><Type size={14}/></button>}
    {meta&&!selectedWork&&!selectedDivider&&!selectedTextDef&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-resize-handle" aria-label="영역 크기 조절" onPointerDown={beginResize}><Maximize2 size={15}/></button>}
    {meta&&!selectedWork&&!selectedDivider&&!selectedTextDef&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-height-handle" aria-label="영역 높이 조절" title="위아래로 드래그해 영역 높이 조절" onPointerDown={beginHeightResize}><span/></button>}
   </div>}
@@ -240,6 +307,7 @@ function LayersPanel({config,selection,select,isVisible,hide,restore,reorderSect
  </div>;
 }
 function Range({label,value,min,max,step,suffix='',onChange}:{label:string;value:number;min:number;max:number;step:number;suffix?:string;onChange:(v:number)=>void}){return <label className="visual-range"><span>{label}<b>{Math.round(value*100)/100}{suffix}</b></span><input type="range" value={value} min={min} max={max} step={step} onChange={e=>onChange(Number(e.target.value))}/></label>}
+function NumberField({label,value,suffix='',onChange}:{label:string;value:number;suffix?:string;onChange:(v:number)=>void}){return <label className="visual-number-field"><span>{label}<b>{suffix}</b></span><input type="number" value={Number.isFinite(value)?value:0} step="1" onChange={e=>{const next=Number(e.target.value);if(Number.isFinite(next))onChange(next)}}/></label>}
 function TextField({label,value,onChange,multi=false}:{label:string;value:string;onChange:(v:string)=>void;multi?:boolean}){return <label className="visual-field"><span>{label}</span>{multi?<textarea value={value} onChange={e=>onChange(e.target.value)}/>:<input value={value} onChange={e=>onChange(e.target.value)}/>}</label>}
 function FileField({label,accept,disabled,value,onFile,onClear}:{label:string;accept:string;disabled:boolean;value?:string;onFile:(file:File|undefined)=>void;onClear?:()=>void}){return <label className="visual-upload"><span>{label}</span><input type="file" accept={accept} disabled={disabled} onChange={e=>onFile(e.target.files?.[0])}/>{value&&<span className="visual-upload-state">등록됨 {onClear&&<button type="button" onClick={e=>{e.preventDefault();onClear()}}>제거</button>}</span>}</label>}
 
@@ -266,7 +334,7 @@ function DividerContent({divider,patch,remove}:{divider:SectionDivider;patch:(va
  return <><div className="visual-editor-panel-head"><h3>구분선</h3><button type="button" className="is-danger" onClick={remove}><Trash2 size={13}/>삭제</button></div><InspectorGroup title="배치" open><label className="visual-field"><span>배치할 영역</span><select value={divider.after} onChange={e=>patch({after:e.target.value as SiteSectionKey})}>{sectionDefs.map(section=><option key={section.key} value={section.key}>{section.label}</option>)}</select></label><label className="visual-toggle"><span>구분선 표시</span><input type="checkbox" checked={divider.visible} onChange={e=>patch({visible:e.target.checked})}/></label></InspectorGroup><p className="visual-help">Layers에서 독립 요소처럼 선택·삭제할 수 있고, Position/Style에서 세밀하게 조절합니다.</p></>;
 }
 function DividerLayout({divider,patch}:{divider:SectionDivider;patch:(value:Partial<SectionDivider>)=>void}){
- return <><div className="visual-editor-panel-head"><strong>구분선 위치·크기</strong></div><Range label="세로 위치" value={divider.offsetY||0} min={-800} max={800} step={1} suffix="px" onChange={v=>patch({offsetY:v})}/><Range label="너비" value={divider.width} min={10} max={100} step={1} suffix="%" onChange={v=>patch({width:v})}/><Range label="좌우 여백" value={divider.inset} min={0} max={240} step={1} suffix="px" onChange={v=>patch({inset:v})}/><Range label="위 여백" value={divider.marginTop} min={0} max={240} step={1} suffix="px" onChange={v=>patch({marginTop:v})}/><Range label="아래 여백" value={divider.marginBottom} min={0} max={240} step={1} suffix="px" onChange={v=>patch({marginBottom:v})}/><button type="button" className="visual-secondary-button" onClick={()=>patch({offsetY:0})}>세로 위치 초기화</button></>;
+ return <><div className="visual-editor-panel-head"><strong>구분선 위치·크기</strong></div><NumberField label="세로 위치 · 제한 없음" value={divider.offsetY||0} suffix="px" onChange={v=>patch({offsetY:v})}/><Range label="너비" value={divider.width} min={10} max={100} step={1} suffix="%" onChange={v=>patch({width:v})}/><Range label="좌우 여백" value={divider.inset} min={0} max={240} step={1} suffix="px" onChange={v=>patch({inset:v})}/><Range label="위 여백" value={divider.marginTop} min={0} max={240} step={1} suffix="px" onChange={v=>patch({marginTop:v})}/><Range label="아래 여백" value={divider.marginBottom} min={0} max={240} step={1} suffix="px" onChange={v=>patch({marginBottom:v})}/><button type="button" className="visual-secondary-button" onClick={()=>patch({offsetY:0})}>세로 위치 초기화</button></>;
 }
 function DividerStyle({divider,patch}:{divider:SectionDivider;patch:(value:Partial<SectionDivider>)=>void}){
  return <InspectorGroup title="구분선 스타일" open><Range label="두께" value={divider.thickness} min={.5} max={12} step={.5} suffix="px" onChange={v=>patch({thickness:v})}/><Range label="불투명도" value={divider.opacity} min={0} max={100} step={1} suffix="%" onChange={v=>patch({opacity:v})}/><label className="visual-color"><span>색상</span><input type="color" value={divider.color||'#ffffff'} onChange={e=>patch({color:e.target.value})}/><b>{divider.color||'AUTO'}</b></label><button type="button" className="visual-secondary-button" onClick={()=>patch({color:''})}>색상 자동</button></InspectorGroup>;
