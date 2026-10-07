@@ -37,12 +37,13 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const memberSwipeMoved=useRef(false);
   const subcategories=useMemo(()=>member.portfolioSubcategories||[],[member.portfolioSubcategories]);
   const galleryItems=useMemo(()=>(member.works||[]).map((src,i)=>({
-    id:member.id+'-'+i,src,sourceIndex:i,title:member.name||'Portfolio',
-    description:member.portfolioCreditsVisible!==false?(member.portfolioCredits||''): '',
+    id:member.id+'-'+i,src,sourceIndex:i,title:member.portfolioWorkTitles?.[i]||member.name||'Portfolio',
+    info:member.portfolioWorkInfo?.[i]||'',
+    credits:member.portfolioCreditsVisible!==false?(member.portfolioWorkCredits?.[i]??member.portfolioCredits??''):'',
     category:member.portfolioWorkCategories?.[i]||subcategories[0]||'All',
     kicker:member.portfolioWorkCategories?.[i]||subcategories[0]||'All',
     ratio:member.portfolioWorkRatios?.[i]||'auto'
-  })).filter(item=>subcategory==='All'||item.category===subcategory),[member.id,member.name,member.works,member.portfolioWorkCategories,member.portfolioWorkRatios,member.portfolioCredits,member.portfolioCreditsVisible,subcategories,subcategory]);
+  })).filter(item=>subcategory==='All'||item.category===subcategory),[member.id,member.name,member.works,member.portfolioWorkCategories,member.portfolioWorkTitles,member.portfolioWorkInfo,member.portfolioWorkCredits,member.portfolioWorkRatios,member.portfolioCredits,member.portfolioCreditsVisible,subcategories,subcategory]);
   const works=useMemo(()=>galleryItems.map(item=>item.src),[galleryItems]);
   const teamMembers=useMemo(()=>(config.teamMembers||[]).filter(item=>item.visible),[config.teamMembers]);
   const memberIndex=Math.max(0,teamMembers.findIndex(item=>item.id===member.id));
