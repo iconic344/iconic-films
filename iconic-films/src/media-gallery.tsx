@@ -3,17 +3,23 @@ import {createPortal} from 'react-dom';
 import {ChevronLeft,ChevronRight,Play,Pause,Volume2,VolumeX,Maximize,Minimize,X} from 'lucide-react';
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
 import TeamMedia,{teamMediaType} from './team-media';
+import type {PortfolioMediaRatio} from './defaults';
 import {scopeGallery} from './gallery-scope';
 
-export type GalleryItem={id:string;src:string;poster?:string;title:string;description?:string;kicker?:string;category?:string;sourceIndex?:number};
+export type GalleryItem={id:string;src:string;poster?:string;title:string;description?:string;kicker?:string;category?:string;sourceIndex?:number;ratio?:PortfolioMediaRatio};
 type MediaFrameMode='landscape'|'portrait'|'square';
 const mediaFrameCache=new Map<string,{mode:MediaFrameMode;ratio:number}>();
-export const portfolioMediaFrame=(width:number,height:number)=>{
- const w=Math.max(1,Number(width)||1),h=Math.max(1,Number(height)||1),raw=w/h;
- if(raw<.96)return {mode:'portrait' as const,ratio:9/16};
- if(raw<=1.08)return {mode:'square' as const,ratio:1};
- const ratio=Math.abs(raw-16/9)<=.12?16/9:Math.min(2.4,Math.max(1.1,raw));
- return {mode:'landscape' as const,ratio};
+const ratioValue=(ratio:PortfolioMediaRatio|undefined)=>{
+ if(!ratio||ratio==='auto')return null;
+ const [w,h]=ratio.split(':').map(Number);
+ return w>0&&h>0?w/h:null;
+};
+const frameFromRatio=(ratio:number)=>({mode:(ratio<.94?'portrait':ratio<=1.06?'square':'landscape') as MediaFrameMode,ratio});
+export const portfolioMediaFrame=(width:number,height:number,override:PortfolioMediaRatio='auto')=>{
+ const forced=ratioValue(override);
+ if(forced)return frameFromRatio(forced);
+ const w=Math.max(1,Number(width)||1),h=Math.max(1,Number(height)||1),raw=Math.min(4,Math.max(.25,w/h));
+ return frameFromRatio(raw);
 };
 const formatTime=(n:number)=>`${Math.floor(n/60)}:${String(Math.floor(n%60)).padStart(2,'0')}`;
 
@@ -31,17 +37,20 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
  const item=items[index],type=item?teamMediaType(item.src):'image',isFullscreen=expanded,showBackdrop=modal||isFullscreen;
  useEffect(()=>{
   if(!item?.src)return;
-  const cached=mediaFrameCache.get(item.src);
+  const cacheKey=item.src+'|'+(item.ratio||'auto');
+  const forced=ratioValue(item.ratio);
+  if(forced){const next=frameFromRatio(forced);mediaFrameCache.set(cacheKey,next);setFrame(next);return}
+  const cached=mediaFrameCache.get(cacheKey);
   if(cached){setFrame(cached);return}
   const kind=teamMediaType(item.src);
-  if(kind==='model'){const next={mode:'landscape' as const,ratio:16/9};mediaFrameCache.set(item.src,next);setFrame(next);return}
+  if(kind==='model'){const next={mode:'landscape' as const,ratio:16/9};mediaFrameCache.set(cacheKey,next);setFrame(next);return}
   if(kind==='video'){setFrame({mode:'landscape',ratio:16/9});return}
   let live=true;
   const probe=new Image();
-  probe.onload=()=>{if(!live)return;const next=portfolioMediaFrame(probe.naturalWidth,probe.naturalHeight);mediaFrameCache.set(item.src,next);setFrame(next)};
+  probe.onload=()=>{if(!live)return;const next=portfolioMediaFrame(probe.naturalWidth,probe.naturalHeight,item.ratio||'auto');mediaFrameCache.set(cacheKey,next);setFrame(next)};
   probe.src=item.src;
   return()=>{live=false;probe.onload=null};
- },[item?.src]);
+ },[item?.src,item?.ratio]);
  useEffect(()=>{if(modal)root.current?.focus({preventScroll:true})},[modal]);
  useEffect(()=>{if(!modal)setPlaying(autoPlay&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)},[autoPlay]);
  useEffect(()=>{if(modal)setMuted(mediaVolume<=0)},[modal,item?.id]);
@@ -158,7 +167,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
      const active=sourceIndex===index,kind=teamMediaType(entry.src);
      return <article className={'media-gallery-slide '+(active?'is-active ':'')} key={slideKey} aria-hidden={!active} inert={!active&&!balancedPreview} data-gallery-index={sourceIndex} data-portfolio-work-index={balanceEdges&&Number.isInteger(entry.sourceIndex)?entry.sourceIndex:undefined}>
       <div className="media-gallery-artwork" data-cursor-label={cleanPreview&&!isFullscreen&&!modal?undefined:(kind==='video'?'VIDEO':kind==='model'?'3D':'IMAGE')} data-native-cursor={cleanPreview&&!isFullscreen&&!modal?'true':undefined} onClick={()=>{if(dragged.current){dragged.current=false;return}if(!active){if(balanceEdges)choose(sourceIndex);return}if(modal&&kind==='video'){toggle();return}if(onExpand&&kind!=='model'){if(kind==='video'&&video.current){video.current.muted=false;setMuted(false);void video.current.play().catch(()=>{})}onExpand(index);return}if(kind==='video')toggle()}}>
-       {kind==='video'?<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-displayIndex)<=1?entry.src:undefined} poster={entry.poster} muted={active?muted:true} data-site-autoplay={!modal&&active?'true':undefined} autoPlay={active} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setReady(n=>n+1);onReady?.();if(playing&&visible){const v=video.current;if(v&&!modal){v.muted=true;setMuted(true)}v?.play().catch(()=>setPlaying(false))}}}} onCanPlay={e=>{if(active&&playing&&visible){if(!modal)e.currentTarget.muted=true;void e.currentTarget.play().catch(()=>{})}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setLandscape((e.currentTarget.videoWidth||0)/(e.currentTarget.videoHeight||1)>=1.45);const nextFrame=portfolioMediaFrame(e.currentTarget.videoWidth,e.currentTarget.videoHeight);mediaFrameCache.set(entry.src,nextFrame);setFrame(nextFrame);if(modal){e.currentTarget.volume=mediaVolume;e.currentTarget.muted=mediaVolume<=0;setMuted(mediaVolume<=0)}setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setPlaying(false);onReady?.()}}}/>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
+       {kind==='video'?<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-displayIndex)<=1?entry.src:undefined} poster={entry.poster} muted={active?muted:true} data-site-autoplay={!modal&&active?'true':undefined} autoPlay={active} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setReady(n=>n+1);onReady?.();if(playing&&visible){const v=video.current;if(v&&!modal){v.muted=true;setMuted(true)}v?.play().catch(()=>setPlaying(false))}}}} onCanPlay={e=>{if(active&&playing&&visible){if(!modal)e.currentTarget.muted=true;void e.currentTarget.play().catch(()=>{})}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setLandscape((e.currentTarget.videoWidth||0)/(e.currentTarget.videoHeight||1)>=1.45);const nextFrame=portfolioMediaFrame(e.currentTarget.videoWidth,e.currentTarget.videoHeight,entry.ratio||'auto');mediaFrameCache.set(entry.src+'|'+(entry.ratio||'auto'),nextFrame);setFrame(nextFrame);if(modal){e.currentTarget.volume=mediaVolume;e.currentTarget.muted=mediaVolume<=0;setMuted(mediaVolume<=0)}setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setPlaying(false);onReady?.()}}}/>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
       </div>
 
       {balanceEdges&&!modal&&!isFullscreen&&<div className="media-gallery-slide-caption" aria-hidden="true">
