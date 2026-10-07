@@ -159,26 +159,34 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
 }
 
 
-/* Team media credits: contextual on slides, available in fullscreen. */
+/* Team slide information: each visible card reveals its own info and credits. */
 @media (min-width:1025px) and (hover:hover) and (pointer:fine){
-  .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-caption{
-    left:50%!important;
-    right:auto!important;
-    bottom:50%!important;
-    width:min(78%,620px)!important;
-    max-width:620px!important;
-    margin:0!important;
-    text-align:center!important;
-    transform:translate(-50%,calc(50% + 12px))!important;
+  .team-portfolio-slider .media-gallery-slide-caption{
+    position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;
+    padding:clamp(24px,4vw,64px);text-align:center;color:#fff;pointer-events:none;
+    opacity:0;visibility:hidden;transform:translate3d(0,14px,0) scale(.992);filter:blur(5px);
+    background:linear-gradient(180deg,rgba(3,4,7,.04),rgba(3,4,7,.28) 48%,rgba(3,4,7,.08));
+    transition:opacity .34s ease,transform .52s cubic-bezier(.16,1,.3,1),filter .42s ease,visibility 0s linear .52s;
   }
-  .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen):hover .media-gallery-caption,
-  .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen):focus-within .media-gallery-caption{
-    transform:translate(-50%,50%)!important;
+  .team-portfolio-slider .media-gallery-slide:hover .media-gallery-slide-caption,
+  .team-portfolio-slider .media-gallery-slide:focus-within .media-gallery-slide-caption{
+    opacity:1;visibility:visible;transform:translate3d(0,0,0) scale(1);filter:blur(0);transition-delay:0s;
   }
-  .team-portfolio-slider .media-gallery-caption p,
-  .unified-media-dialog .media-gallery-caption p{
-    white-space:pre-line!important;
-  }
+  .media-gallery-slide-caption-inner{width:min(78%,620px);max-height:82%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-shadow:0 2px 18px rgba(0,0,0,.38)}
+  .media-gallery-slide-caption-label{font-size:9px;font-weight:650;letter-spacing:.2em;opacity:.62;transform:translateY(8px);transition:opacity .38s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+  .media-gallery-slide-caption-kicker{margin-top:7px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.78;transform:translateY(10px);transition:opacity .4s ease,transform .52s cubic-bezier(.16,1,.3,1)}
+  .media-gallery-slide-caption h3{margin:10px 0 0;font-size:clamp(18px,1.7vw,30px);line-height:1.08;letter-spacing:-.035em;font-weight:600;transform:translateY(12px);transition:opacity .42s ease,transform .56s cubic-bezier(.16,1,.3,1)}
+  .media-gallery-slide-caption-label.is-credits{margin-top:clamp(16px,2.2vw,28px)}
+  .media-gallery-slide-caption p{margin:8px 0 0;max-width:560px;max-height:8.4em;overflow:hidden;white-space:pre-line;font-size:clamp(10px,.82vw,13px);line-height:1.55;opacity:.82;transform:translateY(14px);transition:opacity .44s ease,transform .6s cubic-bezier(.16,1,.3,1)}
+  .team-portfolio-slider .media-gallery-slide:hover .media-gallery-slide-caption-label,
+  .team-portfolio-slider .media-gallery-slide:hover .media-gallery-slide-caption-kicker,
+  .team-portfolio-slider .media-gallery-slide:hover .media-gallery-slide-caption h3,
+  .team-portfolio-slider .media-gallery-slide:hover .media-gallery-slide-caption p,
+  .team-portfolio-slider .media-gallery-slide:focus-within .media-gallery-slide-caption-label,
+  .team-portfolio-slider .media-gallery-slide:focus-within .media-gallery-slide-caption-kicker,
+  .team-portfolio-slider .media-gallery-slide:focus-within .media-gallery-slide-caption h3,
+  .team-portfolio-slider .media-gallery-slide:focus-within .media-gallery-slide-caption p{transform:translateY(0)}
+  .unified-media-dialog .media-gallery-caption p{white-space:pre-line!important}
 }
 
 
