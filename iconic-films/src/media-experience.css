@@ -532,3 +532,19 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
 .scroll-reveal{
   transition:opacity var(--reveal-transition-ms,650ms) var(--gallery-ease,cubic-bezier(.22,1,.36,1)),translate var(--reveal-transition-ms,650ms) var(--gallery-ease,cubic-bezier(.22,1,.36,1))!important;
 }
+
+
+/* 2026-10-07 viewport-center portfolio slider controls */
+.team-portfolio-slider .media-gallery:not(.is-fullscreen):not(.is-modal) .media-gallery-navigation{
+  position:relative!important;
+  left:calc(-1 * var(--portfolio-work-x,0px))!important;
+  right:auto!important;
+  transform:none!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+@media(max-width:820px){
+  .team-portfolio-slider .media-gallery:not(.is-fullscreen):not(.is-modal) .media-gallery-navigation{
+    left:0!important;
+  }
+}
