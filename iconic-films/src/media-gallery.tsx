@@ -57,7 +57,8 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
  useEffect(()=>{
   if(type==='video'||!playing||!visible||!item||error)return;
   let last=performance.now();
-  const timer=window.setInterval(()=>{const now=performance.now();elapsed.current+=now-last;last=now;setProgress(Math.min(1,elapsed.current/6500));if(elapsed.current>=6500)advance()},50);
+  const autoplayMs=Math.max(1200,Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gallery-autoplay-ms'))||6500);
+  const timer=window.setInterval(()=>{const now=performance.now();elapsed.current+=now-last;last=now;setProgress(Math.min(1,elapsed.current/autoplayMs));if(elapsed.current>=autoplayMs)advance()},50);
   return()=>window.clearInterval(timer);
  },[type,playing,visible,index,items.length,error]);
  const toggle=()=>setPlaying(v=>!v);
@@ -101,14 +102,14 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   if(e.key===' '&&!((e.target as HTMLElement).closest('button'))){e.preventDefault();toggle()}
  };
  if(!item)return null;
- const loopPreview=balanceEdges&&!modal&&!isFullscreen&&items.length>=3;
- const previewItems=loopPreview?[
-  {entry:items[items.length-1],sourceIndex:items.length-1,clone:true,key:'loop-pre-'+items[items.length-1].id},
-  ...items.map((entry,sourceIndex)=>({entry,sourceIndex,clone:false,key:'main-'+entry.id})),
-  {entry:items[0],sourceIndex:0,clone:true,key:'loop-post-'+items[0].id}
- ]:items.map((entry,sourceIndex)=>({entry,sourceIndex,clone:false,key:'main-'+entry.id}));
- const displayIndex=loopPreview?index+1:index;
- const gallery=<div ref={root} className={'media-gallery '+(loopPreview?'is-loop-preview ':'')+(modal?'is-modal ':'')+(expanded?'is-expanded ':'')+(isFullscreen?'is-fullscreen ':'')+(items.length<=1?'is-single ':'')+(type==='video'?'has-video ':'has-image ')+(landscape?'is-landscape':'is-portrait')} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} data-cursor-idle={idle?'true':'false'} onPointerMove={wake} onPointerDown={wake} onFocusCapture={wake} onKeyDown={e=>{wake();key(e)}}>
+ const balancedPreview=balanceEdges&&!modal&&!isFullscreen&&items.length>=1;
+ const previewItems:Array<{entry:GalleryItem|null;sourceIndex:number;ghost:boolean;key:string}>=balancedPreview?[
+  {entry:null,sourceIndex:-1,ghost:true,key:'ghost-pre'},
+  ...items.map((entry,sourceIndex)=>({entry,sourceIndex,ghost:false,key:'main-'+entry.id})),
+  {entry:null,sourceIndex:-1,ghost:true,key:'ghost-post'}
+ ]:items.map((entry,sourceIndex)=>({entry,sourceIndex,ghost:false,key:'main-'+entry.id}));
+ const displayIndex=balancedPreview?index+1:index;
+ const gallery=<div ref={root} className={'media-gallery '+(balancedPreview?'is-balanced-preview ':'')+(modal?'is-modal ':'')+(expanded?'is-expanded ':'')+(isFullscreen?'is-fullscreen ':'')+(items.length<=1?'is-single ':'')+(type==='video'?'has-video ':'has-image ')+(landscape?'is-landscape':'is-portrait')} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} data-cursor-idle={idle?'true':'false'} onPointerMove={wake} onPointerDown={wake} onFocusCapture={wake} onKeyDown={e=>{wake();key(e)}}>
   {showBackdrop&&<><div className="media-gallery-backdrop" aria-hidden="true">
    {(type==='image'||item.poster)&&<img src={type==='image'?item.src:item.poster} alt=""/>}
    {type==='video'&&<canvas ref={ambient} style={{opacity:1}}/>}
@@ -116,9 +117,10 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   {isFullscreen&&<button type="button" className="media-gallery-close" aria-label={modal?'미디어 닫기':'전체 화면 종료'} onClick={()=>{if(modal)onExpand?.();else exitFullscreen()}}><X size={23}/></button>}
   <div className="media-gallery-viewport" onPointerDown={e=>{if(e.button!==0||(e.target as HTMLElement).closest('button,input,model-viewer'))return;drag.current={x:e.clientX,y:e.clientY};dragged.current=false;e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={e=>{if(!drag.current)return;const dx=e.clientX-drag.current.x,dy=e.clientY-drag.current.y;drag.current=null;const swiped=Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy);if(swiped){dragged.current=true;choose(index+(dx<0?1:-1))}else if(type==='video'&&(modal||isFullscreen)){dragged.current=true;toggle()}e.currentTarget.releasePointerCapture?.(e.pointerId)}} onPointerCancel={()=>{drag.current=null}}>
    <div className="media-gallery-track" style={{'--gallery-index':displayIndex} as CSSProperties}>
-    {previewItems.map(({entry,sourceIndex,clone,key:slideKey},i)=>{
-     const active=!clone&&sourceIndex===index,kind=teamMediaType(entry.src);
-     return <article className={'media-gallery-slide '+(active?'is-active ':'')+(clone?'is-loop-clone':'')} key={slideKey} aria-hidden={!active} inert={!active}>
+    {previewItems.map(({entry,sourceIndex,ghost,key:slideKey},i)=>{
+     if(ghost||!entry)return <article className="media-gallery-slide is-placeholder" key={slideKey} aria-hidden="true"><div className="media-gallery-placeholder-stack" aria-hidden="true"/></article>;
+     const active=sourceIndex===index,kind=teamMediaType(entry.src);
+     return <article className={'media-gallery-slide '+(active?'is-active ':'')} key={slideKey} aria-hidden={!active} inert={!active}>
       <div className="media-gallery-artwork" data-cursor-label={kind==='video'?'VIDEO':kind==='model'?'3D':'IMAGE'} onClick={()=>{if(dragged.current){dragged.current=false;return}if(!active)return;if(modal&&kind==='video'){toggle();return}if(onExpand&&kind!=='model'){if(kind==='video'&&video.current){video.current.muted=false;setMuted(false);void video.current.play().catch(()=>{})}onExpand();return}if(kind==='video')toggle()}}>
        {kind==='video'?<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-displayIndex)<=1?entry.src:undefined} poster={entry.poster} muted={active?muted:true} data-site-autoplay={!modal&&active?'true':undefined} autoPlay={active} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setReady(n=>n+1);onReady?.();if(playing&&visible){const v=video.current;if(v&&!modal){v.muted=true;setMuted(true)}v?.play().catch(()=>setPlaying(false))}}}} onCanPlay={e=>{if(active&&playing&&visible){if(!modal)e.currentTarget.muted=true;void e.currentTarget.play().catch(()=>{})}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setLandscape((e.currentTarget.videoWidth||0)/(e.currentTarget.videoHeight||1)>=1.45);if(modal){e.currentTarget.volume=mediaVolume;e.currentTarget.muted=mediaVolume<=0;setMuted(mediaVolume<=0)}setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setPlaying(false);onReady?.()}}}/>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
       </div>
@@ -138,9 +140,13 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
    </div>
 
   </div>
-  {items.length>1&&<div className="media-gallery-arrows" role="group" aria-label="미디어 넘기기"><button type="button" className="media-gallery-arrow is-prev" aria-label="이전 미디어" onClick={()=>choose(index-1)}><ChevronLeft size={23}/></button><button type="button" className="media-gallery-arrow is-next" aria-label="다음 미디어" onClick={()=>choose(index+1)}><ChevronRight size={23}/></button></div>}
   <div className="media-gallery-caption">{item.kicker&&<span>{item.kicker}</span>}<h3 data-visual-text={captionVisualText} style={captionTitleStyle}>{item.title}</h3>{item.description&&<p>{item.description}</p>}</div>
-  {items.length>1&&<div className="media-gallery-navigation"><div className="media-gallery-indicators" role="group" aria-label="미디어 선택">{items.map((entry,i)=><button type="button" key={entry.id} aria-label={`${i+1}번 미디어: ${entry.title}`} aria-current={i===index?'true':undefined} className={i===index?'is-active':''} onClick={()=>choose(i)}><span style={{'--gallery-progress':i===index?progress:0} as CSSProperties}/></button>)}</div>{type!=='video'&&<button type="button" className="media-gallery-toggle" aria-label={playing?'일시정지':'재생'} onClick={toggle}>{playing?<Pause size={20} fill="currentColor"/>:<Play size={20} fill="currentColor"/>}</button>}</div>}
+  {items.length>1&&<div className="media-gallery-navigation" role="group" aria-label="슬라이드 컨트롤">
+   <button type="button" className="media-gallery-arrow is-prev" aria-label="이전 미디어" onClick={()=>choose(index-1)}><ChevronLeft size={21}/></button>
+   <div className="media-gallery-indicators" role="group" aria-label="미디어 선택">{items.map((entry,i)=><button type="button" key={entry.id} aria-label={`${i+1}번 미디어: ${entry.title}`} aria-current={i===index?'true':undefined} className={i===index?'is-active':''} onClick={()=>choose(i)}><span style={{'--gallery-progress':i===index?progress:0} as CSSProperties}/></button>)}</div>
+   <button type="button" className="media-gallery-arrow is-next" aria-label="다음 미디어" onClick={()=>choose(index+1)}><ChevronRight size={21}/></button>
+   {type!=='video'&&<button type="button" className="media-gallery-toggle" aria-label={playing?'일시정지':'재생'} onClick={toggle}>{playing?<Pause size={18} fill="currentColor"/>:<Play size={18} fill="currentColor"/>}</button>}
+  </div>}
   <span className="sr-only" aria-live="polite">{index+1} / {items.length}: {item.title}</span>
  </div>;
  // Native fullscreen retains the DOM. Unsupported browsers get a body portal
