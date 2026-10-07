@@ -32,7 +32,8 @@
 .iconic-cursor-caption[data-visible="true"][data-hovered="true"]{opacity:var(--cursor-label-opacity,0)}
 .cursor-optics-label{perspective:180px}
 .cursor-label-text{display:block;transform-style:preserve-3d}
-.iconic-cursor-caption[data-kind="3d"] .cursor-label-text{animation:cursor-model-turn 2.8s linear infinite;font-size:12px;letter-spacing:.02em}
+.iconic-cursor-caption[data-kind="3d"] .cursor-label-text,
+.iconic-cursor-caption[data-kind="video"] .cursor-label-text{animation:cursor-model-turn 2.8s linear infinite;font-size:12px;letter-spacing:.02em}
 @keyframes cursor-model-turn{from{transform:rotateY(0deg)}to{transform:rotateY(360deg)}}
 
 /* One paired translation for the entire page: no dissolves, stagger or remount. */

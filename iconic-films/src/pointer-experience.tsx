@@ -5,13 +5,19 @@ import {cursorDiameter,stepCursorDiameter,stepCursorPosition,type CursorMode} fr
 const interactive='button,a,[role="button"],[role="tab"],[role="switch"],[role="slider"],[role="checkbox"],input,textarea,select,summary';
 const native='input:focus,textarea:focus,select:focus,video[controls],[data-native-cursor]';
 function isModel(target:Element){return !!target.closest('[data-cursor="3d"],model-viewer,.model-stage,.team-model-loading')||!!target.closest('.focus-card-visual,.team-portfolio-grid-item,.team-stack-visual,.media-gallery-artwork,.about-visual,.main-logo')?.querySelector('model-viewer,.model-stage,.team-model-loading');}
+function isVideoTarget(target:Element){
+ if(target.closest('[data-cursor="video"],[data-cursor-label="VIDEO"]'))return true;
+ if(target.closest('video'))return true;
+ const host=target.closest<HTMLElement>('.film-frame,.media-gallery-artwork,.work-image,.hero-gallery button,.focus-card-visual,.team-portfolio-grid-item,.team-stack-visual');
+ return !!host?.querySelector('video');
+}
 function cursorLabel(target:Element){
  const explicit=target.closest<HTMLElement>('[data-cursor-label]')?.dataset.cursorLabel;
  if(explicit)return explicit.toUpperCase();
  if(isModel(target))return '3D';
+ if(isVideoTarget(target))return 'VIDEO';
  if(target.closest('[data-visual-text],[data-visual-work-text],[data-visual-team-text]'))return 'EDIT';
  if(target.closest('.nav a,.nav button,header nav a,header nav button,[role="menuitem"]'))return 'MENU';
- if(target.closest('video,.film-frame video,.media-gallery-artwork video'))return 'VIDEO';
  if(target.closest('.music-player,.music-panel,.track-list button,[aria-label*="재생"],[aria-label*="음악"]'))return 'PLAY';
  if(target.closest('[aria-label*="이전"],.media-gallery-prev,.film-prev'))return 'PREV';
  if(target.closest('[aria-label*="다음"],.media-gallery-next,.film-next'))return 'NEXT';
