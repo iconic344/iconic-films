@@ -21,6 +21,7 @@ const sectionDefs:{key:SectionKey;label:string}[]=[
 const navLabels:Record<NavItemKey,string>={work:'작품',about:'소개',team:'팀',contact:'문의'};
 const labelKeys:Record<NavItemKey,'navWorkLabel'|'navAboutLabel'|'navTeamLabel'|'navContactLabel'>={work:'navWorkLabel',about:'navAboutLabel',team:'navTeamLabel',contact:'navContactLabel'};
 type DirectTextDef={section:SectionKey;label:string;configKey:keyof Config;styleKey?:TextStyleKey;multi?:boolean};
+const verticalDragTextKeys=new Set(['aboutKicker','aboutHeadline','about','aboutDisciplines','footerCopyright']);
 const directTextDefs:Record<string,DirectTextDef>={
  name:{section:'nav',label:'브랜드 이름',configKey:'name',styleKey:'navBrand'},
  navWorkLabel:{section:'nav',label:'작품 메뉴',configKey:'navWorkLabel',styleKey:'navMenu'},
@@ -59,7 +60,7 @@ export default function VisualSiteEditor({
  const [panelPos,setPanelPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-panel-pos'));
  const [inlineEditing,setInlineEditing]=useState<VisualSelection|null>(null);
  const inlineOriginal=useRef('');
- const dragState=useRef<{y:number;baseY:number}|null>(null),resizeState=useRef<{x:number;y:number;base:number}|null>(null),heightState=useRef<{y:number;base:number}|null>(null),textDragState=useRef<{x:number;y:number;baseX:number;baseY:number}|null>(null),textSizeState=useRef<{x:number;y:number;base:number}|null>(null),dividerDragState=useRef<{y:number;base:number}|null>(null);
+ const dragState=useRef<{y:number;baseY:number}|null>(null),resizeState=useRef<{x:number;y:number;base:number}|null>(null),heightState=useRef<{y:number;base:number}|null>(null),textDragState=useRef<{x:number;y:number;baseX:number;baseY:number}|null>(null),textSizeState=useRef<{x:number;y:number;base:number}|null>(null),dividerDragState=useRef<{y:number;base:number}|null>(null),modelDragState=useRef<{y:number;baseY:number;height:number}|null>(null);
  const selectedWorkId=selection.startsWith('work:')?selection.slice(5):'';
  const selectedWork=selectedWorkId?config.works.find(w=>w.id===selectedWorkId)||null:null;
  const selectedDividerId=selection.startsWith('divider:')?selection.slice(8):'';
@@ -91,6 +92,8 @@ export default function VisualSiteEditor({
  useEffect(()=>{if(panelPos)return;const el=targetFor();if(!el)return;const r=el.getBoundingClientRect();if(r.width<window.innerWidth*.76)setPanelSide(r.left+r.width/2>window.innerWidth/2?'left':'right');else if(selection==='nav')setPanelSide('right')},[selection,panelPos]);
 
  const patch=<K extends keyof Config>(key:K,value:Config[K])=>setConfig(d=>({...d,[key]:value}));
+ const showGuides=(x:number,y:number)=>{const html=document.documentElement;html.style.setProperty('--visual-guide-x',Math.round(x)+'px');html.style.setProperty('--visual-guide-y',Math.round(y)+'px');html.classList.add('visual-axis-guides')};
+ const hideGuides=()=>{const html=document.documentElement;html.classList.remove('visual-axis-guides');html.style.removeProperty('--visual-guide-x');html.style.removeProperty('--visual-guide-y')};
  const patchTextStyle=(key:TextStyleKey,value:TextPatch)=>setConfig(d=>({...d,textStyles:{...d.textStyles,[key]:{...d.textStyles[key],...value}}}));
  const patchWork=(id:string,key:keyof Work,value:Work[keyof Work])=>setConfig(d=>({...d,works:d.works.map(w=>w.id===id?{...w,[key]:value}:w)}));
  const patchTeam=(id:string,key:string,value:unknown)=>setConfig(d=>({...d,teamMembers:d.teamMembers.map(m=>m.id===id?{...m,[key]:value}:m)}));
@@ -196,10 +199,12 @@ export default function VisualSiteEditor({
  };
  const beginTextMove=(e:PointerEvent<HTMLButtonElement>)=>{
   if(!selectedTextDef?.styleKey)return;e.preventDefault();e.stopPropagation();
-  const style=config.textStyles[selectedTextDef.styleKey];
-  textDragState.current={x:e.clientX,y:e.clientY,baseX:style.x,baseY:style.y};
-  const move=(event:globalThis.PointerEvent)=>{const start=textDragState.current;if(!start)return;patchTextStyle(selectedTextDef.styleKey!,{x:Math.round(start.baseX+event.clientX-start.x),y:Math.round(start.baseY+event.clientY-start.y)})};
-  const up=()=>{textDragState.current=null;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
+  const style=config.textStyles[selectedTextDef.styleKey],lockX=verticalDragTextKeys.has(selectedTextKey),baseX=selectedTextKey==='footerCopyright'?0:style.x;
+  textDragState.current={x:e.clientX,y:e.clientY,baseX,baseY:style.y};
+  const target=targetFor(),guideX=selectedTextKey==='footerCopyright'?window.innerWidth/2:(target?.getBoundingClientRect().left??e.clientX);
+  showGuides(guideX,e.clientY);
+  const move=(event:globalThis.PointerEvent)=>{const start=textDragState.current;if(!start)return;showGuides(guideX,event.clientY);patchTextStyle(selectedTextDef.styleKey!,{x:lockX?start.baseX:Math.round(start.baseX+event.clientX-start.x),y:Math.round(start.baseY+event.clientY-start.y)})};
+  const up=()=>{textDragState.current=null;hideGuides();window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
   window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
  };
  const beginDividerMove=(e:PointerEvent<HTMLButtonElement>)=>{
@@ -239,8 +244,8 @@ export default function VisualSiteEditor({
    if(styleKey&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='b'){event.preventDefault();const style=config.textStyles[styleKey];patchTextStyle(styleKey,{weight:(style.weight??500)>=650?400:700});return}
    if(selectedTextDef?.styleKey&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){
     event.preventDefault();const style=config.textStyles[selectedTextDef.styleKey],step=event.shiftKey?10:1;
-    if(event.key==='ArrowLeft')patchTextStyle(selectedTextDef.styleKey,{x:style.x-step});
-    if(event.key==='ArrowRight')patchTextStyle(selectedTextDef.styleKey,{x:style.x+step});
+    if(selectedTextKey!=='footerCopyright'&&event.key==='ArrowLeft')patchTextStyle(selectedTextDef.styleKey,{x:style.x-step});
+    if(selectedTextKey!=='footerCopyright'&&event.key==='ArrowRight')patchTextStyle(selectedTextDef.styleKey,{x:style.x+step});
     if(event.key==='ArrowUp')patchTextStyle(selectedTextDef.styleKey,{y:style.y-step});
     if(event.key==='ArrowDown')patchTextStyle(selectedTextDef.styleKey,{y:style.y+step});
    }
@@ -266,21 +271,31 @@ export default function VisualSiteEditor({
     if(inlineEditing===value)return;
     event.preventDefault();event.stopPropagation();
     const styleKey=textStyleKeyFor(value),style=styleKey?config.textStyles[styleKey]:null,sx=event.clientX,sy=event.clientY,startScroll=window.scrollY;
+    const lockX=verticalDragTextKeys.has(directKey),baseX=directKey==='footerCopyright'?0:(style?.x||0),guideX=directKey==='footerCopyright'?window.innerWidth/2:anyText.getBoundingClientRect().left;
     let active=false;
     const move=(ev:globalThis.PointerEvent)=>{
      const dx=ev.clientX-sx,dy=ev.clientY-sy+(window.scrollY-startScroll);
      if(!active&&Math.hypot(dx,dy)<5)return;
      if(!value.startsWith('text:')||!styleKey||!style)return;
-     active=true;document.documentElement.classList.add('visual-direct-dragging');
-     patchTextStyle(styleKey,{x:Math.round(style.x+dx),y:Math.round(style.y+dy)});
+     active=true;document.documentElement.classList.add('visual-direct-dragging');showGuides(guideX,ev.clientY);
+     patchTextStyle(styleKey,{x:lockX?baseX:Math.round(baseX+dx),y:Math.round(style.y+dy)});
      if(ev.clientY<54)window.scrollBy(0,-18);else if(ev.clientY>window.innerHeight-54)window.scrollBy(0,18);
     };
     const up=(ev:globalThis.PointerEvent)=>{
-     document.documentElement.classList.remove('visual-direct-dragging');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);
+     document.documentElement.classList.remove('visual-direct-dragging');hideGuides();window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);
      if(active)refresh();else startInlineEdit(value,ev.clientX,ev.clientY);
     };
     window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
     return;
+   }
+   const modelEl=target.closest<HTMLElement>('[data-visual-model="about"]');
+   if(modelEl&&config.aboutMediaType==='3d'){
+    setSelection('about');event.preventDefault();event.stopPropagation();
+    const r=modelEl.getBoundingClientRect(),sy=event.clientY,baseY=Number(config.modelOffsetY)||0,guideX=r.left+r.width/2;
+    modelDragState.current={y:sy,baseY,height:Math.max(1,r.height)};showGuides(guideX,sy);
+    const move=(ev:globalThis.PointerEvent)=>{const start=modelDragState.current;if(!start)return;document.documentElement.classList.add('visual-direct-dragging');showGuides(guideX,ev.clientY);const next=clamp(start.baseY+((ev.clientY-start.y)/start.height)*100,-80,80);setConfig(d=>({...d,modelOffsetY:Math.round(next*10)/10}))};
+    const up=()=>{modelDragState.current=null;document.documentElement.classList.remove('visual-direct-dragging');hideGuides();window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
+    window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});return;
    }
    const dividerEl=target.closest<HTMLElement>('[data-visual-divider-id]');
    if(dividerEl){
@@ -312,7 +327,7 @@ export default function VisualSiteEditor({
    window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
   };
   document.addEventListener('pointerdown',down,true);
-  return()=>{document.removeEventListener('pointerdown',down,true);document.documentElement.classList.remove('visual-direct-dragging')};
+  return()=>{document.removeEventListener('pointerdown',down,true);document.documentElement.classList.remove('visual-direct-dragging');hideGuides()};
  },[config,setConfig,setSelection]);
  const beginChromeDrag=(e:PointerEvent<HTMLElement>,kind:'toolbar'|'panel')=>{
   if(e.button!==0)return;
@@ -412,13 +427,13 @@ export default function VisualSiteEditor({
    {tab==='layout'&&<div className="visual-editor-layout">
     {selectedBlock?<PageBlockLayout block={selectedBlock} patch={value=>patchBlock(selectedBlock.id,value)}/>:
      selectedDivider?<DividerLayout divider={selectedDivider} patch={value=>patchDivider(selectedDivider.id,value)}/>:
-     selectedTextDef?.styleKey?<><div className="visual-editor-panel-head"><strong>텍스트 위치</strong><button type="button" onClick={()=>patchTextStyle(selectedTextDef.styleKey!,{x:0,y:0})}><RotateCcw size={13}/>Reset</button></div><NumberField label="가로 위치" value={config.textStyles[selectedTextDef.styleKey].x} suffix="px" onChange={v=>patchTextStyle(selectedTextDef.styleKey!,{x:v})}/><NumberField label="세로 위치" value={config.textStyles[selectedTextDef.styleKey].y} suffix="px" onChange={v=>patchTextStyle(selectedTextDef.styleKey!,{y:v})}/></>:
+     selectedTextDef?.styleKey?<><div className="visual-editor-panel-head"><strong>텍스트 위치</strong><button type="button" onClick={()=>patchTextStyle(selectedTextDef.styleKey!,{x:selectedTextKey==='footerCopyright'?0:config.textStyles[selectedTextDef.styleKey!].x,y:0})}><RotateCcw size={13}/>Reset</button></div>{selectedTextKey==='footerCopyright'?<div className="visual-axis-lock"><span>가로 위치</span><b>화면 정중앙 고정</b></div>:<NumberField label="가로 위치" value={config.textStyles[selectedTextDef.styleKey].x} suffix="px" onChange={v=>patchTextStyle(selectedTextDef.styleKey!,{x:v})}/>}<NumberField label="세로 위치" value={config.textStyles[selectedTextDef.styleKey].y} suffix="px" onChange={v=>patchTextStyle(selectedTextDef.styleKey!,{y:v})}/></>:
      <><div className="visual-editor-panel-head"><strong>영역 위치·크기</strong>{meta&&!selectedWork&&<button type="button" onClick={resetLayout}><RotateCcw size={13}/>Reset</button>}</div>{meta&&!selectedWork&&!selectedWorkText&&!selectedTeamText&&<><div className="visual-axis-lock"><span>가로 위치</span><b>중앙 고정 · 0px</b><button onClick={()=>patch(meta.x,0 as never)}>중앙 복귀</button></div><NumberField label="세로 위치 · 제한 없음" value={Number(config[meta.y])} suffix="px" onChange={v=>patch(meta.y,v as never)}/><Range label="크기" value={Math.round(Number(config[meta.scale])*100)} min={65} max={145} step={1} suffix="%" onChange={v=>patch(meta.scale,(v/100) as never)}/><Range label="영역 높이 · 0 = 자동" value={config.sectionHeights?.[sectionSelection]||0} min={0} max={1600} step={10} suffix="px" onChange={v=>patch('sectionHeights',{...config.sectionHeights,[sectionSelection]:v})}/></>}{sectionSelection==='work'&&!selectedWorkText&&<Range label="그리드 열 개수" value={config.columns} min={1} max={4} step={1} onChange={v=>patch('columns',v)}/>} {sectionSelection==='team'&&!selectedTeamText&&<><Range label="미디어 크기" value={config.teamMediaSize} min={120} max={520} step={1} suffix="px" onChange={v=>patch('teamMediaSize',v)}/><Range label="행 간격" value={config.teamRowGap} min={12} max={180} step={1} suffix="px" onChange={v=>patch('teamRowGap',v)}/></>}<Range label="전체 영역 간격" value={config.spacing} min={28} max={180} step={1} suffix="px" onChange={v=>patch('spacing',v)}/>{!selectedWork&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-editor-danger" onClick={()=>removeSection(sectionSelection)}><EyeOff size={14}/> 이 영역 숨기기</button>}</>}
    </div>}
    {tab==='style'&&(
     selectedBlock?<PageBlockStyle block={selectedBlock} patch={value=>patchBlock(selectedBlock.id,value)}/>:
     selectedDivider?<DividerStyle divider={selectedDivider} patch={value=>patchDivider(selectedDivider.id,value)}/>:
-    selectedTextDef?.styleKey?<InspectorGroup title="글자 스타일" open><TextStyleControl label={selectedTextDef.label} value={config.textStyles[selectedTextDef.styleKey]} onChange={v=>patchTextStyle(selectedTextDef.styleKey!,v)}/></InspectorGroup>:
+    selectedTextDef?.styleKey?<InspectorGroup title="글자 스타일" open><TextStyleControl label={selectedTextDef.label} value={config.textStyles[selectedTextDef.styleKey]} lockX={selectedTextKey==='footerCopyright'} onChange={v=>patchTextStyle(selectedTextDef.styleKey!,selectedTextKey==='footerCopyright'?{...v,x:0}:v)}/></InspectorGroup>:
     selectedWorkText&&selectedWorkTextStyleKey?<InspectorGroup title="카드 글자 스타일" open><TextStyleControl label={String(selectedWorkText.field)} value={config.textStyles[selectedWorkTextStyleKey]} onChange={v=>patchTextStyle(selectedWorkTextStyleKey,v)}/></InspectorGroup>:
     selectedTeamText&&selectedTeamTextStyleKey?<InspectorGroup title="팀 글자 스타일" open><TextStyleControl label={String(selectedTeamText.field)} value={config.textStyles[selectedTeamTextStyleKey]} onChange={v=>patchTextStyle(selectedTeamTextStyleKey,v)}/></InspectorGroup>:
     <StylePanel section={sectionSelection} config={config} patch={patch} patchTextStyle={patchTextStyle} uploadConfig={uploadConfig} uploading={uploading}/>
@@ -439,7 +454,7 @@ export default function VisualSiteEditor({
   {tab!=='settings'&&rect&&<div className={'visual-selection-frame is-panel-'+panelSide+(labelInside?' is-label-inside':'')+(selectedTextDef||selectedWorkText||selectedTeamText?' is-text-selection':'')+(selectedDivider?' is-divider-selection':'')+(selectedBlock?' is-block-selection':'')} style={{left:rect.left,top:rect.top,width:rect.width,height:rect.height}}><span className="visual-selection-label">{selectionLabel}</span>
    {selectedDivider&&<button type="button" className="visual-divider-drag-handle" aria-label="구분선 세로 이동" title="구분선을 위아래로 드래그" onPointerDown={beginDividerMove}><span/></button>}
    {meta&&!selectedWork&&!selectedDivider&&!selectedBlock&&!selectedTextDef&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-move-handle" aria-label="영역 세로 이동" title="세로 이동 · X축은 자동 중앙 고정" onPointerDown={beginMove}><Grip size={16}/></button>}
-   {selectedTextDef?.styleKey&&<button type="button" className="visual-move-handle is-text" aria-label="텍스트 이동" title="텍스트 자유 이동" onPointerDown={beginTextMove}><Grip size={16}/></button>}
+   {selectedTextDef?.styleKey&&<button type="button" className="visual-move-handle is-text" aria-label="텍스트 이동" title={verticalDragTextKeys.has(selectedTextKey)?'세로 이동 · 가로 위치 유지':'텍스트 자유 이동'} onPointerDown={beginTextMove}><Grip size={16}/></button>}
    {selectedTextDef?.styleKey&&<button type="button" className="visual-resize-handle is-text-size" aria-label="텍스트 크기 조절" title="드래그해서 글자 크기 조절" onPointerDown={beginTextResize}><Type size={14}/></button>}
    {meta&&!selectedWork&&!selectedDivider&&!selectedBlock&&!selectedTextDef&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-resize-handle" aria-label="영역 크기 조절" onPointerDown={beginResize}><Maximize2 size={15}/></button>}
    {meta&&!selectedWork&&!selectedDivider&&!selectedBlock&&!selectedTextDef&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-height-handle" aria-label="영역 높이 조절" title="위아래로 드래그해 영역 높이 조절" onPointerDown={beginHeightResize}><span/></button>}
@@ -479,7 +494,7 @@ function InspectorGroup({title,children,open=false,meta}:{title:string;children:
 
 function DirectTextEditor({def,config,patch,patchTextStyle}:{def:DirectTextDef;config:Config;patch:<K extends keyof Config>(key:K,value:Config[K])=>void;patchTextStyle:(key:TextStyleKey,value:TextPatch)=>void}){
  const value=String(config[def.configKey]??'');
- return <><div className="visual-editor-panel-head"><h3>{def.label}</h3><span className="visual-direct-badge">직접 편집</span></div><TextField label="텍스트" value={value} multi={!!def.multi} onChange={v=>patch(def.configKey,v as never)}/>{def.styleKey&&<InspectorGroup title="글자 디자인" open meta="글꼴 · 색상 · 크기 · 굵기 · 자간"><TextStyleControl label={def.label} value={config.textStyles[def.styleKey]} onChange={v=>patchTextStyle(def.styleKey!,v)}/></InspectorGroup>}</>;
+ return <><div className="visual-editor-panel-head"><h3>{def.label}</h3><span className="visual-direct-badge">직접 편집</span></div><TextField label="텍스트" value={value} multi={!!def.multi} onChange={v=>patch(def.configKey,v as never)}/>{def.styleKey&&<InspectorGroup title="글자 디자인" open meta="글꼴 · 색상 · 크기 · 굵기 · 자간"><TextStyleControl label={def.label} value={config.textStyles[def.styleKey]} lockX={def.styleKey==='footerCopyright'} onChange={v=>patchTextStyle(def.styleKey!,def.styleKey==='footerCopyright'?{...v,x:0}:v)}/></InspectorGroup>}</>;
 }
 
 function WorkTextEditor({work,field,patch,style,patchStyle}:{work:Work;field:keyof Work;patch:(key:keyof Work,value:Work[keyof Work])=>void;style:Config['textStyles'][TextStyleKey];patchStyle:(value:TextPatch)=>void}){
@@ -601,7 +616,7 @@ function StylePanel({section,config,patch,patchTextStyle,uploadConfig,uploading}
  </div>;
 }
 
-function TextStyleControl({label,value,onChange}:{label:string;value:Config['textStyles'][TextStyleKey];onChange:(value:TextPatch)=>void}){
+function TextStyleControl({label,value,onChange,lockX=false}:{label:string;value:Config['textStyles'][TextStyleKey];onChange:(value:TextPatch)=>void;lockX?:boolean}){
  const weight=value.weight??500,opacity=value.opacity??100,letterSpacing=value.letterSpacing??0,textTransform=value.textTransform??'none';
  return <div className="visual-text-style visual-text-style-open">
   <div className="visual-typography-head"><strong>{label} 스타일</strong><span>{value.size}px · {weight}</span></div>
@@ -615,7 +630,7 @@ function TextStyleControl({label,value,onChange}:{label:string;value:Config['tex
   <Range label="자간" value={letterSpacing} min={-8} max={24} step={.25} suffix="px" onChange={v=>onChange({letterSpacing:v})}/>
   <Range label="불투명도" value={opacity} min={0} max={100} step={1} suffix="%" onChange={v=>onChange({opacity:v})}/>
   <label className="visual-field"><span>영문 대소문자</span><select value={textTransform} onChange={e=>onChange({textTransform:e.target.value as TextPatch['textTransform']})}><option value="none">입력한 그대로</option><option value="uppercase">UPPERCASE</option><option value="lowercase">lowercase</option><option value="capitalize">Capitalize</option></select></label>
-  <details className="visual-advanced-text-controls"><summary>고급 위치 조절</summary><Range label="가로 위치" value={value.x} min={-600} max={600} step={1} suffix="px" onChange={v=>onChange({x:v})}/><Range label="세로 위치" value={value.y} min={-420} max={420} step={1} suffix="px" onChange={v=>onChange({y:v})}/></details>
+  <details className="visual-advanced-text-controls"><summary>고급 위치 조절</summary>{lockX?<div className="visual-axis-lock"><span>가로 위치</span><b>화면 정중앙 고정</b></div>:<Range label="가로 위치" value={value.x} min={-600} max={600} step={1} suffix="px" onChange={v=>onChange({x:v})}/>}<Range label="세로 위치" value={value.y} min={-420} max={420} step={1} suffix="px" onChange={v=>onChange({y:v})}/></details>
  </div>;
 }
 function WorkEditor({work,patch,onUpload,uploading,onDuplicate,onDelete}:{work:Work;patch:(key:keyof Work,value:Work[keyof Work])=>void;onUpload:(file:File|undefined,field:'poster'|'video')=>void;uploading:boolean;onDuplicate:()=>void;onDelete:()=>void}){
