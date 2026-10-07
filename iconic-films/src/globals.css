@@ -13143,6 +13143,9 @@ body:has(.visual-editor-ui) .scroll-toggle{opacity:.18;pointer-events:none}
 }
 
 .visual-height-handle{
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
   position:absolute;
   left:50%;
   bottom:-11px;
@@ -15704,4 +15707,17 @@ html.visual-axis-guides::after{
   .portfolio-media-order-actions{
     grid-template-columns:1fr;
   }
+}
+
+
+/* PROJECT 07 — media rail performance only; no layout or visual geometry changes. */
+.media-gallery-slide{
+  contain:paint style;
+  backface-visibility:hidden;
+}
+.media-gallery-track{
+  transform-style:flat;
+}
+.media-gallery-artwork>img{
+  content-visibility:auto;
 }
