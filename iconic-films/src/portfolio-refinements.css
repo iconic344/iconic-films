@@ -199,7 +199,7 @@
     max-width:none!important;
   }
   .team-portfolio-grid-item{
-    aspect-ratio:4/5!important;
+    aspect-ratio:var(--portfolio-item-ratio,4/5)!important;
     min-height:0!important;
   }
   .team-portfolio-grid-item.is-empty{
