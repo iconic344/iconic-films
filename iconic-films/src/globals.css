@@ -15579,7 +15579,7 @@ html.visual-direct-dragging [data-visual-team-text]{
 }
 
 
-/* PROJECT 07 — precision editing guides + compact content endings. */
+/* PROJECT 07 — requested precision guides and compact footer only. */
 html.visual-axis-guides::before,
 html.visual-axis-guides::after{
   content:"";
@@ -15588,7 +15588,6 @@ html.visual-axis-guides::after{
   pointer-events:none;
   background:color-mix(in srgb,var(--accent-color,#8b1d1d) 78%,white 12%);
   opacity:.72;
-  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent-color,#8b1d1d) 14%,transparent);
 }
 html.visual-axis-guides::before{
   left:var(--visual-guide-x,50vw);
@@ -15602,69 +15601,43 @@ html.visual-axis-guides::after{
   width:100vw;
   height:1px;
 }
-.site.visual-editing [data-visual-model="about"]{
-  cursor:ns-resize!important;
-}
-.site.visual-editing [data-visual-model="about"] model-viewer{
-  pointer-events:none!important;
-}
+.site.visual-editing [data-visual-model="about"]{cursor:ns-resize!important}
+.site.visual-editing [data-visual-model="about"] model-viewer{pointer-events:none!important}
 
-/* About stays content-height driven. The 3D wordmark no longer creates a
-   large dead zone below the copy, while remaining independently movable. */
+/* Keep the original ABOUT geometry; only remove avoidable bottom padding. */
 .site main>.about[data-visual-section="about"]{
   min-height:0!important;
-  align-items:start!important;
-  padding-bottom:clamp(28px,3vw,48px)!important;
-}
-.site main>.about[data-visual-section="about"] .about-visual.is-model{
-  align-self:start!important;
-  aspect-ratio:1.9 / 1!important;
-  min-height:0!important;
-  max-height:360px!important;
-}
-.site main>.about[data-visual-section="about"] .about-visual.is-model .model-stage{
-  min-height:0!important;
+  padding-bottom:clamp(36px,4vw,56px)!important;
 }
 
-/* Main footer copyright is always horizontally centered. Its editor only
-   changes vertical position, and the footer ends with the content. */
+/* Footer stays compact, copyright stays centered, admin stays at the right. */
 .site>footer[data-visual-section="footer"]{
-  position:relative!important;
   min-height:72px!important;
   height:auto!important;
   padding:24px 5%!important;
+  display:grid!important;
+  grid-template-columns:1fr auto 1fr!important;
+  align-items:center!important;
 }
 .site>footer[data-visual-section="footer"]>.footer-copy{
-  position:absolute!important;
-  left:50%!important;
-  top:50%!important;
+  grid-column:2!important;
+  justify-self:center!important;
   width:max-content!important;
-  max-width:calc(100% - 180px)!important;
+  max-width:calc(100vw - 180px)!important;
   margin:0!important;
-  justify-self:auto!important;
   text-align:center!important;
-  transform:translate(-50%,-50%)!important;
 }
 .site>footer[data-visual-section="footer"]>button{
-  margin-left:auto!important;
+  grid-column:3!important;
   justify-self:end!important;
+  margin:0!important;
 }
 @media(max-width:820px){
-  .site main>.about[data-visual-section="about"]{
-    padding-bottom:28px!important;
-  }
-  .site main>.about[data-visual-section="about"] .about-visual.is-model{
-    aspect-ratio:1.55 / 1!important;
-    max-height:320px!important;
-  }
   .site>footer[data-visual-section="footer"]{
-    min-height:70px!important;
-    padding:22px 16px max(22px,env(safe-area-inset-bottom))!important;
-    display:flex!important;
-    align-items:center!important;
+    min-height:68px!important;
+    padding:20px 16px max(20px,env(safe-area-inset-bottom))!important;
   }
   .site>footer[data-visual-section="footer"]>.footer-copy{
-    width:max-content!important;
-    max-width:calc(100% - 130px)!important;
+    max-width:calc(100vw - 130px)!important;
   }
 }
