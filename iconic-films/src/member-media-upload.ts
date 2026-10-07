@@ -12,6 +12,25 @@ const uploadError=async(response:Response)=>{
   return Error(detail||('업로드에 실패했습니다. HTTP '+response.status));
 };
 const b64=(value:string)=>btoa(unescape(encodeURIComponent(value)));
+
+function signedUpload(ticket:UploadTicket,file:File,progress?:(percent:number)=>void,signal?:AbortSignal):Promise<string>{
+  return new Promise((resolve,reject)=>{
+    if(!ticket.token||!ticket.bucketName||!ticket.objectName||!ticket.tusEndpoint){reject(Error('서명 업로드 정보를 만들지 못했습니다.'));return}
+    const storageRoot=ticket.tusEndpoint.replace(/\/upload\/resumable\/?$/,'');
+    const objectPath=[ticket.bucketName,...ticket.objectName.split('/')].map(encodeURIComponent).join('/');
+    const url=storageRoot+'/object/upload/sign/'+objectPath+'?token='+encodeURIComponent(ticket.token);
+    const xhr=new XMLHttpRequest(),abort=()=>xhr.abort(),cleanup=()=>signal?.removeEventListener('abort',abort);
+    xhr.open('PUT',url);xhr.responseType='json';xhr.setRequestHeader('x-upsert','false');
+    xhr.upload.onprogress=e=>{if(e.lengthComputable)progress?.(Math.round(e.loaded/e.total*100))};
+    xhr.onload=()=>{cleanup();if(xhr.status>=200&&xhr.status<300){progress?.(100);resolve(ticket.url)}else if(xhr.status===413)reject(Error('파일 크기가 현재 Supabase Storage 한도를 초과했습니다. Storage의 Global/Bucket 파일 크기 제한을 확인해 주세요.'));else reject(Error(xhr.response?.error||xhr.response?.message||'업로드에 실패했습니다.'))};
+    xhr.onerror=()=>{cleanup();reject(Error('연결이 끊겼습니다. 다시 시도해 주세요.'))};
+    xhr.onabort=()=>{cleanup();reject(new DOMException('업로드 중지','AbortError'))};
+    signal?.addEventListener('abort',abort,{once:true});
+    if(signal?.aborted){cleanup();reject(new DOMException('업로드 중지','AbortError'));return}
+    const body=new FormData();body.append('cacheControl','86400');body.append('',new File([file],file.name,{type:ticket.contentType||file.type||'application/octet-stream'}));xhr.send(body);
+  });
+}
+
 async function resumableUpload(ticket:UploadTicket,file:File,progress?:(percent:number)=>void,signal?:AbortSignal){
   if(!ticket.tusEndpoint||!ticket.token||!ticket.bucketName||!ticket.objectName)throw Error('대용량 업로드 정보를 만들지 못했습니다.');
   const common={'Tus-Resumable':'1.0.0','x-signature':ticket.token};
@@ -88,7 +107,15 @@ export async function uploadMemberFile(memberId:string,file:File,progress?:(perc
   });
   const ticket=await response.json() as UploadTicket&{error?:string};
   if(!response.ok)throw Error(ticket.error||'업로드에 실패했습니다.');
-  if(file.size>6*1024*1024&&ticket.resumable)return resumableUpload(ticket,file,progress,signal);
+  const imageUpload=/^image\//.test(file.type);
+  if(imageUpload)return signedUpload(ticket,file,progress,signal);
+  if(file.size>6*1024*1024&&ticket.resumable){
+    try{return await resumableUpload(ticket,file,progress,signal)}
+    catch(error){
+      if(/Invalid Compact JWS/i.test((error as Error).message||''))return signedUpload(ticket,file,progress,signal);
+      throw error;
+    }
+  }
 
   return new Promise((resolve,reject)=>{
     const xhr=new XMLHttpRequest();
