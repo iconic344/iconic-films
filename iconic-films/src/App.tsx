@@ -22,6 +22,7 @@ import ContactInbox from './contact-inbox';
 import SiteContactNotifications from './site-contact-notifications';
 import VisualSiteEditor,{type VisualSelection} from './visual-site-editor';
 import PortfolioVisualEditor from './portfolio-visual-editor';
+import {ensureFontFamilies} from './font-picker';
 import {adminHeaders,rememberAdminVisit,clearAdminVisit,getAdminVisitEpoch,revokeAdminVisit,hasAdminVisit} from './admin-session';
 import {memberRequest,rememberMemberVisit,clearMemberVisit,hasMemberVisit} from './member-session';
 const fmt=(v:number)=>`${Math.floor((v||0)/60)}:${String(Math.floor((v||0)%60)).padStart(2,'0')}`;
@@ -74,6 +75,12 @@ export default function Home(){
  });
  useEffect(()=>{api('/api/config').then(j=>{const v=normalizeConfig(j.config||{});try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(v))}catch{}setSaved(v);setDraft(v);setTheme(cachedTheme(v.theme));setVolume(v.volume);setShuffle(v.musicShuffle);setRepeat(v.musicRepeatMode==='one'?1:v.musicRepeatMode==='all'?2:0);setLoaded(true)}).catch(e=>{setLoaded(true);setNote(e.message)});},[]);
  useEffect(()=>{document.documentElement.dataset.theme=theme;},[theme]);
+ useEffect(()=>{
+  const families=[c.font,...Object.values(c.textStyles||{}).map(style=>style.font),...c.teamMembers.flatMap(member=>[
+   member.portfolioNameFont,member.portfolioRoleFont,member.portfolioBioFont,member.portfolioTitleFont,member.portfolioIntroFont,member.portfolioUtilityFont
+  ])].filter(Boolean) as string[];
+  ensureFontFamilies(families);
+ },[c.font,c.textStyles,c.teamMembers]);
  useEffect(()=>{if(!loaded)return;try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(saved))}catch{}},[loaded,saved]);
  useEffect(()=>{draftRef.current=draft},[draft]);
  useEffect(()=>{if(!visualEdit)return;const onKey=(e:KeyboardEvent)=>{const target=e.target as HTMLElement|null;if(target?.closest('input,textarea,select,[contenteditable="true"]'))return;if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'){e.preventDefault();undoVisualEdit();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();void saveVisualEdit()}};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey)},[visualEdit]);

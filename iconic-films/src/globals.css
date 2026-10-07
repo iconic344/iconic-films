@@ -14874,3 +14874,240 @@ html.visual-direct-dragging [data-visual-team-text]{
   }
   .visual-inline-text-toolbar>button:first-child span{display:none}
 }
+
+
+/* 2026-10-07 font library picker with live previews */
+.font-picker{
+  position:relative;
+  display:grid;
+  gap:7px;
+  min-width:0;
+  margin-bottom:14px;
+}
+.font-picker-label{
+  color:color-mix(in srgb,var(--ink) 72%,transparent);
+  font-size:11.5px;
+  line-height:1.35;
+  font-weight:650;
+}
+.font-picker-trigger{
+  width:100%;
+  min-height:44px;
+  padding:0 11px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  border:1px solid color-mix(in srgb,var(--ink) 17%,transparent)!important;
+  border-radius:11px!important;
+  background:color-mix(in srgb,var(--page) 91%,transparent)!important;
+  color:var(--ink)!important;
+}
+.font-picker-trigger-preview{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:15px;
+  line-height:1.15;
+}
+.font-picker-popover{
+  position:relative;
+  z-index:20;
+  display:grid;
+  gap:8px;
+  margin-top:1px;
+  padding:9px;
+  border:1px solid color-mix(in srgb,var(--ink) 18%,transparent);
+  border-radius:14px;
+  background:color-mix(in srgb,var(--page) 98%,transparent);
+  -webkit-backdrop-filter:blur(28px) saturate(1.2);
+  backdrop-filter:blur(28px) saturate(1.2);
+  box-shadow:0 16px 48px rgba(0,0,0,.22);
+}
+.font-picker-search{
+  min-height:39px;
+  padding:0 9px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:7px;
+  border:1px solid color-mix(in srgb,var(--ink) 14%,transparent);
+  border-radius:10px;
+  background:color-mix(in srgb,var(--page) 80%,transparent);
+}
+.font-picker-search>svg{color:var(--soft)}
+.font-picker-search input{
+  min-width:0;
+  height:36px;
+  padding:0!important;
+  border:0!important;
+  outline:0!important;
+  background:transparent!important;
+  color:var(--ink)!important;
+  font-size:11px!important;
+}
+.font-picker-search button{
+  width:28px!important;
+  height:28px!important;
+  display:grid!important;
+  place-items:center;
+  border:0!important;
+  border-radius:8px!important;
+  background:transparent!important;
+  color:var(--soft)!important;
+}
+.font-picker-categories{
+  display:flex;
+  gap:4px;
+  overflow-x:auto;
+  padding-bottom:1px;
+  scrollbar-width:none;
+}
+.font-picker-categories::-webkit-scrollbar{display:none}
+.font-picker-categories button{
+  flex:0 0 auto;
+  min-height:29px;
+  padding:0 9px!important;
+  border:1px solid color-mix(in srgb,var(--ink) 11%,transparent)!important;
+  border-radius:999px!important;
+  background:transparent!important;
+  color:var(--soft)!important;
+  font-size:9.5px!important;
+  font-weight:600;
+}
+.font-picker-categories button.is-active{
+  background:var(--ink)!important;
+  color:var(--page)!important;
+  border-color:var(--ink)!important;
+}
+.font-picker-list{
+  max-height:330px;
+  display:grid;
+  gap:4px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding-right:2px;
+}
+.font-picker-item{
+  min-height:58px;
+  padding:7px 9px!important;
+  display:grid!important;
+  grid-template-columns:112px minmax(0,1fr);
+  align-items:center;
+  gap:10px!important;
+  text-align:left!important;
+  border:1px solid transparent!important;
+  border-radius:10px!important;
+  background:transparent!important;
+  color:var(--ink)!important;
+}
+.font-picker-item:hover{
+  background:color-mix(in srgb,var(--ink) 6%,transparent)!important;
+}
+.font-picker-item.is-selected{
+  border-color:color-mix(in srgb,var(--accent-color) 60%,var(--ink) 12%)!important;
+  background:color-mix(in srgb,var(--accent-color) 8%,var(--page))!important;
+}
+.font-picker-item-name{
+  min-width:0;
+  display:grid;
+  gap:3px;
+  font-family:system-ui,-apple-system,sans-serif!important;
+  font-size:10.5px!important;
+  font-weight:650;
+  line-height:1.15;
+}
+.font-picker-item-name small{
+  color:var(--soft);
+  font-family:system-ui,-apple-system,sans-serif!important;
+  font-size:8px!important;
+  font-weight:500;
+}
+.font-picker-item-sample{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:17px!important;
+  line-height:1.25;
+  font-weight:400!important;
+}
+.font-picker-empty{
+  margin:12px 0;
+  color:var(--soft);
+  text-align:center;
+  font-size:10px;
+}
+.font-picker-custom{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:center;
+  gap:8px;
+  padding-top:7px;
+  border-top:1px solid color-mix(in srgb,var(--ink) 10%,transparent);
+}
+.font-picker-custom>span{
+  color:var(--soft);
+  font-size:9px;
+  white-space:nowrap;
+}
+.font-picker-custom input{
+  min-width:0;
+  height:34px;
+  padding:0 8px!important;
+  border:1px solid color-mix(in srgb,var(--ink) 13%,transparent)!important;
+  border-radius:8px!important;
+  background:color-mix(in srgb,var(--page) 76%,transparent)!important;
+  color:var(--ink)!important;
+  font-size:9.5px!important;
+}
+
+/* compact font picker used by the floating text HUD */
+.visual-inline-text-toolbar>.font-picker.is-compact{
+  margin:0;
+  display:block;
+  min-width:0;
+}
+.font-picker.is-compact .font-picker-label{display:none}
+.font-picker.is-compact .font-picker-trigger{
+  min-height:32px;
+  height:32px;
+  padding:0 7px!important;
+  border-radius:8px!important;
+}
+.font-picker.is-compact .font-picker-trigger-preview{
+  font-size:10px!important;
+}
+.font-picker.is-compact .font-picker-popover{
+  position:absolute;
+  left:0;
+  bottom:calc(100% + 8px);
+  width:min(390px,calc(100vw - 20px));
+  margin:0;
+}
+.font-picker.is-compact .font-picker-list{
+  max-height:300px;
+}
+.visual-inline-text-toolbar{
+  grid-template-columns:auto minmax(100px,1fr) 34px 32px 30px 32px 34px!important;
+}
+.edit-site-settings-body .font-picker{
+  margin-bottom:14px;
+}
+@media(max-width:620px){
+  .font-picker-item{
+    grid-template-columns:92px minmax(0,1fr);
+    min-height:54px;
+    gap:7px!important;
+  }
+  .font-picker-item-sample{font-size:15px!important}
+  .font-picker-list{max-height:290px}
+  .font-picker.is-compact .font-picker-popover{
+    position:fixed;
+    left:8px;
+    right:8px;
+    bottom:76px;
+    width:auto;
+  }
+}

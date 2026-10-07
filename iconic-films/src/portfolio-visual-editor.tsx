@@ -4,6 +4,7 @@ import {ArrowDown,ArrowUp,Copy,Eye,EyeOff,Grip,Layers3,Maximize2,PanelLeft,Panel
 import type {Config,PortfolioDivider,PortfolioSectionKey,TeamMember,TextAlign} from './defaults';
 import {uploadFile} from './media-upload';
 import EditSiteFullSettings from './edit-site-full-settings';
+import FontPicker from './font-picker';
 
 type PanelTab='layers'|'content'|'layout'|'style'|'settings';
 type Point={x:number;y:number};
@@ -275,7 +276,7 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
 
   {tab!=='settings'&&rect&&selectedText&&style&&<div className="visual-inline-text-toolbar" style={quickToolbarStyle}>
    <button type="button" className={inlineEditing===selectedText?'is-active':''} title="화면에서 바로 입력 · Enter/F2" onMouseDown={e=>e.preventDefault()} onClick={()=>startInlineEdit(selectedText)}><Type size={13}/><span>입력</span></button>
-   <select aria-label="빠른 글꼴 변경" value={style.font} onChange={e=>patchPortfolioTextStyle(selectedText,{font:e.target.value})}><option value="Arial, Helvetica, sans-serif">Arial</option><option value="Helvetica Neue, Arial, sans-serif">Helvetica</option><option value="system-ui, sans-serif">System</option><option value="Apple SD Gothic Neo, sans-serif">Apple SD Gothic</option><option value="Malgun Gothic, sans-serif">맑은 고딕</option><option value="Noto Sans KR, sans-serif">Noto Sans KR</option><option value="Georgia, serif">Georgia</option><option value="Times New Roman, serif">Times</option></select>
+   <FontPicker compact value={style.font} onChange={font=>patchPortfolioTextStyle(selectedText,{font})}/>
    <label className="visual-inline-color" title="글자 색상"><input type="color" value={style.color||'#ffffff'} onChange={e=>patchPortfolioTextStyle(selectedText,{color:e.target.value})}/><span style={{background:style.color||'#ffffff'}}/></label>
    <button type="button" title="글자 작게" onClick={()=>patchPortfolioTextStyle(selectedText,{size:Math.max(4,style.size-1)})}>−</button><span className="visual-inline-size">{Math.round(style.size)}</span><button type="button" title="글자 크게" onClick={()=>patchPortfolioTextStyle(selectedText,{size:Math.min(240,style.size+1)})}>+</button>
   </div>}
@@ -299,7 +300,7 @@ function SectionContent({section,config,member,patchConfig,patchMember,uploadHer
  return <p className="visual-help">이 영역의 텍스트는 연결된 앞/뒤 포트폴리오 이름을 자동으로 사용합니다. 위치·크기/스타일은 이 영역 자체에서 조절하세요.</p>;
 }
 function TextStyleEditor({style,onChange}:{style:{font:string;size:number;color:string;align:TextAlign;x:number;y:number};onChange:(value:Partial<{font:string;size:number;color:string;align:TextAlign;x:number;y:number}>)=>void}){
- return <><div className="visual-editor-panel-head"><strong>글자 스타일</strong></div><label className="visual-field"><span>폰트</span><select value={style.font||'Arial, Helvetica, sans-serif'} onChange={e=>onChange({font:e.target.value})}>{['Arial, Helvetica, sans-serif','Helvetica Neue, Arial, sans-serif','Georgia, serif','Times New Roman, serif','Verdana, sans-serif','Trebuchet MS, sans-serif','Courier New, monospace','system-ui, sans-serif'].map(font=><option key={font} value={font}>{font}</option>)}</select></label><Range label="크기" value={style.size} min={8} max={180} step={1} suffix="px" onChange={size=>onChange({size})}/><ColorInput label="색상" value={style.color||'#ffffff'} onChange={color=>onChange({color})}/><div className="visual-segmented">{(['left','center','right'] as TextAlign[]).map(align=><button key={align} className={style.align===align?'is-active':''} onClick={()=>onChange({align})}>{align.toUpperCase()}</button>)}</div></>;
+ return <><div className="visual-editor-panel-head"><strong>글자 스타일</strong></div><FontPicker value={style.font||'Arial, Helvetica, sans-serif'} onChange={font=>onChange({font})}/><Range label="크기" value={style.size} min={8} max={180} step={1} suffix="px" onChange={size=>onChange({size})}/><ColorInput label="색상" value={style.color||'#ffffff'} onChange={color=>onChange({color})}/><div className="visual-segmented">{(['left','center','right'] as TextAlign[]).map(align=><button key={align} className={style.align===align?'is-active':''} onClick={()=>onChange({align})}>{align.toUpperCase()}</button>)}</div></>;
 }
 function Range({label,value,min,max,step,suffix='',onChange}:{label:string;value:number;min:number;max:number;step:number;suffix?:string;onChange:(value:number)=>void}){return <label className="visual-range"><span>{label}<b>{Math.round(value*100)/100}{suffix}</b></span><input type="range" value={value} min={min} max={max} step={step} onChange={e=>onChange(Number(e.target.value))}/></label>}
 function TextInput({label,value,onChange,multi=false}:{label:string;value:string;onChange:(value:string)=>void;multi?:boolean}){return <label className="visual-field"><span>{label}</span>{multi?<textarea value={value||''} onChange={e=>onChange(e.target.value)}/>:<input value={value||''} onChange={e=>onChange(e.target.value)}/>}</label>}

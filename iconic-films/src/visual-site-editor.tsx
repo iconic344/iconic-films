@@ -4,6 +4,7 @@ import {ArrowDown,ArrowUp,Copy,Eye,EyeOff,Grip,Layers3,Maximize2,PanelLeft,Panel
 import type {Config,NavItemKey,SiteSectionKey,Work,SectionDivider} from './defaults';
 import {uploadFile} from './media-upload';
 import EditSiteFullSettings from './edit-site-full-settings';
+import FontPicker from './font-picker';
 
 type SectionKey=SiteSectionKey;
 type PanelTab='layers'|'content'|'layout'|'style'|'settings';
@@ -405,7 +406,7 @@ export default function VisualSiteEditor({
 
   {tab!=='settings'&&rect&&quickTextStyle&&quickStyleKey&&<div className="visual-inline-text-toolbar" style={quickToolbarStyle}>
    <button type="button" className={inlineEditing===selection?'is-active':''} title="화면에서 바로 글자 입력 · Enter/F2" onMouseDown={e=>e.preventDefault()} onClick={()=>startInlineEdit(selection)}><Type size={13}/><span>입력</span></button>
-   <select aria-label="빠른 글꼴 변경" title="글꼴" value={quickTextStyle.font} onChange={e=>patchTextStyle(quickStyleKey,{font:e.target.value})}><option value="Arial, Helvetica, sans-serif">Arial</option><option value="Helvetica Neue, Arial, sans-serif">Helvetica</option><option value="system-ui, sans-serif">System</option><option value="Apple SD Gothic Neo, sans-serif">Apple SD Gothic</option><option value="Malgun Gothic, sans-serif">맑은 고딕</option><option value="Noto Sans KR, sans-serif">Noto Sans KR</option><option value="Georgia, serif">Georgia</option><option value="Times New Roman, serif">Times</option></select>
+   <FontPicker compact value={quickTextStyle.font} onChange={font=>patchTextStyle(quickStyleKey,{font})}/>
    <label className="visual-inline-color" title="글자 색상"><input type="color" value={quickTextStyle.color||'#ffffff'} onChange={e=>patchTextStyle(quickStyleKey,{color:e.target.value})}/><span style={{background:quickTextStyle.color||'#ffffff'}}/></label>
    <button type="button" title="글자 작게" onClick={()=>patchTextStyle(quickStyleKey,{size:Math.max(4,quickTextStyle.size-1)})}>−</button>
    <span className="visual-inline-size">{Math.round(quickTextStyle.size)}</span>
@@ -501,10 +502,9 @@ function StylePanel({section,config,patch,patchTextStyle,uploadConfig,uploading}
 
 function TextStyleControl({label,value,onChange}:{label:string;value:Config['textStyles'][TextStyleKey];onChange:(value:TextPatch)=>void}){
  const weight=value.weight??500,opacity=value.opacity??100,letterSpacing=value.letterSpacing??0,textTransform=value.textTransform??'none';
- const fontOptions=['Arial, Helvetica, sans-serif','Helvetica Neue, Arial, sans-serif','system-ui, sans-serif','Apple SD Gothic Neo, sans-serif','Malgun Gothic, sans-serif','Noto Sans KR, sans-serif','Georgia, serif','Times New Roman, serif','Verdana, sans-serif','Trebuchet MS, sans-serif','Courier New, monospace'];
  return <div className="visual-text-style visual-text-style-open">
   <div className="visual-typography-head"><strong>{label} 스타일</strong><span>{value.size}px · {weight}</span></div>
-  <label className="visual-field"><span>글꼴</span><input list="visual-font-options" value={value.font} onChange={e=>onChange({font:e.target.value})} placeholder="폰트 이름 또는 CSS font-family"/><datalist id="visual-font-options">{fontOptions.map(font=><option key={font} value={font}/>)}</datalist></label>
+  <FontPicker value={value.font} onChange={font=>onChange({font})}/>
   <div className="visual-quick-style-grid">
    <label className="visual-color"><span>글자 색상</span><input type="color" value={value.color||'#ffffff'} onChange={e=>onChange({color:e.target.value})}/><b>{value.color||'AUTO'}</b></label>
    <label className="visual-field"><span>정렬</span><select value={value.align} onChange={e=>onChange({align:e.target.value as TextPatch['align']})}><option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option></select></label>
