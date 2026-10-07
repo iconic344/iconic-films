@@ -58,6 +58,8 @@ export default function Home(){
  const [saved,setSaved]=useState<Config>(bootConfig),[draft,setDraft]=useState<Config>(bootConfig),[theme,setTheme]=useState(()=>cachedTheme(bootConfig.theme)),[admin,setAdmin]=useState(false),[preview,setPreview]=useState(false),[login,setLogin]=useState(false),[loginTarget,setLoginTarget]=useState<'admin'|'visual'>('admin'),[pin,setPin]=useState(''),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[category,setCategory]=useState('All'),[work,setWork]=useState<Work|null>(null),[music,setMusic]=useState(false),[track,setTrack]=useState(0),[playing,setPlaying]=useState(false),[shuffle,setShuffle]=useState(bootConfig.musicShuffle),[repeat,setRepeat]=useState(bootConfig.musicRepeatMode==='one'?1:bootConfig.musicRepeatMode==='all'?2:0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[group,setGroup]=useState('Tracks'),[filter,setFilter]=useState('All'),[volume,setVolume]=useState(bootConfig.volume),[newPin,setNewPin]=useState(''),[loaded,setLoaded]=useState(false),[scrollTarget,setScrollTarget]=useState<'top'|'bottom'>('bottom'),[autoplayBlocked,setAutoplayBlocked]=useState(false),[animations,setAnimations]=useState<string[]>([]),[editorTab,setEditorTab]=useState('content'),[contactOpen,setContactOpen]=useState(false),[teamRoute,setTeamRoute]=useState(()=>typeof window==='undefined'?'':decodeURIComponent(window.location.pathname.match(/^\/team\/([^/]+)/)?.[1]||'')),[teamPageClosing,setTeamPageClosing]=useState(false),[adminClosing,setAdminClosing]=useState(false),[ownerMode,setOwnerMode]=useState(false),[memberLogin,setMemberLogin]=useState<TeamMember|null>(null),[memberPin,setMemberPin]=useState(''),[memberEditor,setMemberEditor]=useState<TeamMember|null>(null),[memberDraft,setMemberDraft]=useState<TeamMember|null>(null),[memberBusy,setMemberBusy]=useState(false),[teamPins,setTeamPins]=useState<Record<string,string>>({});
  const [focusIndex,setFocusIndex]=useState<number|null>(null);
  const [visualEdit,setVisualEdit]=useState(false),[visualSelection,setVisualSelection]=useState<VisualSelection>('hero');
+ const navDragItemRef=useRef<NavItemKey|null>(null);
+ const [navDraggingItem,setNavDraggingItem]=useState<NavItemKey|null>(null),[navDropItem,setNavDropItem]=useState<NavItemKey|null>(null);
  const musicButton=useRef<HTMLButtonElement>(null),musicPanel=useRef<HTMLElement>(null);
  const startup=useRef(false),audio=useRef<HTMLAudioElement>(null),filmWasPlaying=useRef(false),teamVideoWasPlaying=useRef(false),drag=useRef<{x:number;y:number}|null>(null),frame=useRef<HTMLDivElement>(null),lastScrollY=useRef(0),videoWarm=useRef(new Map<string,HTMLVideoElement>());
  const [compactViewport,setCompactViewport]=useState(()=>typeof window!=='undefined'&&window.matchMedia('(max-width: 820px), (max-width: 1180px) and (any-pointer: coarse)').matches);
@@ -227,6 +229,45 @@ export default function Home(){
   finally{setBusy(false)}
  }
  function openAdminFromVisual(){setVisualEdit(false);setAdminClosing(false);setPreview(false);setLogin(false);setAdmin(true)}
+ function reorderVisualNav(from:NavItemKey,to:NavItemKey){
+  if(!visualEdit||from===to)return;
+  setDraft(d=>{
+   const navOrder=[...d.navOrder],fromIndex=navOrder.indexOf(from),toIndex=navOrder.indexOf(to);
+   if(fromIndex<0||toIndex<0)return d;
+   const [moved]=navOrder.splice(fromIndex,1);
+   navOrder.splice(toIndex,0,moved);
+   const sectionOrder=[...(d.sectionOrder||[])];
+   const orderedSections=navOrder.filter((item):item is Exclude<NavItemKey,'contact'>=>item!=='contact');
+   const movable=new Set<SiteSectionKey>(orderedSections);
+   const slots=sectionOrder.map((key,index)=>movable.has(key)?index:-1).filter(index=>index>=0);
+   const nextSectionOrder=[...sectionOrder];
+   slots.forEach((slot,index)=>{const key=orderedSections[index];if(key)nextSectionOrder[slot]=key});
+   return {...d,navOrder,sectionOrder:nextSectionOrder};
+  });
+ }
+ function navDragProps(item:NavItemKey){
+  if(!visualEdit)return {};
+  return {
+   draggable:true,
+   onDragStart:(e:React.DragEvent<HTMLElement>)=>{
+    navDragItemRef.current=item;
+    setNavDraggingItem(item);
+    setNavDropItem(item);
+    e.dataTransfer.effectAllowed='move';
+    e.dataTransfer.setData('text/plain',item);
+   },
+   onDragEnter:(e:React.DragEvent<HTMLElement>)=>{e.preventDefault();setNavDropItem(item)},
+   onDragOver:(e:React.DragEvent<HTMLElement>)=>{e.preventDefault();e.dataTransfer.dropEffect='move';setNavDropItem(item)},
+   onDrop:(e:React.DragEvent<HTMLElement>)=>{
+    e.preventDefault();e.stopPropagation();
+    const from=navDragItemRef.current||(e.dataTransfer.getData('text/plain') as NavItemKey);
+    if(from&&from!==item)reorderVisualNav(from,item);
+    navDragItemRef.current=null;setNavDraggingItem(null);setNavDropItem(null);
+   },
+   onDragEnd:()=>{navDragItemRef.current=null;setNavDraggingItem(null);setNavDropItem(null)}
+  };
+ }
+ const navDragClass=(item:NavItemKey)=>visualEdit?' visual-nav-draggable'+(navDraggingItem===item?' is-nav-dragging':'')+(navDropItem===item&&navDraggingItem!==item?' is-nav-drop-target':''):'';
  function selectVisualTarget(e:React.MouseEvent<HTMLDivElement>){
   if(!visualEdit)return;
   const target=e.target as HTMLElement;
@@ -367,7 +408,22 @@ export default function Home(){
  <ScrollReveal enabled={!admin||preview}/>
  <PointerExperience enabled={!visualEdit&&(!admin||preview)&&!login&&c.motion>0}/>
  {!teamPage&&<div className="site-backdrop" aria-hidden="true">{c.backgroundType==='image'&&c.backgroundImage&&<img src={c.backgroundImage} alt="" style={{opacity:c.backgroundOpacity/100}}/>}{c.backgroundType==='video'&&c.backgroundVideo&&<video key={c.backgroundVideo} src={c.backgroundVideo} data-site-autoplay="true" autoPlay muted loop playsInline preload="auto" onLoadedMetadata={e=>keepMutedLoopPlaying(e.currentTarget)} onCanPlay={e=>keepMutedLoopPlaying(e.currentTarget)} style={{opacity:c.backgroundOpacity/100}}/>}{c.backgroundType!=='none'&&<div className="backdrop-dim" style={{background:'var(--page)',opacity:c.backgroundDim/100}}/>}<div className="site-pattern" style={{backgroundImage:patternImages[c.pattern]||'none',backgroundSize:`${c.patternSize}px ${c.patternSize}px`,opacity:c.patternOpacity/100}}/></div>}
- {teamPage?teamPage:<> {c.showNav&&<header data-visual-section="nav" className="nav" style={sectionStyle('nav')}><a href="#" className="brand" data-visual-text="name">{c.logo?<img src={c.logo} alt={c.name}/>:c.name}<span>®</span></a><nav>{c.navOrder.map((item:NavItemKey)=>item==='work'?<a key={item} href="#work" data-visual-text="navWorkLabel">{c.navWorkLabel}</a>:item==='about'?<a key={item} href="#about" data-visual-text="navAboutLabel">{c.navAboutLabel}</a>:item==='team'?(c.showTeam&&c.teamMembers.some(m=>m.visible)?<a key={item} href="#team" data-visual-text="navTeamLabel">{c.navTeamLabel}</a>:null):<button key={item} type="button" className="nav-contact" data-visual-text="navContactLabel" onClick={()=>setContactOpen(true)}>{c.navContactLabel}</button>)}</nav><div className="nav-tools"><Btn label={theme==='light'?'다크 모드':'라이트 모드'} onClick={()=>{const v=theme==='light'?'dark':'light';setTheme(v);localStorage.setItem('iconic-theme',v)}}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</Btn><button className="admin-link" onPointerEnter={()=>fetch('/api/auth',{method:'GET',cache:'no-store'}).catch(()=>{})} onFocus={()=>fetch('/api/auth',{method:'GET',cache:'no-store'}).catch(()=>{})} onClick={enter}>admin</button></div></header>}
+  {teamPage?teamPage:<>
+  {c.showNav&&<header data-visual-section="nav" className="nav" style={sectionStyle('nav')}>
+   <a href="#" className="brand" data-visual-text="name">{c.logo?<img src={c.logo} alt={c.name}/>:c.name}<span>®</span></a>
+   <nav>
+    {c.navOrder.map((item:NavItemKey)=>item==='work'?
+     <a key={item} href="#work" data-visual-text="navWorkLabel" data-visual-nav-key={item} className={navDragClass(item).trim()} {...navDragProps(item)}>{c.navWorkLabel}</a>
+     :item==='about'?
+     <a key={item} href="#about" data-visual-text="navAboutLabel" data-visual-nav-key={item} className={navDragClass(item).trim()} {...navDragProps(item)}>{c.navAboutLabel}</a>
+     :item==='team'?
+     (c.showTeam&&c.teamMembers.some(m=>m.visible)?
+      <a key={item} href="#team" data-visual-text="navTeamLabel" data-visual-nav-key={item} className={navDragClass(item).trim()} {...navDragProps(item)}>{c.navTeamLabel}</a>
+      :null)
+     :<button key={item} type="button" className={'nav-contact'+navDragClass(item)} data-visual-text="navContactLabel" data-visual-nav-key={item} {...navDragProps(item)} onClick={()=>setContactOpen(true)}>{c.navContactLabel}</button>)}
+   </nav>
+   <div className="nav-tools"><Btn label={theme==='light'?'다크 모드':'라이트 모드'} onClick={()=>{const v=theme==='light'?'dark':'light';setTheme(v);localStorage.setItem('iconic-theme',v)}}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</Btn><button className="admin-link" onPointerEnter={()=>fetch('/api/auth',{method:'GET',cache:'no-store'}).catch(()=>{})} onFocus={()=>fetch('/api/auth',{method:'GET',cache:'no-store'}).catch(()=>{})} onClick={enter}>admin</button></div>
+  </header>}
  <main>{c.showHero&&<section data-visual-section="hero" className="hero" style={sectionStyle('hero')}>{c.eyebrow&&<div className="hero-top"><span data-visual-text="eyebrow">{c.eyebrow}</span></div>}<div className="hero-gallery"><MediaGallery items={heroItems} captionTitleStyle={textCss('heroCaption')} captionVisualText="heroCaption" onExpand={()=>openFilm({id:'reel',title:'Director’s cut',category:'Showreel',year:'2026',role:'Direction / Cinematography / Edit',description:'',poster:c.heroVideo?'':c.heroPoster,video:c.heroVideo,visible:true})}/></div><MainLogo config={c}/>{c.subtitle&&<div className="hero-bottom"><p data-visual-text="subtitle">{c.subtitle}</p></div>}</section>}
  {c.navOrder.map((item:NavItemKey)=>item==='work'?<Fragment key="work"><section id="work" data-visual-section="work" className="work-section" style={sectionStyle('work')}><div className="section-head reveal"><div><span className="kicker" data-visual-text="workKicker" style={textCss('workKicker')}>{c.workKicker}</span><h2 data-visual-text="headline" style={textCss('workHeadline')}>{c.headline.split('\n').map((s,i)=><span key={i}>{s}<br/></span>)}</h2></div><span className="small" data-visual-text="workAside" style={textCss('workAside')}>{c.workAside.split('\n').map((line,i)=><span key={i}>{line}{i<c.workAside.split('\n').length-1&&<br/>}</span>)}</span></div><div className="filters" role="group" aria-label="작품 분류">{['All',...new Set(c.works.filter(w=>w.visible).map(w=>w.category))].map(x=><button key={x} className={category===x?'selected':''} onClick={()=>setCategory(x)}>{x}{x==='All'&&<sup>{c.works.filter(w=>w.visible).length}</sup>}</button>)}</div><div className="works-grid" style={{'--cols':c.columns} as CSSProperties}>{c.works.filter(w=>w.visible&&(category==='All'||w.category===category)).map((w,i)=><article className="work-card" data-visual-work-id={w.id} key={w.id}><button className="work-image" onPointerEnter={()=>warmVideo(w.video)} onFocus={()=>warmVideo(w.video)} onClick={()=>openFilm(w)}>{w.video?<video key={w.video} src={w.video} poster={w.poster||c.heroPoster} data-site-autoplay="true" autoPlay muted loop playsInline preload="none" onLoadedMetadata={e=>keepMutedLoopPlaying(e.currentTarget)} onCanPlay={e=>keepMutedLoopPlaying(e.currentTarget)}/>:<img loading="lazy" src={w.poster||c.heroPoster} alt={w.title} style={{objectPosition:i%2?'60% 40%':'50% 50%',filter:i%2?'none':'grayscale(1)'}}/>}<span className="glass work-play"><Play fill="currentColor" size={22}/></span><span className="work-number">0{i+1}</span></button><div className="work-info"><div><h3 data-visual-work-text={w.id+':title'} style={textCss('workCardTitle')}>{w.title}</h3><p style={textCss('workCardMeta')}><span data-visual-work-text={w.id+':category'}>{w.category}</span> <span>/</span> <span data-visual-work-text={w.id+':role'}>{w.role}</span></p></div><span data-visual-work-text={w.id+':year'} style={textCss('workCardMeta')}>{w.year}</span></div></article>)}</div>{!c.works.some(w=>w.visible)&&<p>새로운 필름을 준비하고 있습니다.</p>}</section>
  </Fragment>:item==='about'?<Fragment key="about">{c.showAbout&&<section id="about" data-visual-section="about" className="about reveal" style={sectionStyle('about')}><span className="kicker" data-visual-text="aboutKicker" style={textCss('aboutKicker')}>{c.aboutKicker}</span><div className="about-copy"><h2 data-visual-text="aboutHeadline" style={textCss('aboutHeadline')}>{c.aboutHeadline.split('\n').map((line,i)=><span key={i}>{line}<br/></span>)}</h2><p data-visual-text="about" style={textCss('aboutBody')}>{c.about}</p><div className="disciplines" data-visual-text="aboutDisciplines" style={textCss('aboutDisciplines')}>{c.aboutDisciplines.split('\n').filter(Boolean).map((line,i)=><span key={i}>{line}</span>)}</div></div><div className={'about-visual '+(c.aboutMediaType==='3d'?'is-model':'')}>{c.aboutMediaType==='3d'&&c.aboutModel?<ModelScene config={c}/>:<img src={c.aboutImage||c.heroPoster} alt="ICONIC creative direction"/>}</div></section>}</Fragment>:item==='team'?<Fragment key="team">{c.showTeam&&<TeamSection config={c} onOpen={openTeamPortfolio} order={sectionRank('team')} minHeight={c.sectionHeights?.team||0}/>}</Fragment>:null)}{c.sectionDividers.filter(divider=>divider.visible).map(divider=><div key={divider.id} data-visual-divider-id={divider.id} className="site-divider" style={dividerStyle(divider)} aria-hidden="true"/>)}</main>

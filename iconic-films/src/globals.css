@@ -13434,3 +13434,29 @@ body:has(.visual-editor-ui) .scroll-toggle{opacity:.18;pointer-events:none}
 .site.visual-editing [data-visual-divider-id]{
   cursor:ns-resize!important;
 }
+
+
+/* EDIT SITE: drag the real top navigation items to reorder them. */
+.site.visual-editing .nav nav [data-visual-nav-key]{
+  cursor:grab!important;
+  user-select:none;
+  -webkit-user-drag:element;
+  transition:
+    opacity .16s ease,
+    transform .2s cubic-bezier(.16,1,.3,1),
+    box-shadow .2s ease,
+    background-color .2s ease;
+}
+.site.visual-editing .nav nav [data-visual-nav-key]:active{
+  cursor:grabbing!important;
+}
+.site.visual-editing .nav nav [data-visual-nav-key].is-nav-dragging{
+  opacity:.42;
+  transform:scale(.96);
+}
+.site.visual-editing .nav nav [data-visual-nav-key].is-nav-drop-target{
+  transform:translateY(-2px);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent-color) 68%,transparent);
+  background:color-mix(in srgb,var(--page) 74%,transparent);
+  border-radius:999px;
+}
