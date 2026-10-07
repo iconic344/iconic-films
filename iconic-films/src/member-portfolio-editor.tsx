@@ -1,13 +1,15 @@
 'use client';
 import {useState,type Dispatch,type SetStateAction} from 'react';
-import {Save,Trash2,X} from 'lucide-react';
+import {ArrowLeft,ArrowRight,Save,Trash2,X} from 'lucide-react';
 import {Slider} from '@/components/ui/slider';
 import {Switch} from '@/components/ui/switch';
-import type {Config,TeamMember,TextStyle} from './defaults';
+import type {Config,PortfolioMediaRatio,TeamMember,TextStyle} from './defaults';
 import TextStyleEditor from './text-style-editor';
 import TeamMedia from './team-media';
 import {uploadMemberFile} from './member-media-upload';
 import {memberRequest} from './member-session';
+
+const ratioOptions:{value:PortfolioMediaRatio;label:string}[]=[{value:'auto',label:'원본 / 자동'},{value:'16:9',label:'16:9'},{value:'4:5',label:'4:5'},{value:'4:3',label:'4:3'},{value:'3:2',label:'3:2'},{value:'1:1',label:'1:1'},{value:'9:16',label:'9:16'}];
 
 type Props={
   config:Config;
@@ -39,10 +41,29 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
     labels[index]=value;
     return {...current,portfolioWorkCategories:labels} as TeamMember;
   });
+  const setWorkRatio=(index:number,value:PortfolioMediaRatio)=>setMember(current=>{
+    if(!current)return current;
+    const ratios=[...(current.portfolioWorkRatios||current.works.map(()=>'auto' as PortfolioMediaRatio))];
+    while(ratios.length<current.works.length)ratios.push('auto');
+    ratios[index]=value;
+    return {...current,portfolioWorkRatios:ratios} as TeamMember;
+  });
+  const moveWork=(index:number,dir:number)=>setMember(current=>{
+    if(!current)return current;
+    const target=index+dir;if(target<0||target>=current.works.length)return current;
+    const works=[...current.works],categories=[...(current.portfolioWorkCategories||[])],ratios=[...(current.portfolioWorkRatios||current.works.map(()=>'auto' as PortfolioMediaRatio))];
+    while(categories.length<works.length)categories.push((current.portfolioSubcategories||[])[0]||'All');
+    while(ratios.length<works.length)ratios.push('auto');
+    [works[index],works[target]]=[works[target],works[index]];
+    [categories[index],categories[target]]=[categories[target],categories[index]];
+    [ratios[index],ratios[target]]=[ratios[target],ratios[index]];
+    return {...current,works,portfolioWorkCategories:categories,portfolioWorkRatios:ratios} as TeamMember;
+  });
   const removeWork=(index:number)=>setMember(current=>current?{
     ...current,
     works:(current.works||[]).filter((_,i)=>i!==index),
-    portfolioWorkCategories:(current.portfolioWorkCategories||[]).filter((_,i)=>i!==index)
+    portfolioWorkCategories:(current.portfolioWorkCategories||[]).filter((_,i)=>i!==index),
+    portfolioWorkRatios:(current.portfolioWorkRatios||current.works.map(()=>'auto' as PortfolioMediaRatio)).filter((_,i)=>i!==index)
   } as TeamMember:current);
   const miniRange=(key:keyof TeamMember,label:string,min:number,max:number,step=1,suffix='px')=><label className="field layout-range">{label}<span className="val">{Number(member[key])}{suffix}</span><Slider value={[Number(member[key])]} min={min} max={max} step={step} onValueChange={v=>patch(key,v[0])}/></label>;
 
@@ -87,8 +108,23 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
         urls.push(await uploadMemberFile(member.id,file));
       }
       const fallback=(member.portfolioSubcategories||[])[0]||'All';
-      setMember(current=>current?{...current,works:[...(current.works||[]),...urls],portfolioWorkCategories:[...(current.portfolioWorkCategories||[]),...urls.map(()=>fallback)]} as TeamMember:current);
-      notify('포트폴리오 미디어 업로드 완료. 세부 카테고리를 지정한 뒤 저장 & 적용을 눌러 반영하세요.');
+      setMember(current=>current?{...current,works:[...(current.works||[]),...urls],portfolioWorkCategories:[...(current.portfolioWorkCategories||[]),...urls.map(()=>fallback)],portfolioWorkRatios:[...(current.portfolioWorkRatios||current.works.map(()=>'auto' as PortfolioMediaRatio)),...urls.map(()=>'auto' as PortfolioMediaRatio)]} as TeamMember:current);
+      notify('포트폴리오 미디어 업로드 완료. 새 작품은 원본 비율로 표시됩니다.');
+    }catch(e){notify((e as Error).message)}
+    finally{setUploading('');setBusy(false)}
+  }
+  async function replaceWork(index:number,file:File|undefined){
+    if(!file)return;
+    try{
+      setBusy(true);setUploading(`작품 ${index+1} 교체 중…`);
+      const url=await uploadMemberFile(member.id,file);
+      setMember(current=>{
+        if(!current)return current;
+        const works=[...current.works];works[index]=url;
+        const ratios=[...(current.portfolioWorkRatios||current.works.map(()=>'auto' as PortfolioMediaRatio))];while(ratios.length<works.length)ratios.push('auto');ratios[index]='auto';
+        return {...current,works,portfolioWorkRatios:ratios} as TeamMember;
+      });
+      notify('작품을 교체했습니다. 표시 비율은 원본 비율로 초기화했습니다.');
     }catch(e){notify((e as Error).message)}
     finally{setUploading('');setBusy(false)}
   }
@@ -173,7 +209,7 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
           <label className="field file-upload member-profile-upload">히어로 배경 미디어<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadOne(e.target.files?.[0],'photo')}/><span className="uploaded-file">{member.photo?'히어로 배경 등록됨':'이미지 / 영상 / GLB·glTF'}</span>{member.photo&&<button type="button" className="file-clear" onClick={()=>patch('photo','')}>배경 제거</button>}</label>
           {member.photo&&<div className="team-editor-hero-preview"><TeamMedia src={member.photo} alt="히어로 배경 미리보기" className="team-editor-hero-preview-media" interactive/></div>}
           <label className="field file-upload member-work-upload">포트폴리오 미디어 업로드<input type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>uploadWorks(e.target.files)}/><span className="uploaded-file">이미지 / 영상 / 3D 여러 개 선택 가능</span></label>
-          {!!member.works?.length&&<div className="team-editor-works team-editor-works--categorized">{member.works.map((url,i)=><div key={url+i} className="team-editor-work-card"><TeamMedia src={url} alt={'작품 '+(i+1)} className="team-editor-work-media" interactive/><div className="team-editor-work-meta"><span>{String(i+1).padStart(2,'0')}</span><select aria-label="세부 카테고리" value={(member.portfolioWorkCategories||[])[i]||(member.portfolioSubcategories||[])[0]||'All'} onChange={e=>setWorkCategory(i,e.target.value)}>{(member.portfolioSubcategories||[]).map(label=><option key={label} value={label}>{label}</option>)}{!(member.portfolioSubcategories||[]).length&&<option value="All">All</option>}</select></div><button type="button" aria-label="작품 삭제" onClick={()=>removeWork(i)}><Trash2 size={14}/></button></div>)}</div>}
+          {!!member.works?.length&&<div className="team-editor-works team-editor-works--categorized">{member.works.map((url,i)=><div key={url+i} className="team-editor-work-card"><TeamMedia src={url} alt={'작품 '+(i+1)} className="team-editor-work-media" interactive/><div className="team-editor-work-meta"><span>{String(i+1).padStart(2,'0')}</span><select aria-label="세부 카테고리" value={(member.portfolioWorkCategories||[])[i]||(member.portfolioSubcategories||[])[0]||'All'} onChange={e=>setWorkCategory(i,e.target.value)}>{(member.portfolioSubcategories||[]).map(label=><option key={label} value={label}>{label}</option>)}{!(member.portfolioSubcategories||[]).length&&<option value="All">All</option>}</select><select aria-label="표시 비율" value={member.portfolioWorkRatios?.[i]||'auto'} onChange={e=>setWorkRatio(i,e.target.value as PortfolioMediaRatio)}>{ratioOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></div><div className="team-editor-work-actions"><button type="button" aria-label="왼쪽으로 이동" disabled={i===0} onClick={()=>moveWork(i,-1)}><ArrowLeft size={14}/></button><button type="button" aria-label="오른쪽으로 이동" disabled={i===member.works.length-1} onClick={()=>moveWork(i,1)}><ArrowRight size={14}/></button><label className="team-editor-work-replace">교체<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.gltf" disabled={busy} onChange={e=>{replaceWork(i,e.target.files?.[0]);e.currentTarget.value=''}}/></label><button type="button" aria-label="작품 삭제" onClick={()=>removeWork(i)}><Trash2 size={14}/></button></div></div>)}</div>}
         </section>
 
         <section className="editor-card team-editor-card">
