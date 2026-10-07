@@ -15776,3 +15776,105 @@ html.visual-media-dragging *{
   opacity:.72;
   letter-spacing:.16em;
 }
+
+
+/* PROJECT 07 — explicit ON/OFF state for Edit Site switches. */
+.edit-site-full-settings .edit-site-setting-toggle{
+  min-height:52px!important;
+  padding:9px 10px 9px 12px!important;
+  border:1px solid color-mix(in srgb,var(--ink) 13%,transparent)!important;
+  border-radius:12px!important;
+  background:color-mix(in srgb,var(--page) 82%,transparent)!important;
+  color:var(--ink)!important;
+}
+.edit-site-full-settings .edit-site-setting-toggle-copy{
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+.edit-site-full-settings .edit-site-setting-toggle-copy>b{
+  color:var(--ink);
+  font-size:12px;
+  font-weight:650;
+  line-height:1.25;
+}
+.edit-site-full-settings .edit-site-setting-toggle-copy>small{
+  color:var(--soft);
+  font-size:9px;
+  font-weight:600;
+  letter-spacing:.035em;
+}
+.edit-site-full-settings .edit-site-setting-toggle.is-on .edit-site-setting-toggle-copy>small{
+  color:var(--accent-color);
+}
+.edit-site-full-settings [data-slot="switch"].edit-site-state-switch{
+  position:relative!important;
+  flex:0 0 auto!important;
+  width:42px!important;
+  height:24px!important;
+  min-width:42px!important;
+  padding:2px!important;
+  border:1px solid color-mix(in srgb,var(--ink) 16%,transparent)!important;
+  border-radius:999px!important;
+  background:color-mix(in srgb,var(--ink) 11%,var(--page))!important;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.08)!important;
+  transition:background .22s ease,border-color .22s ease,box-shadow .22s ease!important;
+}
+.edit-site-full-settings [data-slot="switch"].edit-site-state-switch[data-state="checked"]{
+  border-color:var(--accent-color)!important;
+  background:var(--accent-color)!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent-color) 10%,transparent),inset 0 1px 1px rgba(255,255,255,.16)!important;
+}
+.edit-site-full-settings [data-slot="switch"].edit-site-state-switch [data-slot="switch-thumb"]{
+  position:absolute!important;
+  left:2px!important;
+  top:2px!important;
+  width:18px!important;
+  height:18px!important;
+  border-radius:50%!important;
+  background:#fff!important;
+  box-shadow:0 2px 7px rgba(0,0,0,.22)!important;
+  transform:translateX(0)!important;
+  transition:transform .24s cubic-bezier(.16,1,.3,1),width .16s ease!important;
+}
+.edit-site-full-settings [data-slot="switch"].edit-site-state-switch[data-state="checked"] [data-slot="switch-thumb"]{
+  transform:translateX(18px)!important;
+}
+.edit-site-full-settings [data-slot="switch"].edit-site-state-switch:active [data-slot="switch-thumb"]{
+  width:21px!important;
+}
+.edit-site-full-settings [data-slot="switch"].edit-site-state-switch:focus-visible{
+  outline:2px solid color-mix(in srgb,var(--accent-color) 28%,transparent)!important;
+  outline-offset:3px!important;
+}
+.edit-site-3d-motion-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:14px;
+}
+.edit-site-3d-motion-head h3{
+  margin-bottom:5px!important;
+}
+.edit-site-3d-motion-head p{
+  margin:0!important;
+  max-width:520px;
+  color:var(--soft)!important;
+  font-size:10.5px!important;
+  line-height:1.55!important;
+}
+.edit-site-motion-count{
+  flex:0 0 auto;
+  min-height:28px;
+  display:inline-flex;
+  align-items:center;
+  padding:0 9px;
+  border:1px solid color-mix(in srgb,var(--accent-color) 26%,var(--line));
+  border-radius:999px;
+  background:color-mix(in srgb,var(--accent-color) 8%,transparent);
+  color:var(--accent-color);
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.055em;
+}
