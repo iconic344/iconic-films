@@ -10,7 +10,7 @@ function signedUpload(ticket:UploadTicket,file:File,progress?:(percent:number)=>
   return new Promise((resolve,reject)=>{
     if(!ticket.uploadUrl){reject(Error('서명 업로드 주소를 만들지 못했습니다.'));return}
     const xhr=new XMLHttpRequest(),abort=()=>xhr.abort(),cleanup=()=>signal?.removeEventListener('abort',abort);
-    xhr.open('PUT',ticket.uploadUrl);xhr.responseType='json';xhr.setRequestHeader('x-upsert','false');
+    xhr.open('PUT',ticket.uploadUrl);xhr.responseType='json';
     xhr.upload.onprogress=e=>{if(e.lengthComputable)progress?.(Math.round(e.loaded/e.total*100))};
     xhr.onload=()=>{
       cleanup();
