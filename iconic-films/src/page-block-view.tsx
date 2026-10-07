@@ -22,7 +22,7 @@ export default function PageBlockView({block,config,order,editing=false}:{block:
   '--page-block-fade-top':block.fadeTopSize+'%',
   '--page-block-fade-bottom':block.fadeBottomSize+'%',
   '--page-block-fade-density':block.fadeDensity+'%',
-  '--page-block-fade-opacity':String(block.fadeEnabled?block.fadeOpacity/100:0),
+  '--page-block-fade-opacity':(block.fadeEnabled?block.fadeOpacity:0)+'%',
   '--page-block-fade-blur':block.fadeBlur+'px',
   translate:'0 '+(block.offsetY||0)+'px'
  } as CSSProperties;
