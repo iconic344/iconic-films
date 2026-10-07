@@ -86,7 +86,7 @@ export default function VisualSiteEditor({
  };
  const refresh=()=>{const el=targetFor();setRect(el?el.getBoundingClientRect():null)};
  useEffect(()=>{let raf=0;const sync=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(refresh)};sync();window.addEventListener('scroll',sync,{passive:true});window.addEventListener('resize',sync);return()=>{cancelAnimationFrame(raf);window.removeEventListener('scroll',sync);window.removeEventListener('resize',sync)}},[selection,config]);
- useEffect(()=>{setTab(current=>current==='settings'?'settings':'content')},[selection]);
+ useEffect(()=>{setPanelOpen(true);setTab(current=>current==='settings'?'settings':'content')},[selection]);
  useEffect(()=>{if(panelPos)return;const el=targetFor();if(!el)return;const r=el.getBoundingClientRect();if(r.width<window.innerWidth*.76)setPanelSide(r.left+r.width/2>window.innerWidth/2?'left':'right');else if(selection==='nav')setPanelSide('right')},[selection,panelPos]);
 
  const patch=<K extends keyof Config>(key:K,value:Config[K])=>setConfig(d=>({...d,[key]:value}));
