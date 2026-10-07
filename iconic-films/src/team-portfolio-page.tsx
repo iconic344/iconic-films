@@ -321,7 +321,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           })}
         </div>}
 
-        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider" data-portfolio-edit="layout"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={()=>{if(!visualEditing)openViewer(index)}} balanceEdges/></div>}
+        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={()=>{if(!visualEditing)openViewer(index)}} balanceEdges/></div>}
       </section>
       {renderDividers('work')}
     </main>
