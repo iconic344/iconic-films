@@ -176,9 +176,9 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
         <button type="button" aria-label="영상 볼륨 조절">{mediaVolume<=0||muted?<VolumeX size={18}/>:<Volume2 size={18}/>}</button>
         <div className="media-volume-popover" role="group" aria-label="영상 볼륨"><input type="range" aria-label="영상 볼륨" min={0} max={1} step={.01} value={muted?0:mediaVolume} onChange={e=>{const next=Number(e.target.value);setMediaVolume(next);setMuted(next<=0)}}/><span>{Math.round((muted?0:mediaVolume)*100)}</span></div>
        </div>
-       {!modal&&<button type="button" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}>{isFullscreen?<Minimize size={17}/>:<Maximize size={17}/>}</button>}
+       {!modal&&!balanceEdges&&<button type="button" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}>{isFullscreen?<Minimize size={17}/>:<Maximize size={17}/>}</button>}
       </div>}
-      {active&&kind!=='video'&&!modal&&!cleanPreview&&<button type="button" className="media-gallery-expand" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}><Maximize size={18}/></button>}
+      {active&&kind!=='video'&&!modal&&!cleanPreview&&!balanceEdges&&<button type="button" className="media-gallery-expand" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}><Maximize size={18}/></button>}
      </article>;
     })}
    </div>
