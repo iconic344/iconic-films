@@ -183,7 +183,6 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
             {miniRange('portfolioSliderHeight','슬라이드 높이',320,1100)}
             {miniRange('portfolioGridWidth','그리드 전체 폭',45,100,1,'%')}
           </div>
-          <label className="field">슬라이드 기본 비율<div className="team-layout-choice"><button type="button" className={member.portfolioSliderAspect==="cinema"?"active":""} onClick={()=>patch("portfolioSliderAspect","cinema")}>16:9</button><button type="button" className={member.portfolioSliderAspect==="standard"?"active":""} onClick={()=>patch("portfolioSliderAspect","standard")}>4:5</button><button type="button" className={member.portfolioSliderAspect==="photo"?"active":""} onClick={()=>patch("portfolioSliderAspect","photo")}>3:2</button><button type="button" className={member.portfolioSliderAspect==="square"?"active":""} onClick={()=>patch("portfolioSliderAspect","square")}>1:1</button></div></label>
           <label className="field">포트폴리오 보기 방식<div className="team-layout-choice"><button type="button" className={member.portfolioLayout!=='slider'?'active':''} onClick={()=>patch('portfolioLayout','grid')}>GRID</button><button type="button" className={member.portfolioLayout==='slider'?'active':''} onClick={()=>patch('portfolioLayout','slider')}>SLIDER</button></div></label>
           {member.portfolioLayout!=='slider'&&miniRange('portfolioColumns','포트폴리오 열 수',1,4,1,'')}
           {miniRange('portfolioGap','포트폴리오 간격',4,48)}
