@@ -51,18 +51,27 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
   const moveWork=(index:number,dir:number)=>setMember(current=>{
     if(!current)return current;
     const target=index+dir;if(target<0||target>=current.works.length)return current;
-    const works=[...current.works],categories=[...(current.portfolioWorkCategories||[])],ratios=[...(current.portfolioWorkRatios||current.works.map(()=>'auto' as PortfolioMediaRatio))];
+    const works=[...current.works],categories=[...(current.portfolioWorkCategories||[])],titles=[...(current.portfolioWorkTitles||current.works.map(()=>current.name||'Portfolio'))],info=[...(current.portfolioWorkInfo||current.works.map(()=>''))],credits=[...(current.portfolioWorkCredits||current.works.map(()=>current.portfolioCredits||''))],ratios=[...(current.portfolioWorkRatios||current.works.map(()=>'auto' as PortfolioMediaRatio))];
     while(categories.length<works.length)categories.push((current.portfolioSubcategories||[])[0]||'All');
+    while(titles.length<works.length)titles.push(current.name||'Portfolio');
+    while(info.length<works.length)info.push('');
+    while(credits.length<works.length)credits.push(current.portfolioCredits||'');
     while(ratios.length<works.length)ratios.push('auto');
     [works[index],works[target]]=[works[target],works[index]];
     [categories[index],categories[target]]=[categories[target],categories[index]];
+    [titles[index],titles[target]]=[titles[target],titles[index]];
+    [info[index],info[target]]=[info[target],info[index]];
+    [credits[index],credits[target]]=[credits[target],credits[index]];
     [ratios[index],ratios[target]]=[ratios[target],ratios[index]];
-    return {...current,works,portfolioWorkCategories:categories,portfolioWorkRatios:ratios} as TeamMember;
+    return {...current,works,portfolioWorkCategories:categories,portfolioWorkTitles:titles,portfolioWorkInfo:info,portfolioWorkCredits:credits,portfolioWorkRatios:ratios} as TeamMember;
   });
   const removeWork=(index:number)=>setMember(current=>current?{
     ...current,
     works:(current.works||[]).filter((_,i)=>i!==index),
     portfolioWorkCategories:(current.portfolioWorkCategories||[]).filter((_,i)=>i!==index),
+    portfolioWorkTitles:(current.portfolioWorkTitles||current.works.map(()=>current.name||'Portfolio')).filter((_,i)=>i!==index),
+    portfolioWorkInfo:(current.portfolioWorkInfo||current.works.map(()=>'')).filter((_,i)=>i!==index),
+    portfolioWorkCredits:(current.portfolioWorkCredits||current.works.map(()=>current.portfolioCredits||'')).filter((_,i)=>i!==index),
     portfolioWorkRatios:(current.portfolioWorkRatios||current.works.map(()=>'auto' as PortfolioMediaRatio)).filter((_,i)=>i!==index)
   } as TeamMember:current);
   const miniRange=(key:keyof TeamMember,label:string,min:number,max:number,step=1,suffix='px')=><label className="field layout-range">{label}<span className="val">{Number(member[key])}{suffix}</span><Slider value={[Number(member[key])]} min={min} max={max} step={step} onValueChange={v=>patch(key,v[0])}/></label>;
@@ -108,7 +117,7 @@ export default function MemberPortfolioEditor({config,member,setMember,busy,setB
         urls.push(await uploadMemberFile(member.id,file));
       }
       const fallback=(member.portfolioSubcategories||[])[0]||'All';
-      setMember(current=>current?{...current,works:[...(current.works||[]),...urls],portfolioWorkCategories:[...(current.portfolioWorkCategories||[]),...urls.map(()=>fallback)],portfolioWorkRatios:[...(current.portfolioWorkRatios||current.works.map(()=>'auto' as PortfolioMediaRatio)),...urls.map(()=>'auto' as PortfolioMediaRatio)]} as TeamMember:current);
+      setMember(current=>current?{...current,works:[...(current.works||[]),...urls],portfolioWorkCategories:[...(current.portfolioWorkCategories||[]),...urls.map(()=>fallback)],portfolioWorkTitles:[...(current.portfolioWorkTitles||current.works.map(()=>current.name||'Portfolio')),...urls.map(()=>current.name||'Portfolio')],portfolioWorkInfo:[...(current.portfolioWorkInfo||current.works.map(()=>'')),...urls.map(()=>'')],portfolioWorkCredits:[...(current.portfolioWorkCredits||current.works.map(()=>current.portfolioCredits||'')),...urls.map(()=>current.portfolioCredits||'')],portfolioWorkRatios:[...(current.portfolioWorkRatios||current.works.map(()=>'auto' as PortfolioMediaRatio)),...urls.map(()=>'auto' as PortfolioMediaRatio)]} as TeamMember:current);
       notify('포트폴리오 미디어 업로드 완료. 새 작품은 원본 비율로 표시됩니다.');
     }catch(e){notify((e as Error).message)}
     finally{setUploading('');setBusy(false)}
