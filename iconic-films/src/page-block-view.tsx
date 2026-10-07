@@ -38,7 +38,7 @@ export default function PageBlockView({block,config,order,editing=false}:{block:
   const mediaItems:GalleryItem[]=block.media?[{id:block.id+'-media',src:block.media,title:block.title||'Media'}]:[];
   return <section className={className} data-visual-block-id={block.id} style={style}>
    {block.title&&<h3 className="page-block-title">{block.title}</h3>}
-   <div className="page-block-media-frame" data-native-cursor="true">
+   <div className="page-block-media-frame" data-native-cursor="true" data-visual-media={'block:'+block.id}>
     {mediaItems.length?<MediaGallery items={mediaItems} cleanPreview mediaFit={block.mediaFit} mediaPositionX={block.mediaPositionX} mediaPositionY={block.mediaPositionY} autoPlay={block.autoplay}/>:editing?<span className="page-block-editor-placeholder">이미지 · 영상 · 3D 파일을 추가하세요</span>:null}
     {block.fadeEnabled&&<div className="page-block-local-fade" aria-hidden="true"/>}
     {block.pattern!=='none'&&<div className="page-block-local-pattern" aria-hidden="true" style={{backgroundImage:patternImage(block.pattern,block.patternColor,block.patternSize),backgroundSize:`${block.patternSize}px ${block.patternSize}px`,opacity:block.patternOpacity/100}}/>}
