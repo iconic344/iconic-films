@@ -226,7 +226,7 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
 
 /* 2026-10-07 aspect-aware fullscreen media */
 .media-gallery.is-fullscreen.is-landscape .media-gallery-artwork>video{
-  object-fit:contain!important;
+  object-fit:cover!important;
   object-position:center!important;
 }
 .media-gallery.is-fullscreen.is-landscape .media-gallery-backdrop,
@@ -291,21 +291,58 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
 .unified-media-dialog .media-gallery.is-fullscreen.is-landscape .media-gallery-artwork>video{
   position:absolute!important;
   inset:0!important;
-  width:100%!important;
-  min-width:0!important;
-  max-width:100%!important;
-  height:100%!important;
-  min-height:0!important;
-  max-height:100%!important;
-  margin:auto!important;
+  width:100vw!important;
+  min-width:100vw!important;
+  max-width:none!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:none!important;
+  margin:0!important;
   padding:0!important;
   border:0!important;
   border-radius:0!important;
-  object-fit:contain!important;
+  object-fit:cover!important;
   object-position:center!important;
   transform:none!important;
 }
 .unified-media-dialog .media-gallery.is-fullscreen.is-landscape .media-gallery-backdrop,
 .unified-media-dialog .media-gallery.is-fullscreen.is-landscape .media-gallery-backdrop-glass{
   display:none!important;
+}
+
+
+/* 2026-10-07 desktop fullscreen video: always fill the viewport edge-to-edge.
+   Phone portrait behavior is overridden separately in mobile-refinements.css. */
+@media(min-width:821px){
+  .unified-media-dialog .media-gallery.is-fullscreen.has-video,
+  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-viewport,
+  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-slide,
+  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-artwork{
+    width:100vw!important;
+    max-width:none!important;
+    height:100dvh!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+  }
+  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-artwork{
+    position:absolute!important;
+    inset:0!important;
+  }
+  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-artwork>video{
+    position:absolute!important;
+    inset:0!important;
+    width:100vw!important;
+    min-width:100vw!important;
+    max-width:none!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:none!important;
+    margin:0!important;
+    object-fit:cover!important;
+    object-position:center!important;
+    transform:none!important;
+  }
 }
