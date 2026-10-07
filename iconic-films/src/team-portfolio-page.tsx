@@ -1,10 +1,31 @@
 'use client';
 import {useEffect,useMemo,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent} from 'react';
 import {ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,Moon,Sun} from 'lucide-react';
-import MediaGalleryDialog,{MediaGallery} from './media-gallery';
-import type {Config,NavItemKey,PortfolioDivider,PortfolioSectionKey,TeamMember} from './defaults';
+import MediaGalleryDialog,{MediaGallery,portfolioMediaFrame} from './media-gallery';
+import type {Config,NavItemKey,PortfolioDivider,PortfolioMediaRatio,PortfolioSectionKey,TeamMember} from './defaults';
 import TeamMedia,{teamMediaType} from './team-media';
 
+function PortfolioGridCard({src,ratio,index,sourceIndex,name,onOpen,visualEditing}:{src:string;ratio:PortfolioMediaRatio;index:number;sourceIndex:number;name:string;onOpen:()=>void;visualEditing:boolean}){
+  const [frameRatio,setFrameRatio]=useState(()=>ratio==='auto'?4/5:portfolioMediaFrame(1,1,ratio).ratio);
+  useEffect(()=>{
+    if(ratio!=='auto'){setFrameRatio(portfolioMediaFrame(1,1,ratio).ratio);return}
+    const kind=teamMediaType(src);
+    if(kind==='model'){setFrameRatio(16/9);return}
+    if(kind==='image'){
+      let live=true;const image=new Image();
+      image.onload=()=>{if(live)setFrameRatio(portfolioMediaFrame(image.naturalWidth,image.naturalHeight,'auto').ratio)};
+      image.src=src;return()=>{live=false;image.onload=null};
+    }
+    const video=document.createElement('video');
+    const loaded=()=>setFrameRatio(portfolioMediaFrame(video.videoWidth,video.videoHeight,'auto').ratio);
+    video.preload='metadata';video.addEventListener('loadedmetadata',loaded,{once:true});video.src=src;
+    return()=>{video.removeEventListener('loadedmetadata',loaded);video.removeAttribute('src');video.load()};
+  },[src,ratio]);
+  return <button type="button" className="team-portfolio-grid-item" data-portfolio-work-index={sourceIndex} style={{'--portfolio-item-ratio':String(frameRatio)} as CSSProperties} onClick={()=>{if(!visualEditing)onOpen()}}>
+    <TeamMedia src={src} alt={name+' portfolio '+(index+1)} className="team-portfolio-work-media" autoPlay/>
+    <span className="team-portfolio-grid-index">{String(index+1).padStart(2,'0')}</span>
+  </button>;
+}
 
 export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onSelectMember,onToggleTheme,onContact,onAdmin,onVideoViewerOpen,onVideoViewerClose,onMemberEdit,onEditSite,visualEditing=false}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onSelectMember:(member:TeamMember,direction?:1|-1)=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void;onVideoViewerOpen:()=>void;onVideoViewerClose:()=>void;onMemberEdit:(member:TeamMember)=>void;onEditSite:()=>void;visualEditing?:boolean}){
   const [index,setIndex]=useState(0);
@@ -19,8 +40,9 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     id:member.id+'-'+i,src,sourceIndex:i,title:member.name||'Portfolio',
     description:member.portfolioCreditsVisible!==false?(member.portfolioCredits||''): '',
     category:member.portfolioWorkCategories?.[i]||subcategories[0]||'All',
-    kicker:member.portfolioWorkCategories?.[i]||subcategories[0]||'All'
-  })).filter(item=>subcategory==='All'||item.category===subcategory),[member.id,member.name,member.works,member.portfolioWorkCategories,member.portfolioCredits,member.portfolioCreditsVisible,subcategories,subcategory]);
+    kicker:member.portfolioWorkCategories?.[i]||subcategories[0]||'All',
+    ratio:member.portfolioWorkRatios?.[i]||'auto'
+  })).filter(item=>subcategory==='All'||item.category===subcategory),[member.id,member.name,member.works,member.portfolioWorkCategories,member.portfolioWorkRatios,member.portfolioCredits,member.portfolioCreditsVisible,subcategories,subcategory]);
   const works=useMemo(()=>galleryItems.map(item=>item.src),[galleryItems]);
   const teamMembers=useMemo(()=>(config.teamMembers||[]).filter(item=>item.visible),[config.teamMembers]);
   const memberIndex=Math.max(0,teamMembers.findIndex(item=>item.id===member.id));
@@ -314,10 +336,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
         {member.portfolioLayout==='grid'&&<div className="team-portfolio-grid">
           {Array.from({length:Math.max(9,works.length)},(_,i)=>{
             const item=galleryItems[i],url=item?.src,sourceIndex=item?.sourceIndex;
-            return url?<button type="button" className="team-portfolio-grid-item" data-portfolio-work-index={sourceIndex} key={url+i} onClick={()=>{if(!visualEditing)openViewer(i)}}>
-              <TeamMedia src={url} alt={(member.name||'Portfolio')+' portfolio '+(i+1)} className="team-portfolio-work-media" autoPlay/>
-              <span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span>
-            </button>:<div className="team-portfolio-grid-item is-empty" key={'empty-'+i} aria-hidden="true"><span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span></div>
+            return url?<PortfolioGridCard key={url+i} src={url} ratio={item.ratio||'auto'} index={i} sourceIndex={sourceIndex??i} name={member.name||'Portfolio'} onOpen={()=>openViewer(i)} visualEditing={visualEditing}/>:<div className="team-portfolio-grid-item is-empty" key={'empty-'+i} aria-hidden="true"><span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span></div>
           })}
         </div>}
 
