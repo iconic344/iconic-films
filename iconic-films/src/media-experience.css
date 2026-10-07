@@ -379,3 +379,18 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
     transform:none!important;
   }
 }
+
+
+/* 2026-10-07 balanced edge carousel pass:
+   keep the visible card group centered even when the first/last item is active. */
+@media(min-width:1025px){
+  .media-gallery.is-balanced-two:not(.is-modal):not(.is-fullscreen) .media-gallery-track{
+    transform:translate3d(calc((100% - var(--gallery-card))/2 - .5*(var(--gallery-card) + var(--gallery-gap))),0,0)!important;
+  }
+  .media-gallery.is-balanced-start:not(.is-modal):not(.is-fullscreen) .media-gallery-track{
+    transform:translate3d(calc((100% - var(--gallery-card))/2 - 1*(var(--gallery-card) + var(--gallery-gap))),0,0)!important;
+  }
+  .media-gallery.is-balanced-end:not(.is-modal):not(.is-fullscreen) .media-gallery-track{
+    transform:translate3d(calc((100% - var(--gallery-card))/2 - var(--gallery-edge-center)*(var(--gallery-card) + var(--gallery-gap))),0,0)!important;
+  }
+}
