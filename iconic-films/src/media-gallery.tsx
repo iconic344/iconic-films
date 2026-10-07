@@ -23,13 +23,13 @@ export const portfolioMediaFrame=(width:number,height:number,override:PortfolioM
 };
 const formatTime=(n:number)=>`${Math.floor(n/60)}:${String(Math.floor(n%60)).padStart(2,'0')}`;
 
-type GalleryProps={items:GalleryItem[];initialIndex?:number;onIndexChange?:(index:number)=>void;onExpand?:(index?:number)=>void;onReady?:()=>void;modal?:boolean;preserveItems?:boolean;captionTitleStyle?:CSSProperties;captionVisualText?:string;balanceEdges?:boolean;cleanPreview?:boolean;mediaFit?:'contain'|'cover';mediaPositionX?:number;mediaPositionY?:number;autoPlay?:boolean};
+type GalleryProps={items:GalleryItem[];initialIndex?:number;onIndexChange?:(index:number)=>void;onExpand?:(index?:number)=>void;onReady?:()=>void;modal?:boolean;preserveItems?:boolean;captionTitleStyle?:CSSProperties;captionVisualText?:string;balanceEdges?:boolean;cleanPreview?:boolean;mediaFit?:'contain'|'cover';mediaPositionX?:number;mediaPositionY?:number;autoPlay?:boolean;autoplayMs?:number;transitionMs?:number;easing?:'smooth'|'soft'|'snappy'|'linear';maxCardHeight?:number};
 export function MediaGallery({items,initialIndex=0,onIndexChange,preserveItems=false,...props}:GalleryProps){
  if(preserveItems)return <ScopedMediaGallery {...props} items={items} initialIndex={initialIndex} onIndexChange={onIndexChange}/>;
  const scoped=scopeGallery(items,initialIndex);
  return <ScopedMediaGallery {...props} items={scoped.items} initialIndex={scoped.index} onIndexChange={index=>onIndexChange?.(scoped.sourceIndices[index])}/>;
 }
-function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false,captionTitleStyle,captionVisualText,balanceEdges=false,cleanPreview=false,mediaFit='contain',mediaPositionX=50,mediaPositionY=50,autoPlay=true}:GalleryProps){
+function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false,captionTitleStyle,captionVisualText,balanceEdges=false,cleanPreview=false,mediaFit='contain',mediaPositionX=50,mediaPositionY=50,autoPlay=true,autoplayMs=6500,transitionMs=820,easing='smooth',maxCardHeight}:GalleryProps){
  const [index,setIndex]=useState(Math.min(initialIndex,Math.max(0,items.length-1)));
  const [playing,setPlaying]=useState(()=>autoPlay&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
  const [muted,setMuted]=useState(()=>!modal),[mediaVolume,setMediaVolume]=useState(1),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(modal),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState(''),[landscape,setLandscape]=useState(false),[frame,setFrame]=useState<{mode:MediaFrameMode;ratio:number}>({mode:'landscape',ratio:16/9});
@@ -102,8 +102,8 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
  useEffect(()=>{
   if(type==='video'||!playing||!visible||!item||error)return;
   let last=performance.now();
-  const autoplayMs=Math.max(1200,Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gallery-autoplay-ms'))||6500);
-  const timer=window.setInterval(()=>{const now=performance.now();elapsed.current+=now-last;last=now;setProgress(Math.min(1,elapsed.current/autoplayMs));if(elapsed.current>=autoplayMs)advance()},120);
+  const intervalMs=Math.max(1200,Number(autoplayMs)||6500);
+  const timer=window.setInterval(()=>{const now=performance.now();elapsed.current+=now-last;last=now;setProgress(Math.min(1,elapsed.current/intervalMs));if(elapsed.current>=intervalMs)advance()},120);
   return()=>window.clearInterval(timer);
  },[type,playing,visible,index,items.length,error]);
  const toggle=()=>setPlaying(v=>!v);
@@ -156,7 +156,9 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   ...(showTrailingSlot?[{entry:null,sourceIndex:-1,ghost:true,key:'ghost-post'}]:[])
  ]:items.map((entry,sourceIndex)=>({entry,sourceIndex,ghost:false,key:'main-'+entry.id}));
  const displayIndex=balancedPreview?index+(showLeadingSlot?1:0):index;
- const gallery=<div ref={root} className={'media-gallery '+(balancedPreview?'is-balanced-preview ':'')+(cleanPreview&&!isFullscreen&&!modal?'is-clean-preview ':'')+(modal?'is-modal ':'')+(expanded?'is-expanded ':'')+(isFullscreen?'is-fullscreen ':'')+(items.length<=1?'is-single ':'')+(type==='video'?'has-video ':'has-image ')+(landscape?'is-landscape':'is-portrait')+' is-frame-'+frame.mode} style={{'--gallery-media-fit':mediaFit,'--gallery-media-position':mediaPositionX+'% '+mediaPositionY+'%','--gallery-frame-ratio':String(frame.ratio)} as CSSProperties} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} data-native-cursor={cleanPreview&&!isFullscreen&&!modal?'true':undefined} data-cursor-idle={idle?'true':'false'} onPointerMove={wake} onPointerDown={wake} onFocusCapture={wake} onKeyDown={e=>{wake();key(e)}}>
+ const easingValue=easing==='soft'?'cubic-bezier(.22,.61,.36,1)':easing==='snappy'?'cubic-bezier(.2,.9,.25,1.08)':easing==='linear'?'linear':'cubic-bezier(.16,1,.3,1)';
+ const heightCap=maxCardHeight&&Number.isFinite(maxCardHeight)?Math.max(180,maxCardHeight)*frame.ratio:null;
+ const gallery=<div ref={root} className={'media-gallery '+(balancedPreview?'is-balanced-preview ':'')+(cleanPreview&&!isFullscreen&&!modal?'is-clean-preview ':'')+(modal?'is-modal ':'')+(expanded?'is-expanded ':'')+(isFullscreen?'is-fullscreen ':'')+(items.length<=1?'is-single ':'')+(type==='video'?'has-video ':'has-image ')+(landscape?'is-landscape':'is-portrait')+' is-frame-'+frame.mode} style={{'--gallery-media-fit':mediaFit,'--gallery-media-position':mediaPositionX+'% '+mediaPositionY+'%','--gallery-frame-ratio':String(frame.ratio),'--gallery-transition-ms':Math.max(120,Number(transitionMs)||820)+'ms','--gallery-easing':easingValue,'--gallery-height-cap-width':heightCap?heightCap+'px':'9999px'} as CSSProperties} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} data-native-cursor={cleanPreview&&!isFullscreen&&!modal?'true':undefined} data-cursor-idle={idle?'true':'false'} onPointerMove={wake} onPointerDown={wake} onFocusCapture={wake} onKeyDown={e=>{wake();key(e)}}>
   {showBackdrop&&<><div className="media-gallery-backdrop" aria-hidden="true">
    {(type==='image'||item.poster)&&<img src={type==='image'?item.src:item.poster} alt=""/>}
    {type==='video'&&<canvas ref={ambient} style={{opacity:1}}/>}
@@ -209,6 +211,6 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
  return expanded&&!modal?createPortal(gallery,document.body):gallery;
 }
 
-export default function MediaGalleryDialog({items,index,onClose,onIndexChange}:{items:GalleryItem[];index:number|null;onClose:()=>void;onIndexChange?:(index:number)=>void}){
- return <Dialog open={index!==null} onOpenChange={open=>{if(!open)onClose()}}><DialogContent className="unified-media-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}><DialogTitle className="sr-only">미디어 갤러리</DialogTitle><DialogDescription className="sr-only">좌우 화살표 또는 스와이프로 같은 카테고리의 미디어를 넘길 수 있습니다.</DialogDescription>{index!==null&&<MediaGallery items={items} initialIndex={index} onIndexChange={onIndexChange} onExpand={onClose} modal preserveItems/>}</DialogContent></Dialog>;
+export default function MediaGalleryDialog({items,index,onClose,onIndexChange,autoPlay=true,autoplayMs=6500,transitionMs=820,easing='smooth'}:{items:GalleryItem[];index:number|null;onClose:()=>void;onIndexChange?:(index:number)=>void;autoPlay?:boolean;autoplayMs?:number;transitionMs?:number;easing?:'smooth'|'soft'|'snappy'|'linear'}){
+ return <Dialog open={index!==null} onOpenChange={open=>{if(!open)onClose()}}><DialogContent className="unified-media-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}><DialogTitle className="sr-only">미디어 갤러리</DialogTitle><DialogDescription className="sr-only">좌우 화살표 또는 스와이프로 같은 카테고리의 미디어를 넘길 수 있습니다.</DialogDescription>{index!==null&&<MediaGallery items={items} initialIndex={index} onIndexChange={onIndexChange} onExpand={onClose} modal preserveItems autoPlay={autoPlay} autoplayMs={autoplayMs} transitionMs={transitionMs} easing={easing}/>}</DialogContent></Dialog>;
 }
