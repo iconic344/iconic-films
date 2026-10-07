@@ -55,6 +55,8 @@ export default function VisualSiteEditor({
  const [rect,setRect]=useState<DOMRect|null>(null),[uploading,setUploading]=useState(false),[panelSide,setPanelSide]=useState<'left'|'right'>('right'),[panelOpen,setPanelOpen]=useState(true),[tab,setTab]=useState<PanelTab>('layers');
  const [toolbarPos,setToolbarPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-toolbar-pos'));
  const [panelPos,setPanelPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-panel-pos'));
+ const [inlineEditing,setInlineEditing]=useState<VisualSelection|null>(null);
+ const inlineOriginal=useRef('');
  const dragState=useRef<{y:number;baseY:number}|null>(null),resizeState=useRef<{x:number;y:number;base:number}|null>(null),heightState=useRef<{y:number;base:number}|null>(null),textDragState=useRef<{x:number;y:number;baseX:number;baseY:number}|null>(null),textSizeState=useRef<{x:number;y:number;base:number}|null>(null),dividerDragState=useRef<{y:number;base:number}|null>(null);
  const selectedWorkId=selection.startsWith('work:')?selection.slice(5):'';
  const selectedWork=selectedWorkId?config.works.find(w=>w.id===selectedWorkId)||null:null;
@@ -86,6 +88,64 @@ export default function VisualSiteEditor({
  const patchTextStyle=(key:TextStyleKey,value:TextPatch)=>setConfig(d=>({...d,textStyles:{...d.textStyles,[key]:{...d.textStyles[key],...value}}}));
  const patchWork=(id:string,key:keyof Work,value:Work[keyof Work])=>setConfig(d=>({...d,works:d.works.map(w=>w.id===id?{...w,[key]:value}:w)}));
  const patchTeam=(id:string,key:string,value:unknown)=>setConfig(d=>({...d,teamMembers:d.teamMembers.map(m=>m.id===id?{...m,[key]:value}:m)}));
+ const textStyleKeyFor=(value:VisualSelection):TextStyleKey|undefined=>{
+  if(value.startsWith('text:'))return directTextDefs[value.slice(5)]?.styleKey;
+  if(value.startsWith('worktext:')){const field=value.slice(9).split(':').slice(1).join(':');return field==='title'?'workCardTitle':'workCardMeta'}
+  if(value.startsWith('teamtext:')){const field=value.slice(9).split(':').slice(1).join(':');return field==='name'?'teamMemberName':field==='bio'?'teamMemberBio':'teamMemberRole'}
+  return undefined;
+ };
+ const inlineMetaFor=(value:VisualSelection)=>{
+  if(value.startsWith('text:')){
+   const key=value.slice(5),def=directTextDefs[key];if(!def)return null;
+   return {multi:!!def.multi,read:()=>String(config[def.configKey]??''),write:(text:string)=>patch(def.configKey,text as never)};
+  }
+  if(value.startsWith('worktext:')){
+   const parts=value.slice(9).split(':'),id=parts.shift()||'',field=parts.join(':') as keyof Work;
+   const work=config.works.find(item=>item.id===id);if(!work)return null;
+   return {multi:field==='description',read:()=>String(work[field]??''),write:(text:string)=>patchWork(id,field,text as never)};
+  }
+  if(value.startsWith('teamtext:')){
+   const parts=value.slice(9).split(':'),id=parts.shift()||'',field=parts.join(':');
+   const member=config.teamMembers.find(item=>item.id===id);if(!member)return null;
+   return {multi:field==='bio',read:()=>String((member as any)[field]??''),write:(text:string)=>patchTeam(id,field,text)};
+  }
+  return null;
+ };
+ const stopInlineEdit=(commit=true)=>{
+  const value=inlineEditing;if(!value)return;
+  const el=targetFor(value),meta=inlineMetaFor(value);
+  if(el&&meta){
+   if(commit){
+    let text=(el.innerText||el.textContent||'').replace(/\r/g,'').replace(/\u00a0/g,' ');
+    if(!meta.multi)text=text.replace(/\n+/g,' ');
+    meta.write(text);
+   }else{
+    el.innerText=inlineOriginal.current;
+   }
+   el.contentEditable='false';el.removeAttribute('data-inline-editing');el.removeAttribute('spellcheck');
+   if(el.dataset.visualNavKey)el.draggable=true;
+  }
+  setInlineEditing(null);
+ };
+ const startInlineEdit=(value:VisualSelection=selection,clientX?:number,clientY?:number)=>{
+  const el=targetFor(value),meta=inlineMetaFor(value);if(!el||!meta)return;
+  if(inlineEditing&&inlineEditing!==value)stopInlineEdit(true);
+  setSelection(value);setTab('content');inlineOriginal.current=meta.read();setInlineEditing(value);
+  el.contentEditable='true';el.spellcheck=false;el.dataset.inlineEditing='true';if(el.dataset.visualNavKey)el.draggable=false;
+  requestAnimationFrame(()=>{
+   el.focus({preventScroll:true});
+   const doc=document as Document&{caretPositionFromPoint?:(x:number,y:number)=>{offsetNode:Node;offset:number}|null;caretRangeFromPoint?:(x:number,y:number)=>Range|null};
+   const selectionApi=window.getSelection();if(!selectionApi)return;
+   let range:Range|null=null;
+   if(clientX!==undefined&&clientY!==undefined){
+    const caret=doc.caretPositionFromPoint?.(clientX,clientY);
+    if(caret){range=document.createRange();range.setStart(caret.offsetNode,caret.offset);range.collapse(true)}
+    else range=doc.caretRangeFromPoint?.(clientX,clientY)||null;
+   }
+   if(!range){range=document.createRange();range.selectNodeContents(el);range.collapse(false)}
+   selectionApi.removeAllRanges();selectionApi.addRange(range);
+  });
+ };
  const layoutKeys=(key:SectionKey)=>{
   if(key==='nav')return {x:'navOffsetX',y:'navOffsetY',scale:'navScale'} as const;
   if(key==='hero')return {x:'heroOffsetX',y:'heroOffsetY',scale:'heroScale'} as const;
@@ -144,28 +204,60 @@ export default function VisualSiteEditor({
   window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
  };
  useEffect(()=>{
+  if(!inlineEditing)return;
+  const el=targetFor(inlineEditing);if(!el)return;
+  const onBlur=()=>stopInlineEdit(true);
+  const onKey=(event:KeyboardEvent)=>{
+   const meta=inlineMetaFor(inlineEditing);
+   if(event.key==='Escape'){event.preventDefault();event.stopPropagation();stopInlineEdit(false);return}
+   if(event.key==='Enter'&&!event.shiftKey&&!meta?.multi){event.preventDefault();event.stopPropagation();stopInlineEdit(true);return}
+   if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();event.stopPropagation();stopInlineEdit(true)}
+  };
+  el.addEventListener('blur',onBlur);el.addEventListener('keydown',onKey);
+  return()=>{el.removeEventListener('blur',onBlur);el.removeEventListener('keydown',onKey)};
+ },[inlineEditing,config]);
+ useEffect(()=>{
+  const onKey=(event:KeyboardEvent)=>{
+   const target=event.target as HTMLElement|null;
+   if(target?.closest('input,textarea,select,[contenteditable="true"]'))return;
+   const styleKey=textStyleKeyFor(selection);
+   if((event.key==='Enter'||event.key==='F2')&&inlineMetaFor(selection)){event.preventDefault();startInlineEdit(selection);return}
+   if(styleKey&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='b'){event.preventDefault();const style=config.textStyles[styleKey];patchTextStyle(styleKey,{weight:(style.weight??500)>=650?400:700});return}
+   if(selectedTextDef?.styleKey&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){
+    event.preventDefault();const style=config.textStyles[selectedTextDef.styleKey],step=event.shiftKey?10:1;
+    if(event.key==='ArrowLeft')patchTextStyle(selectedTextDef.styleKey,{x:style.x-step});
+    if(event.key==='ArrowRight')patchTextStyle(selectedTextDef.styleKey,{x:style.x+step});
+    if(event.key==='ArrowUp')patchTextStyle(selectedTextDef.styleKey,{y:style.y-step});
+    if(event.key==='ArrowDown')patchTextStyle(selectedTextDef.styleKey,{y:style.y+step});
+   }
+  };
+  window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
+ },[selection,config,inlineEditing]);
+ useEffect(()=>{
   const down=(event:globalThis.PointerEvent)=>{
    if(event.button!==0)return;
    const target=event.target as HTMLElement|null;
    if(!target||target.closest('[data-visual-editor="true"]')||target.closest('[data-visual-nav-key]'))return;
-   const textEl=target.closest<HTMLElement>('[data-visual-text]');
-   if(textEl){
-    const key=textEl.dataset.visualText||'';
-    const def=directTextDefs[key];
-    if(!def)return;
-    setSelection(('text:'+key) as VisualSelection);
-    if(!def.styleKey)return;
+   const anyText=target.closest<HTMLElement>('[data-visual-text],[data-visual-work-text],[data-visual-team-text]');
+   if(anyText){
+    const value=(anyText.dataset.visualText?('text:'+anyText.dataset.visualText):anyText.dataset.visualWorkText?('worktext:'+anyText.dataset.visualWorkText):('teamtext:'+anyText.dataset.visualTeamText)) as VisualSelection;
+    setSelection(value);
+    if(inlineEditing===value)return;
     event.preventDefault();event.stopPropagation();
-    const style=config.textStyles[def.styleKey],sx=event.clientX,sy=event.clientY,startScroll=window.scrollY;
+    const styleKey=textStyleKeyFor(value),style=styleKey?config.textStyles[styleKey]:null,sx=event.clientX,sy=event.clientY,startScroll=window.scrollY;
     let active=false;
     const move=(ev:globalThis.PointerEvent)=>{
      const dx=ev.clientX-sx,dy=ev.clientY-sy+(window.scrollY-startScroll);
-     if(!active&&Math.hypot(dx,dy)<3)return;
+     if(!active&&Math.hypot(dx,dy)<5)return;
+     if(!value.startsWith('text:')||!styleKey||!style)return;
      active=true;document.documentElement.classList.add('visual-direct-dragging');
-     patchTextStyle(def.styleKey!,{x:Math.round(style.x+dx),y:Math.round(style.y+dy)});
+     patchTextStyle(styleKey,{x:Math.round(style.x+dx),y:Math.round(style.y+dy)});
      if(ev.clientY<54)window.scrollBy(0,-18);else if(ev.clientY>window.innerHeight-54)window.scrollBy(0,18);
     };
-    const up=()=>{document.documentElement.classList.remove('visual-direct-dragging');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
+    const up=(ev:globalThis.PointerEvent)=>{
+     document.documentElement.classList.remove('visual-direct-dragging');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);
+     if(active)refresh();else startInlineEdit(value,ev.clientX,ev.clientY);
+    };
     window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
     return;
    }
@@ -269,6 +361,8 @@ export default function VisualSiteEditor({
  const selectionLabel=tab==='settings'?'사이트 설정':selectedDivider?'구분선':selectedTextDef?.label||(selectedWorkText?'작품 텍스트':selectedTeamText?'팀 텍스트':selectedWork?'작품 카드':sectionDefs.find(s=>s.key===sectionSelection)?.label);
  const toolbarStyle=toolbarPos?{'--ve-toolbar-x':toolbarPos.x+'px','--ve-toolbar-y':toolbarPos.y+'px'} as CSSProperties:undefined;
  const panelStyle=panelPos?{'--ve-panel-x':panelPos.x+'px','--ve-panel-y':panelPos.y+'px'} as CSSProperties:undefined;
+ const quickStyleKey=textStyleKeyFor(selection),quickTextStyle=quickStyleKey?config.textStyles[quickStyleKey]:null;
+ const quickToolbarStyle=rect&&typeof window!=='undefined'?{left:Math.max(8,Math.min(window.innerWidth-360,rect.left+rect.width/2-176)),top:Math.max(8,rect.top>74?rect.top-52:rect.bottom+10)} as CSSProperties:undefined;
 
  return <div className={'visual-editor-ui is-panel-'+panelSide} data-visual-editor="true">
   <div style={toolbarStyle} className={'visual-editor-topbar '+(toolbarPos?'is-free ':toolbarBottom?'is-bottom ':'is-top ')} onPointerDown={e=>beginChromeDrag(e,'toolbar')}>
@@ -309,6 +403,15 @@ export default function VisualSiteEditor({
    {tab!=='settings'&&hiddenSections.length>0&&<div className="visual-editor-restore"><span>숨긴 영역</span><div>{hiddenSections.map(s=><button type="button" key={s.key} onClick={()=>{restoreSection(s.key);selectLayer(s.key)}}><Plus size={13}/>{s.label}</button>)}</div></div>}
   </aside>:<button type="button" className={'visual-panel-reopen is-'+panelSide} onClick={()=>setPanelOpen(true)}><SlidersHorizontal size={16}/><span>편집 패널</span></button>}
 
+  {tab!=='settings'&&rect&&quickTextStyle&&quickStyleKey&&<div className="visual-inline-text-toolbar" style={quickToolbarStyle}>
+   <button type="button" className={inlineEditing===selection?'is-active':''} title="화면에서 바로 글자 입력 · Enter/F2" onMouseDown={e=>e.preventDefault()} onClick={()=>startInlineEdit(selection)}><Type size={13}/><span>입력</span></button>
+   <select aria-label="빠른 글꼴 변경" title="글꼴" value={quickTextStyle.font} onChange={e=>patchTextStyle(quickStyleKey,{font:e.target.value})}><option value="Arial, Helvetica, sans-serif">Arial</option><option value="Helvetica Neue, Arial, sans-serif">Helvetica</option><option value="system-ui, sans-serif">System</option><option value="Apple SD Gothic Neo, sans-serif">Apple SD Gothic</option><option value="Malgun Gothic, sans-serif">맑은 고딕</option><option value="Noto Sans KR, sans-serif">Noto Sans KR</option><option value="Georgia, serif">Georgia</option><option value="Times New Roman, serif">Times</option></select>
+   <label className="visual-inline-color" title="글자 색상"><input type="color" value={quickTextStyle.color||'#ffffff'} onChange={e=>patchTextStyle(quickStyleKey,{color:e.target.value})}/><span/></label>
+   <button type="button" title="글자 작게" onClick={()=>patchTextStyle(quickStyleKey,{size:Math.max(4,quickTextStyle.size-1)})}>−</button>
+   <span className="visual-inline-size">{Math.round(quickTextStyle.size)}</span>
+   <button type="button" title="글자 크게" onClick={()=>patchTextStyle(quickStyleKey,{size:Math.min(240,quickTextStyle.size+1)})}>+</button>
+   <button type="button" className={(quickTextStyle.weight??500)>=650?'is-active':''} title="굵게 · Ctrl/Cmd+B" onClick={()=>patchTextStyle(quickStyleKey,{weight:(quickTextStyle.weight??500)>=650?400:700})}><b>B</b></button>
+  </div>}
   {tab!=='settings'&&rect&&<div className={'visual-selection-frame is-panel-'+panelSide+(labelInside?' is-label-inside':'')+(selectedTextDef||selectedWorkText||selectedTeamText?' is-text-selection':'')+(selectedDivider?' is-divider-selection':'')} style={{left:rect.left,top:rect.top,width:rect.width,height:rect.height}}><span className="visual-selection-label">{selectionLabel}</span>
    {selectedDivider&&<button type="button" className="visual-divider-drag-handle" aria-label="구분선 세로 이동" title="구분선을 위아래로 드래그" onPointerDown={beginDividerMove}><span/></button>}
    {meta&&!selectedWork&&!selectedDivider&&!selectedTextDef&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-move-handle" aria-label="영역 세로 이동" title="세로 이동 · X축은 자동 중앙 고정" onPointerDown={beginMove}><Grip size={16}/></button>}
