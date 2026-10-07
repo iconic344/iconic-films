@@ -311,13 +311,14 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
 }
 
 
-/* 2026-10-07 desktop fullscreen video: always fill the viewport edge-to-edge.
-   Phone portrait behavior is overridden separately in mobile-refinements.css. */
+/* 2026-10-07 aspect-aware desktop fullscreen video.
+   Landscape (16:9-class) fills the viewport edge-to-edge.
+   Portrait/square media keeps its native aspect ratio instead of being blown up and cropped. */
 @media(min-width:821px){
-  .unified-media-dialog .media-gallery.is-fullscreen.has-video,
-  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-viewport,
-  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-slide,
-  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-artwork{
+  .unified-media-dialog .media-gallery.is-fullscreen.is-landscape.has-video,
+  .unified-media-dialog .media-gallery.is-fullscreen.is-landscape.has-video .media-gallery-viewport,
+  .unified-media-dialog .media-gallery.is-fullscreen.is-landscape.has-video .media-gallery-slide,
+  .unified-media-dialog .media-gallery.is-fullscreen.is-landscape.has-video .media-gallery-artwork{
     width:100vw!important;
     max-width:none!important;
     height:100dvh!important;
@@ -327,11 +328,11 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
     border:0!important;
     border-radius:0!important;
   }
-  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-artwork{
+  .unified-media-dialog .media-gallery.is-fullscreen.is-landscape.has-video .media-gallery-artwork{
     position:absolute!important;
     inset:0!important;
   }
-  .unified-media-dialog .media-gallery.is-fullscreen.has-video .media-gallery-artwork>video{
+  .unified-media-dialog .media-gallery.is-fullscreen.is-landscape.has-video .media-gallery-artwork>video{
     position:absolute!important;
     inset:0!important;
     width:100vw!important;
@@ -342,6 +343,38 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
     max-height:none!important;
     margin:0!important;
     object-fit:cover!important;
+    object-position:center!important;
+    transform:none!important;
+  }
+
+  .unified-media-dialog .media-gallery.is-fullscreen.is-portrait.has-video,
+  .unified-media-dialog .media-gallery.is-fullscreen.is-portrait.has-video .media-gallery-viewport,
+  .unified-media-dialog .media-gallery.is-fullscreen.is-portrait.has-video .media-gallery-slide,
+  .unified-media-dialog .media-gallery.is-fullscreen.is-portrait.has-video .media-gallery-artwork{
+    width:100vw!important;
+    max-width:none!important;
+    height:100dvh!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+  }
+  .unified-media-dialog .media-gallery.is-fullscreen.is-portrait.has-video .media-gallery-artwork{
+    position:absolute!important;
+    inset:0!important;
+  }
+  .unified-media-dialog .media-gallery.is-fullscreen.is-portrait.has-video .media-gallery-artwork>video{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:100%!important;
+    min-height:0!important;
+    max-height:100%!important;
+    margin:auto!important;
+    object-fit:contain!important;
     object-position:center!important;
     transform:none!important;
   }
