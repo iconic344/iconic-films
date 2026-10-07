@@ -8,13 +8,13 @@ import {scopeGallery} from './gallery-scope';
 export type GalleryItem={id:string;src:string;poster?:string;title:string;description?:string;kicker?:string;category?:string};
 const formatTime=(n:number)=>`${Math.floor(n/60)}:${String(Math.floor(n%60)).padStart(2,'0')}`;
 
-type GalleryProps={items:GalleryItem[];initialIndex?:number;onIndexChange?:(index:number)=>void;onExpand?:()=>void;onReady?:()=>void;modal?:boolean;preserveItems?:boolean;captionTitleStyle?:CSSProperties;captionVisualText?:string};
+type GalleryProps={items:GalleryItem[];initialIndex?:number;onIndexChange?:(index:number)=>void;onExpand?:()=>void;onReady?:()=>void;modal?:boolean;preserveItems?:boolean;captionTitleStyle?:CSSProperties;captionVisualText?:string;balanceEdges?:boolean};
 export function MediaGallery({items,initialIndex=0,onIndexChange,preserveItems=false,...props}:GalleryProps){
  if(preserveItems)return <ScopedMediaGallery {...props} items={items} initialIndex={initialIndex} onIndexChange={onIndexChange}/>;
  const scoped=scopeGallery(items,initialIndex);
  return <ScopedMediaGallery {...props} items={scoped.items} initialIndex={scoped.index} onIndexChange={index=>onIndexChange?.(scoped.sourceIndices[index])}/>;
 }
-function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false,captionTitleStyle,captionVisualText}:GalleryProps){
+function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false,captionTitleStyle,captionVisualText,balanceEdges=false}:GalleryProps){
  const [index,setIndex]=useState(Math.min(initialIndex,Math.max(0,items.length-1)));
  const [playing,setPlaying]=useState(()=>!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
  const [muted,setMuted]=useState(()=>!modal),[mediaVolume,setMediaVolume]=useState(1),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(modal),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState(''),[landscape,setLandscape]=useState(false);
@@ -101,7 +101,8 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   if(e.key===' '&&!((e.target as HTMLElement).closest('button'))){e.preventDefault();toggle()}
  };
  if(!item)return null;
- const gallery=<div ref={root} className={'media-gallery '+(modal?'is-modal ':'')+(expanded?'is-expanded ':'')+(isFullscreen?'is-fullscreen ':'')+(items.length<=1?'is-single ':'')+(type==='video'?'has-video ':'has-image ')+(landscape?'is-landscape':'is-portrait')} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} data-cursor-idle={idle?'true':'false'} onPointerMove={wake} onPointerDown={wake} onFocusCapture={wake} onKeyDown={e=>{wake();key(e)}}>
+ const edgeClass=balanceEdges&&!modal&&!isFullscreen?(items.length===2?'is-balanced-two ':items.length>=3?(index===0?'is-balanced-start ':index===items.length-1?'is-balanced-end ':''):''):'';
+ const gallery=<div ref={root} className={'media-gallery '+edgeClass+(modal?'is-modal ':'')+(expanded?'is-expanded ':'')+(isFullscreen?'is-fullscreen ':'')+(items.length<=1?'is-single ':'')+(type==='video'?'has-video ':'has-image ')+(landscape?'is-landscape':'is-portrait')} style={balanceEdges?{'--gallery-last-start':Math.max(0,items.length-3)} as CSSProperties:undefined} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} data-cursor-idle={idle?'true':'false'} onPointerMove={wake} onPointerDown={wake} onFocusCapture={wake} onKeyDown={e=>{wake();key(e)}}>
   {showBackdrop&&<><div className="media-gallery-backdrop" aria-hidden="true">
    {(type==='image'||item.poster)&&<img src={type==='image'?item.src:item.poster} alt=""/>}
    {type==='video'&&<canvas ref={ambient} style={{opacity:1}}/>}
