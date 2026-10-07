@@ -64,7 +64,12 @@ export default function Home(){
  const [compactViewport,setCompactViewport]=useState(()=>typeof window!=='undefined'&&window.matchMedia('(max-width: 820px), (max-width: 1180px) and (any-pointer: coarse)').matches);
  const c=visualEdit?draft:(preview?draft:saved), t=c.tracks[track];
  const sectionRank=(key:SiteSectionKey)=>{const i=(c.sectionOrder||[]).indexOf(key);return (i<0?99:i)*100};
- const sectionStyle=(key:SiteSectionKey):CSSProperties=>({order:sectionRank(key),minHeight:key==='about'||key==='footer'?undefined:(c.sectionHeights?.[key]||0)>0?(c.sectionHeights[key]+'px'):undefined});
+ const sectionStyle=(key:SiteSectionKey):CSSProperties=>{
+  const height=Math.max(0,Number(c.sectionHeights?.[key]||0));
+  if(key==='footer')return {order:sectionRank(key)};
+  if(key==='about'&&height>0)return {order:sectionRank(key),height:height+'px',minHeight:0};
+  return {order:sectionRank(key),minHeight:height>0?height+'px':undefined};
+ };
  const dividerStyle=(divider:Config['sectionDividers'][number]):CSSProperties=>({
   order:sectionRank(divider.after)+50,
   width:divider.width+'%',
