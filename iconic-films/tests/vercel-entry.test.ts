@@ -65,7 +65,7 @@ test('actual Vercel API retains exported assets and revokes admin sessions',asyn
       assert.equal(config.works.length,1);assert.equal(config.tracks.length,28);
       assert(Object.keys(config).length>=64,'the full exported design configuration is retained');
       assert.equal(config.heroVideo,'/media/8091a227-4883-4f87-8a17-7645109f704b.mp4');
-      assert.equal(config.aboutModel,'/media/da61feaa-799d-45b5-8e01-81cd8ad8801a.glb');
+      assert.equal(config.aboutModel,'/media/viivii-sara-metallic.gltf');
       assert(config.tracks.every((track:any)=>track.url.startsWith('/media/')&&track.url.endsWith('.mp3')));
     }
     assert.equal(legacyRequests,0,'the standalone deployment never requests the original Sites runtime');
