@@ -121,11 +121,19 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
     {previewItems.map(({entry,sourceIndex,ghost,key:slideKey},i)=>{
      if(ghost||!entry)return <article className="media-gallery-slide is-placeholder" key={slideKey} aria-hidden="true"><div className="media-gallery-placeholder-stack" aria-hidden="true"/></article>;
      const active=sourceIndex===index,kind=teamMediaType(entry.src);
-     return <article className={'media-gallery-slide '+(active?'is-active ':'')} key={slideKey} aria-hidden={!active} inert={!active}>
+     return <article className={'media-gallery-slide '+(active?'is-active ':'')} key={slideKey} aria-hidden={!active} inert={!active&&!balancedPreview}>
       <div className="media-gallery-artwork" data-cursor-label={cleanPreview&&!isFullscreen&&!modal?undefined:(kind==='video'?'VIDEO':kind==='model'?'3D':'IMAGE')} data-native-cursor={cleanPreview&&!isFullscreen&&!modal?'true':undefined} onClick={()=>{if(dragged.current){dragged.current=false;return}if(!active)return;if(modal&&kind==='video'){toggle();return}if(onExpand&&kind!=='model'){if(kind==='video'&&video.current){video.current.muted=false;setMuted(false);void video.current.play().catch(()=>{})}onExpand();return}if(kind==='video')toggle()}}>
        {kind==='video'?<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-displayIndex)<=1?entry.src:undefined} poster={entry.poster} muted={active?muted:true} data-site-autoplay={!modal&&active?'true':undefined} autoPlay={active} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setReady(n=>n+1);onReady?.();if(playing&&visible){const v=video.current;if(v&&!modal){v.muted=true;setMuted(true)}v?.play().catch(()=>setPlaying(false))}}}} onCanPlay={e=>{if(active&&playing&&visible){if(!modal)e.currentTarget.muted=true;void e.currentTarget.play().catch(()=>{})}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setLandscape((e.currentTarget.videoWidth||0)/(e.currentTarget.videoHeight||1)>=1.45);if(modal){e.currentTarget.volume=mediaVolume;e.currentTarget.muted=mediaVolume<=0;setMuted(mediaVolume<=0)}setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setPlaying(false);onReady?.()}}}/>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
       </div>
 
+      {balanceEdges&&!modal&&!isFullscreen&&<div className="media-gallery-slide-caption" aria-hidden="true">
+       <div className="media-gallery-slide-caption-inner">
+        <span className="media-gallery-slide-caption-label">INFO</span>
+        {entry.kicker&&<span className="media-gallery-slide-caption-kicker">{entry.kicker}</span>}
+        <h3>{entry.title}</h3>
+        {entry.description&&<><span className="media-gallery-slide-caption-label is-credits">CREDITS</span><p>{entry.description}</p></>}
+       </div>
+      </div>}
       {active&&error&&<p className="media-gallery-error" role="status">미디어를 불러오지 못했습니다. <button type="button" onClick={()=>{setError(false);video.current?.load();setPlaying(true)}}>다시 시도</button></p>}
       {active&&kind==='video'&&(!cleanPreview||isFullscreen||modal)&&<div className="media-gallery-tools">
        <button type="button" aria-label={playing?'일시정지':'재생'} onClick={toggle}>{playing?<Pause size={18} fill="currentColor"/>:<Play size={18} fill="currentColor"/>}</button><span>{formatTime(time)}</span><input type="range" aria-label="영상 재생 위치" min={0} max={duration||1} step={.1} value={Math.min(time,duration||0)} onChange={e=>{if(video.current)video.current.currentTime=Number(e.target.value)}}/><span>{formatTime(duration)}</span>
@@ -141,7 +149,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
    </div>
 
   </div>
-  {(!cleanPreview||isFullscreen||modal)&&<div className="media-gallery-caption">{item.kicker&&<span>{item.kicker}</span>}<h3 data-visual-text={captionVisualText} style={captionTitleStyle}>{item.title}</h3>{item.description&&<p>{item.description}</p>}</div>}
+  {(isFullscreen||modal||(!cleanPreview&&!balanceEdges))&&<div className="media-gallery-caption">{item.kicker&&<span>{item.kicker}</span>}<h3 data-visual-text={captionVisualText} style={captionTitleStyle}>{item.title}</h3>{item.description&&<p>{item.description}</p>}</div>}
   {items.length>1&&<div className="media-gallery-navigation" role="group" aria-label="슬라이드 컨트롤">
    <button type="button" className="media-gallery-arrow is-prev" aria-label="이전 미디어" onClick={()=>choose(index-1)}><ChevronLeft size={21}/></button>
    <div className="media-gallery-indicators" role="group" aria-label="미디어 선택">{items.map((entry,i)=><button type="button" key={entry.id} aria-label={`${i+1}번 미디어: ${entry.title}`} aria-current={i===index?'true':undefined} className={i===index?'is-active':''} onClick={()=>choose(i)}><span style={{'--gallery-progress':i===index?progress:0} as CSSProperties}/></button>)}</div>
