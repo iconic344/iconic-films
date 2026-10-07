@@ -12,7 +12,7 @@ class HttpError extends Error{constructor(public status:number,message:string){s
 
 const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
-const maxFile=100*1024*1024;
+const maxFile=1000*1024*1024;
 const maxConfig=10*1024*1024;
 
 let client:SupabaseClient|undefined;
@@ -354,7 +354,7 @@ function validateConfig(c:any){
   if(Buffer.byteLength(JSON.stringify(c))>maxConfig)throw new HttpError(400,'편집 정보는 최대 10MB입니다.');
 }
 function normalizeUpload(name:string,type:string,size:number){
-  if(typeof name!=='string'||typeof type!=='string'||!Number.isInteger(size)||size<=0||size>maxFile)throw new HttpError(400,'파일은 최대 100MB입니다.');
+  if(typeof name!=='string'||typeof type!=='string'||!Number.isInteger(size)||size<=0||size>maxFile)throw new HttpError(400,'파일은 최대 1000MB(1GB)입니다.');
   const ext=name.split('.').pop()?.toLowerCase();
   if(ext==='glb')return {type:'model/gltf-binary',ext:'glb'};
   if(ext==='gltf')return {type:'model/gltf+json',ext:'gltf'};
@@ -367,7 +367,7 @@ function normalizeUpload(name:string,type:string,size:number){
 const memberStringFields=[
   'name','role','bio','instagram','photo','portfolioTitle','portfolioIntro','portfolioCredits','portfolioTeamIndexLabel','portfolioReturnLabel',
   'portfolioNameFont','portfolioNameColor','portfolioRoleFont','portfolioRoleColor','portfolioBioFont','portfolioBioColor',
-  'portfolioTitleFont','portfolioTitleColor','portfolioIntroFont','portfolioIntroColor','portfolioUtilityFont','portfolioUtilityColor'
+  'portfolioTitleFont','portfolioTitleColor','portfolioIntroFont','portfolioIntroColor','portfolioUtilityFont','portfolioUtilityColor','portfolioSliderAspect'
 ] as const;
 const memberNumberFields=[
   'photoRadius','photoSize','portfolioColumns','portfolioGap','portfolioRadius','portfolioProfileSize',
