@@ -11,6 +11,9 @@ type Point={x:number;y:number};
 type TextKey='siteName'|'navWorkLabel'|'navAboutLabel'|'navTeamLabel'|'navContactLabel'|'indexLabel'|'name'|'title'|'intro'|'footerReturn';
 type Selection=PortfolioSectionKey|`text:${TextKey}`|`work:${number}`|`divider:${string}`;
 type TextFields={font:keyof TeamMember;size:keyof TeamMember;color:keyof TeamMember;align:keyof TeamMember;x:keyof TeamMember;y:keyof TeamMember};
+const textKeys:TextKey[]=['siteName','navWorkLabel','navAboutLabel','navTeamLabel','navContactLabel','indexLabel','name','title','intro','footerReturn'];
+const isTextKey=(value:string):value is TextKey=>textKeys.includes(value as TextKey);
+const fallbackSectionLayout={visible:true,x:0,y:0,scale:1,minHeight:0,opacity:100,background:'',radius:0};
 
 const clamp=(n:number,min:number,max:number)=>Math.min(max,Math.max(min,n));
 const numberValue=(value:unknown,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
@@ -46,14 +49,17 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  const member=useMemo(()=>config.teamMembers.find(item=>item.id===memberId)||null,[config.teamMembers,memberId]);
 
  const patchConfig=<K extends keyof Config>(key:K,value:Config[K])=>setConfig(current=>({...current,[key]:value}));
- const patchMember=(value:Partial<TeamMember>)=>setConfig(current=>({...current,teamMembers:current.teamMembers.map(item=>item.id===memberId?{...item,...value}:item)}));
+ const patchMember=(value:Partial<TeamMember>)=>setConfig(current=>({...current,teamMembers:(current.teamMembers||[]).map(item=>item.id===memberId?{...item,...value}:item)}));
  if(!member)return null;
 
- const selectedSection=(sectionDefs.some(item=>item.key===selection)?selection:selection.startsWith('text:')?textSection[selection.slice(5) as TextKey]:selection.startsWith('work:')?'work':selection.startsWith('divider:')?(member.portfolioDividers.find(item=>item.id===selection.slice(8))?.after||'work'):'work') as PortfolioSectionKey;
- const selectedText=selection.startsWith('text:')?selection.slice(5) as TextKey:null;
- const selectedWorkIndex=selection.startsWith('work:')?Number(selection.slice(5)):-1;
- const selectedDivider=selection.startsWith('divider:')?member.portfolioDividers.find(item=>item.id===selection.slice(8))||null:null;
- const selectedLayout=member.portfolioSections[selectedSection];
+ const portfolioDividers=Array.isArray(member.portfolioDividers)?member.portfolioDividers:[];
+ const sectionLayout=(key:PortfolioSectionKey)=>member.portfolioSections?.[key]||fallbackSectionLayout;
+ const rawTextKey=selection.startsWith('text:')?selection.slice(5):'';
+ const selectedText=isTextKey(rawTextKey)?rawTextKey:null;
+ const selectedWorkIndex=selection.startsWith('work:')&&Number.isFinite(Number(selection.slice(5)))?Number(selection.slice(5)):-1;
+ const selectedDivider=selection.startsWith('divider:')?portfolioDividers.find(item=>item.id===selection.slice(8))||null:null;
+ const selectedSection=(sectionDefs.some(item=>item.key===selection)?selection:selectedText?textSection[selectedText]:selection.startsWith('work:')?'work':selectedDivider?.after||'work') as PortfolioSectionKey;
+ const selectedLayout=sectionLayout(selectedSection);
 
  const targetFor=(value:Selection=selection)=>{
   if(value.startsWith('work:'))return document.querySelector<HTMLElement>(`[data-portfolio-work-index="${CSS.escape(value.slice(5))}"]`);
@@ -64,11 +70,13 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  const refresh=()=>{const target=targetFor();setRect(target?target.getBoundingClientRect():null)};
  useEffect(()=>{let raf=0;const sync=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(refresh)};sync();window.addEventListener('scroll',sync,{passive:true});window.addEventListener('resize',sync);return()=>{cancelAnimationFrame(raf);window.removeEventListener('scroll',sync);window.removeEventListener('resize',sync)}},[selection,config]);
  useEffect(()=>{if(selection.startsWith('text:')||selection.startsWith('work:')||selection.startsWith('divider:'))setTab('content')},[selection]);
+ useEffect(()=>{if(selection.startsWith('text:')&&!isTextKey(selection.slice(5)))setSelection('work')},[selection]);
+ useEffect(()=>{if(selectedWorkIndex>=0&&selectedWorkIndex>=(member.works||[]).length)setSelection('work')},[selectedWorkIndex,member.works]);
 
- const patchSection=(key:PortfolioSectionKey,value:Partial<TeamMember['portfolioSections'][PortfolioSectionKey]>)=>patchMember({portfolioSections:{...member.portfolioSections,[key]:{...member.portfolioSections[key],...value}}});
- const patchDivider=(id:string,value:Partial<PortfolioDivider>)=>patchMember({portfolioDividers:member.portfolioDividers.map(item=>item.id===id?{...item,...value}:item)});
- const deleteDivider=(id:string)=>{patchMember({portfolioDividers:member.portfolioDividers.filter(item=>item.id!==id)});setSelection(selectedSection);setTab('layers')};
- const addDivider=()=>{const id='portfolio-divider-'+Date.now();patchMember({portfolioDividers:[...member.portfolioDividers,{id,after:selectedSection,visible:true,width:100,thickness:1,opacity:24,inset:0,marginTop:0,marginBottom:0,offsetY:0,color:''}]});setSelection(`divider:${id}`);setTab('content')};
+ const patchSection=(key:PortfolioSectionKey,value:Partial<TeamMember['portfolioSections'][PortfolioSectionKey]>)=>patchMember({portfolioSections:{...(member.portfolioSections||{}),[key]:{...fallbackSectionLayout,...sectionLayout(key),...value}} as TeamMember['portfolioSections']});
+ const patchDivider=(id:string,value:Partial<PortfolioDivider>)=>patchMember({portfolioDividers:portfolioDividers.map(item=>item.id===id?{...item,...value}:item)});
+ const deleteDivider=(id:string)=>{patchMember({portfolioDividers:portfolioDividers.filter(item=>item.id!==id)});setSelection(selectedSection);setTab('layers')};
+ const addDivider=()=>{const id='portfolio-divider-'+Date.now();patchMember({portfolioDividers:[...portfolioDividers,{id,after:selectedSection,visible:true,width:100,thickness:1,opacity:24,inset:0,marginTop:0,marginBottom:0,offsetY:0,color:''}]});setSelection(`divider:${id}`);setTab('content')};
 
  const textValue=(key:TextKey)=>key==='siteName'?config.name:key==='navWorkLabel'?config.navWorkLabel:key==='navAboutLabel'?config.navAboutLabel:key==='navTeamLabel'?config.navTeamLabel:key==='navContactLabel'?config.navContactLabel:key==='indexLabel'?member.portfolioTeamIndexLabel:key==='name'?member.name:key==='title'?member.portfolioTitle:key==='intro'?member.portfolioIntro:member.portfolioReturnLabel;
  const patchText=(key:TextKey,value:string)=>{
@@ -167,11 +175,19 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
    const work=target.closest<HTMLElement>('[data-portfolio-work-index]');
    if(work?.dataset.portfolioWorkIndex!==undefined){setSelection(`work:${work.dataset.portfolioWorkIndex}` as Selection);event.preventDefault();event.stopPropagation();return}
    const text=target.closest<HTMLElement>('[data-portfolio-edit]');
-   if(text?.dataset.portfolioEdit){const key=text.dataset.portfolioEdit as TextKey;setSelection(`text:${key}`);if(inlineEditing===key)return;event.preventDefault();event.stopPropagation();const current=currentTextStyle(key),sx=event.clientX,sy=event.clientY,startScroll=window.scrollY;let active=false;const move=(ev:PointerEvent)=>{const dx=ev.clientX-sx,dy=ev.clientY-sy+(window.scrollY-startScroll);if(!active&&Math.hypot(dx,dy)<5)return;if(!current)return;active=true;document.documentElement.classList.add('visual-direct-dragging');patchPortfolioTextStyle(key,{x:Math.round(current.x+dx),y:Math.round(current.y+dy)});if(ev.clientY<54)window.scrollBy(0,-18);else if(ev.clientY>window.innerHeight-54)window.scrollBy(0,18)};const up=(ev:PointerEvent)=>{document.documentElement.classList.remove('visual-direct-dragging');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);if(active)refresh();else startInlineEdit(key,ev.clientX,ev.clientY)};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});return}
+   if(text?.dataset.portfolioEdit){
+    const rawKey=text.dataset.portfolioEdit;
+    if(!isTextKey(rawKey)){
+     const section=text.closest<HTMLElement>('[data-portfolio-section]');
+     const sectionKey=section?.dataset.portfolioSection as PortfolioSectionKey|undefined;
+     setSelection(sectionDefs.some(item=>item.key===sectionKey)?sectionKey!:'work');
+     event.preventDefault();event.stopPropagation();return;
+    }
+    const key=rawKey;setSelection(`text:${key}`);if(inlineEditing===key)return;event.preventDefault();event.stopPropagation();const current=currentTextStyle(key),sx=event.clientX,sy=event.clientY,startScroll=window.scrollY;let active=false;const move=(ev:PointerEvent)=>{const dx=ev.clientX-sx,dy=ev.clientY-sy+(window.scrollY-startScroll);if(!active&&Math.hypot(dx,dy)<5)return;if(!current)return;active=true;document.documentElement.classList.add('visual-direct-dragging');patchPortfolioTextStyle(key,{x:Math.round(current.x+dx),y:Math.round(current.y+dy)});if(ev.clientY<54)window.scrollBy(0,-18);else if(ev.clientY>window.innerHeight-54)window.scrollBy(0,18)};const up=(ev:PointerEvent)=>{document.documentElement.classList.remove('visual-direct-dragging');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);if(active)refresh();else startInlineEdit(key,ev.clientX,ev.clientY)};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});return}
    const section=target.closest<HTMLElement>('[data-portfolio-section]');const key=section?.dataset.portfolioSection as PortfolioSectionKey|undefined;
    if(!section||!key)return;setSelection(key);
    if(target.closest('button,a,input,textarea,select,video,model-viewer')){event.preventDefault();event.stopPropagation();return}
-   event.preventDefault();event.stopPropagation();const sy=event.clientY,startScroll=window.scrollY,base=member.portfolioSections[key].y;let active=false;
+   event.preventDefault();event.stopPropagation();const sy=event.clientY,startScroll=window.scrollY,base=sectionLayout(key).y;let active=false;
    const move=(ev:PointerEvent)=>{const dy=ev.clientY-sy+(window.scrollY-startScroll);if(!active&&Math.abs(dy)<3)return;active=true;document.documentElement.classList.add('visual-direct-dragging');patchSection(key,{x:0,y:Math.round(base+dy)});if(ev.clientY<54)window.scrollBy(0,-18);else if(ev.clientY>window.innerHeight-54)window.scrollBy(0,18)};
    const up=()=>{document.documentElement.classList.remove('visual-direct-dragging');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
   };
@@ -245,8 +261,8 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
     <div className="visual-layer-heading"><span>이 포트폴리오 페이지의 영역</span><div><button type="button" onClick={addDivider}><Plus size={13}/>구분선</button><button type="button" onClick={addWork}><Plus size={13}/>작품</button></div></div>
     <p className="visual-help">현재 포트폴리오에서 실제로 보이는 영역만 관리합니다. 영역을 고른 뒤 ‘선택 항목’에서 내용·배치·디자인을 편집하세요. 숨김과 복구는 이 포트폴리오에만 적용됩니다.</p>
     {sectionDefs.map(section=><div className="visual-layer-group" key={section.key}>
-     <div className={'visual-layer-row '+(selection===section.key?'is-active':'')}><button className="visual-layer-select" onClick={()=>{setSelection(section.key);targetFor(section.key)?.scrollIntoView({behavior:'smooth',block:'center'})}}><span>{section.label}</span><small>{member.portfolioSections[section.key].visible?'VISIBLE':'HIDDEN'}</small></button><button className="visual-layer-icon" onClick={()=>patchSection(section.key,{visible:!member.portfolioSections[section.key].visible})}>{member.portfolioSections[section.key].visible?<Eye size={14}/>:<EyeOff size={14}/>}</button></div>
-     {member.portfolioDividers.filter(divider=>divider.after===section.key).map(divider=><div className={'visual-layer-row is-child is-divider '+(selection===`divider:${divider.id}`?'is-active':'')} key={divider.id}><button className="visual-layer-select" onClick={()=>setSelection(`divider:${divider.id}`)}><span>구분선</span><small>{divider.visible?'VISIBLE':'HIDDEN'}</small></button><div className="visual-layer-mini-actions"><button onClick={()=>patchDivider(divider.id,{visible:!divider.visible})}>{divider.visible?<Eye size={12}/>:<EyeOff size={12}/>}</button><button className="is-danger" onClick={()=>deleteDivider(divider.id)}><Trash2 size={12}/></button></div></div>)}
+     <div className={'visual-layer-row '+(selection===section.key?'is-active':'')}><button className="visual-layer-select" onClick={()=>{setSelection(section.key);targetFor(section.key)?.scrollIntoView({behavior:'smooth',block:'center'})}}><span>{section.label}</span><small>{sectionLayout(section.key).visible?'VISIBLE':'HIDDEN'}</small></button><button className="visual-layer-icon" onClick={()=>patchSection(section.key,{visible:!sectionLayout(section.key).visible})}>{sectionLayout(section.key).visible?<Eye size={14}/>:<EyeOff size={14}/>}</button></div>
+     {portfolioDividers.filter(divider=>divider.after===section.key).map(divider=><div className={'visual-layer-row is-child is-divider '+(selection===`divider:${divider.id}`?'is-active':'')} key={divider.id}><button className="visual-layer-select" onClick={()=>setSelection(`divider:${divider.id}`)}><span>구분선</span><small>{divider.visible?'VISIBLE':'HIDDEN'}</small></button><div className="visual-layer-mini-actions"><button onClick={()=>patchDivider(divider.id,{visible:!divider.visible})}>{divider.visible?<Eye size={12}/>:<EyeOff size={12}/>}</button><button className="is-danger" onClick={()=>deleteDivider(divider.id)}><Trash2 size={12}/></button></div></div>)}
      {section.key==='work'&&<details className="visual-layer-details"><summary><span>작품 세부 관리</span><small>{member.works.length}개</small></summary><div className="visual-layer-children">{member.works.map((work,index)=><div className={'visual-layer-row is-child '+(selection===`work:${index}`?'is-active':'')} key={index}><button className="visual-layer-select" onClick={()=>setSelection(`work:${index}`)}><span>{work?'작품 '+String(index+1).padStart(2,'0'):'빈 작품 '+String(index+1).padStart(2,'0')}</span><small>{member.portfolioWorkCategories[index]||'미분류'}</small></button><div className="visual-layer-mini-actions"><button disabled={index===0} onClick={()=>moveWork(index,-1)}><ArrowUp size={12}/></button><button disabled={index===member.works.length-1} onClick={()=>moveWork(index,1)}><ArrowDown size={12}/></button><button className="is-danger" onClick={()=>removeWork(index)}><Trash2 size={12}/></button></div></div>)}</div></details>}
     </div>)}
    </div>}
