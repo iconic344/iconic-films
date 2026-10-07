@@ -15721,3 +15721,20 @@ html.visual-axis-guides::after{
 .media-gallery-artwork>img{
   content-visibility:auto;
 }
+
+
+/* PROJECT 07 — direct media positioning in Edit Site only. */
+.site.visual-editing [data-visual-media]{
+  cursor:grab!important;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+html.visual-media-dragging,
+html.visual-media-dragging *{
+  cursor:grabbing!important;
+}
+.site.visual-editing [data-visual-media] img,
+.site.visual-editing [data-visual-media] video{
+  pointer-events:none!important;
+}
