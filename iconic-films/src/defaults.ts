@@ -128,7 +128,7 @@ export function normalizeConfig(value:unknown={}){
   marginTop:Math.min(240,Math.max(0,Number(divider?.marginTop??0))),
   marginBottom:Math.min(240,Math.max(0,Number(divider?.marginBottom??0))),
   color:typeof divider?.color==='string'?divider.color:''
- })): [{id:'hero-divider',after:'hero',visible:true,width:100,thickness:1,opacity:22,inset:0,marginTop:0,marginBottom:0,color:''}];
+ })):[];
  const storedText=(stored.textStyles||{}) as Partial<SiteTextStyles>;
  const textStyles=Object.fromEntries(Object.entries(defaultTextStyles).map(([key,value])=>[key,{...value,...((storedText as any)[key]||{})}])) as SiteTextStyles;
  const hasNewPlaybackDefaults=typeof stored.musicShuffle==='boolean'||stored.musicRepeatMode==='none'||stored.musicRepeatMode==='all'||stored.musicRepeatMode==='one';

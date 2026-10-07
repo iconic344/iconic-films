@@ -5,6 +5,23 @@ import {cursorDiameter,stepCursorDiameter,stepCursorPosition,type CursorMode} fr
 const interactive='button,a,[role="button"],[role="tab"],[role="switch"],[role="slider"],[role="checkbox"],input,textarea,select,summary';
 const native='input:focus,textarea:focus,select:focus,video[controls],[data-native-cursor]';
 function isModel(target:Element){return !!target.closest('[data-cursor="3d"],model-viewer,.model-stage,.team-model-loading')||!!target.closest('.focus-card-visual,.team-portfolio-grid-item,.team-stack-visual,.media-gallery-artwork,.about-visual,.main-logo')?.querySelector('model-viewer,.model-stage,.team-model-loading');}
+function cursorLabel(target:Element){
+ const explicit=target.closest<HTMLElement>('[data-cursor-label]')?.dataset.cursorLabel;
+ if(explicit)return explicit.toUpperCase();
+ if(isModel(target))return '3D';
+ if(target.closest('[data-visual-text],[data-visual-work-text],[data-visual-team-text]'))return 'EDIT';
+ if(target.closest('.nav a,.nav button,header nav a,header nav button,[role="menuitem"]'))return 'MENU';
+ if(target.closest('video,.film-frame video,.media-gallery-artwork video'))return 'VIDEO';
+ if(target.closest('.music-player,.music-panel,.track-list button,[aria-label*="재생"],[aria-label*="음악"]'))return 'PLAY';
+ if(target.closest('[aria-label*="이전"],.media-gallery-prev,.film-prev'))return 'PREV';
+ if(target.closest('[aria-label*="다음"],.media-gallery-next,.film-next'))return 'NEXT';
+ if(target.closest('input[type="range"],[role="slider"],.film-seek,.volume'))return 'DRAG';
+ if(target.closest('img,picture,.work-image,.team-stack-visual,.focus-card-visual,.about-visual'))return 'IMAGE';
+ if(target.closest('a[href]'))return 'LINK';
+ if(target.closest('.work-card,.media-gallery-artwork,.team-portfolio-grid-item,[data-visual-work-id]'))return 'VIEW';
+ if(target.closest('button,[role="button"],[role="tab"],summary'))return 'CLICK';
+ return 'VIEW';
+}
 function modeFor(target:Element):CursorMode{if(isModel(target))return 'media';const control=target.closest(interactive);if(control&&!control.matches('.work-image'))return 'control';if(target.closest('img,video,.work-image,.film-frame,.stage,.media-gallery-artwork,.about-visual,.main-logo'))return 'media';return target.closest('h1,h2,h3,p,article,figure,li,label,strong,small,.kicker,.disciplines span,.footer-copy,.team-portfolio-credits')?'text':'dot';}
 export default function PointerExperience({enabled=true}:{enabled?:boolean}){
  const [mounted,setMounted]=useState(false),[portalTarget,setPortalTarget]=useState<Element|null>(null);const point=useRef<{x:number;y:number}|null>(null);const cursor=useRef<HTMLDivElement>(null),glow=useRef<HTMLDivElement>(null),optics=useRef<HTMLDivElement>(null),caption=useRef<HTMLDivElement>(null);
@@ -35,7 +52,7 @@ export default function PointerExperience({enabled=true}:{enabled?:boolean}){
   const hide=()=>{cancelAnimationFrame(raf);raf=0;last=0;visible=false;dirty=false;hit=null;positionReady=false;el.dataset.visible='false';halo.dataset.visible='false';glass.dataset.visible=captionNode.dataset.visible='false';document.body.classList.remove('iconic-pointer')};
   const tick=(now:number)=>{
    raf=0;const dt=last?now-last:16;last=now;
-   if(dirty){dirty=false;if(!hit||hit.closest(native)){hide();return}const mode=modeFor(hit),hovered=mode==='control'||mode==='media';halo.dataset.visible=el.dataset.visible='true';el.dataset.hovered=glass.dataset.hovered=captionNode.dataset.hovered=String(hovered);glass.dataset.visible=captionNode.dataset.visible=String(hovered);document.body.classList.add('iconic-pointer');const model=hovered&&isModel(hit);captionNode.dataset.kind=model?'3d':'view';const label=captionNode.querySelector('.cursor-label-text') as HTMLElement;label.textContent=model?'3D':'VIEW';wanted=cursorDiameter[mode];if(!visible){visible=true;diameter=6;targetDiameter=6;renderX=x;renderY=y;positionReady=true}}
+   if(dirty){dirty=false;if(!hit||hit.closest(native)){hide();return}const mode=modeFor(hit),hovered=mode==='control'||mode==='media';halo.dataset.visible=el.dataset.visible='true';el.dataset.hovered=glass.dataset.hovered=captionNode.dataset.hovered=String(hovered);glass.dataset.visible=captionNode.dataset.visible=String(hovered);document.body.classList.add('iconic-pointer');const labelText=hovered?cursorLabel(hit):'VIEW';captionNode.dataset.kind=labelText.toLowerCase();const label=captionNode.querySelector('.cursor-label-text') as HTMLElement;label.textContent=labelText;wanted=cursorDiameter[mode];if(!visible){visible=true;diameter=6;targetDiameter=6;renderX=x;renderY=y;positionReady=true}}
    if(!visible)return;
    // Only translation belongs to the anchor. A fixed 64px lens scales about its own center.
    // Moving and resizing can never change the anchor's origin or screen coordinates.

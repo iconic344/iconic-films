@@ -13361,3 +13361,30 @@ body:has(.visual-editor-ui) .scroll-toggle{opacity:.18;pointer-events:none}
 .site .hero{
   border-bottom:0!important;
 }
+
+
+/* 2026-10-07: section separators are opt-in Divider layers only. */
+.site>.nav,
+.site main>.hero,
+.site main>.work-section,
+.site main>.about,
+.site main>.contact,
+.site main>[data-visual-section="team"],
+.site>footer,
+.site .focus-section,
+.site .focus-rail,
+.site .team-stack-list,
+.site .team-stack-item{
+  border-top:0!important;
+  border-bottom:0!important;
+}
+.site main>.about::before,
+.site main>.about::after,
+.site main>.work-section::before,
+.site main>.work-section::after,
+.site main>[data-visual-section="team"]::before,
+.site main>[data-visual-section="team"]::after,
+.site>footer::before,
+.site>footer::after{
+  border:0!important;
+}

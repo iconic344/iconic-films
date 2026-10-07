@@ -849,3 +849,11 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
   translate:var(--hero-caption-x,0px) var(--hero-caption-y,0px)!important;
   line-height:1.08!important;
 }
+
+
+/* No automatic section rules. Add a Divider explicitly in EDIT SITE when needed. */
+.focus-section .focus-rail,
+.focus-section .focus-rail.is-empty{
+  border-top:0!important;
+  border-bottom:0!important;
+}
