@@ -254,6 +254,9 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     '--portfolio-return-y':(member.portfolioReturnY||0)+'px',
     '--portfolio-slider-width':(member.portfolioSliderWidth||100)+'%',
     '--portfolio-slider-height':(member.portfolioSliderHeight||760)+'px',
+    '--portfolio-slider-landscape-vw':Math.max(30,(member.portfolioSliderWidth||100)*.665)+'vw',
+    '--portfolio-slider-portrait-vw':Math.max(24,(member.portfolioSliderWidth||100)*.42)+'vw',
+    '--portfolio-slider-square-vw':Math.max(28,(member.portfolioSliderWidth||100)*.54)+'vw',
     '--portfolio-grid-width':(member.portfolioGridWidth||100)+'%',
     '--portfolio-work-x':(member.portfolioSections.work.x||0)+'px',
   } as CSSProperties;
@@ -340,7 +343,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           })}
         </div>}
 
-        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={()=>{if(!visualEditing)openViewer(index)}} balanceEdges/></div>}
+        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={()=>{if(!visualEditing)openViewer(index)}} balanceEdges autoPlay={member.portfolioSliderAutoplay!==false} autoplayMs={member.portfolioSliderAutoplayMs||6500} transitionMs={member.portfolioSliderTransitionMs||820} easing={member.portfolioSliderEasing||'smooth'} maxCardHeight={member.portfolioSliderHeight||760}/></div>}
       </section>
       {renderDividers('work')}
     </main>
@@ -354,6 +357,6 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     <footer className="team-portfolio-footer" data-portfolio-section="footer" data-portfolio-hidden={member.portfolioSections.footer.visible?'false':'true'} style={sectionStyle('footer')}><span>© 2026 {config.name}</span><button type="button" data-portfolio-edit="footerReturn" onClick={()=>{if(!visualEditing)onBack()}}>{member.portfolioReturnLabel||'Back to team'}</button></footer>
     {renderDividers('footer')}
 
-    <MediaGalleryDialog items={galleryItems} index={viewerIndex} onClose={closeViewer} onIndexChange={setViewerIndex}/>
+    <MediaGalleryDialog items={galleryItems} index={viewerIndex} onClose={closeViewer} onIndexChange={setViewerIndex} autoPlay={member.portfolioSliderAutoplay!==false} autoplayMs={member.portfolioSliderAutoplayMs||6500} transitionMs={member.portfolioSliderTransitionMs||820} easing={member.portfolioSliderEasing||'smooth'}/>
   </div>
 }
