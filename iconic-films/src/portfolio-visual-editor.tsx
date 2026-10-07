@@ -38,6 +38,8 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  const [panelSide,setPanelSide]=useState<'left'|'right'>('right'),[panelOpen,setPanelOpen]=useState(true);
  const [toolbarPos,setToolbarPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-toolbar-pos'));
  const [panelPos,setPanelPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-panel-pos'));
+ const [inlineEditing,setInlineEditing]=useState<TextKey|null>(null);
+ const inlineOriginal=useRef('');
  const sectionDrag=useRef<{y:number;base:number}|null>(null),sectionScale=useRef<{x:number;y:number;base:number}|null>(null),sectionHeight=useRef<{y:number;base:number}|null>(null);
  const textDrag=useRef<{x:number;y:number;baseX:number;baseY:number}|null>(null),textResize=useRef<{x:number;y:number;base:number}|null>(null),dividerDrag=useRef<{y:number;base:number}|null>(null);
  const member=useMemo(()=>config.teamMembers.find(item=>item.id===memberId)||null,[config.teamMembers,memberId]);
@@ -92,8 +94,41 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
   patchMember(patch);
  };
  const currentTextStyle=(key:TextKey)=>{
-  const fields=textFields[key];if(!fields)return null;
-  return {font:String(member[fields.font]||''),size:numberValue(member[fields.size]),color:String(member[fields.color]||''),align:(member[fields.align]||'left') as TextAlign,x:numberValue(member[fields.x]),y:numberValue(member[fields.y])};
+  const fields=textFields[key];
+  if(fields)return {font:String(member[fields.font]||''),size:numberValue(member[fields.size]),color:String(member[fields.color]||''),align:(member[fields.align]||'left') as TextAlign,x:numberValue(member[fields.x]),y:numberValue(member[fields.y])};
+  if(key==='siteName'){const s=config.textStyles.navBrand;return {font:s.font,size:s.size,color:s.color,align:s.align,x:s.x,y:s.y}}
+  if(key==='navWorkLabel'||key==='navAboutLabel'||key==='navTeamLabel'||key==='navContactLabel'){const s=config.textStyles.navMenu;return {font:s.font,size:s.size,color:s.color,align:s.align,x:s.x,y:s.y}}
+  return null;
+ };
+ const patchPortfolioTextStyle=(key:TextKey,value:Partial<{font:string;size:number;color:string;align:TextAlign;x:number;y:number}>)=>{
+  const fields=textFields[key];if(fields)return patchTextFields(key,value);
+  const styleKey=key==='siteName'?'navBrand':(key==='navWorkLabel'||key==='navAboutLabel'||key==='navTeamLabel'||key==='navContactLabel')?'navMenu':null;
+  if(!styleKey)return;
+  setConfig(current=>({...current,textStyles:{...current.textStyles,[styleKey]:{...current.textStyles[styleKey],...value}}}));
+ };
+ const stopInlineEdit=(commit=true)=>{
+  const key=inlineEditing;if(!key)return;
+  const el=targetFor(`text:${key}` as Selection);
+  if(el){
+   if(commit){let value=(el.innerText||el.textContent||'').replace(/\r/g,'').replace(/\u00a0/g,' ');if(key!=='intro')value=value.replace(/\n+/g,' ');patchText(key,value)}
+   else el.innerText=inlineOriginal.current;
+   el.contentEditable='false';el.removeAttribute('data-inline-editing');el.removeAttribute('spellcheck');
+  }
+  setInlineEditing(null);
+ };
+ const startInlineEdit=(key:TextKey,clientX?:number,clientY?:number)=>{
+  const el=targetFor(`text:${key}` as Selection);if(!el)return;
+  if(inlineEditing&&inlineEditing!==key)stopInlineEdit(true);
+  setSelection(`text:${key}`);setTab('content');inlineOriginal.current=textValue(key);setInlineEditing(key);
+  el.contentEditable='true';el.spellcheck=false;el.dataset.inlineEditing='true';
+  requestAnimationFrame(()=>{
+   el.focus({preventScroll:true});
+   const doc=document as Document&{caretPositionFromPoint?:(x:number,y:number)=>{offsetNode:Node;offset:number}|null;caretRangeFromPoint?:(x:number,y:number)=>Range|null};
+   const selectionApi=window.getSelection();if(!selectionApi)return;let range:Range|null=null;
+   if(clientX!==undefined&&clientY!==undefined){const caret=doc.caretPositionFromPoint?.(clientX,clientY);if(caret){range=document.createRange();range.setStart(caret.offsetNode,caret.offset);range.collapse(true)}else range=doc.caretRangeFromPoint?.(clientX,clientY)||null}
+   if(!range){range=document.createRange();range.selectNodeContents(el);range.collapse(false)}
+   selectionApi.removeAllRanges();selectionApi.addRange(range);
+  });
  };
 
  const uploadHero=async(file?:File)=>{if(!file)return;try{setUploading(true);patchMember({photo:await uploadFile(file)})}finally{setUploading(false)}};
@@ -111,6 +146,18 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  const beginDividerMove=(e:ReactPointerEvent<HTMLButtonElement>)=>{if(!selectedDivider)return;e.preventDefault();e.stopPropagation();dividerDrag.current={y:e.clientY,base:selectedDivider.offsetY||0};const move=(event:PointerEvent)=>{const start=dividerDrag.current;if(!start)return;patchDivider(selectedDivider.id,{offsetY:Math.round(start.base+event.clientY-start.y)})};const up=()=>{dividerDrag.current=null;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true})};
 
  useEffect(()=>{
+  if(!inlineEditing)return;
+  const el=targetFor(`text:${inlineEditing}` as Selection);if(!el)return;
+  const onBlur=()=>stopInlineEdit(true);
+  const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();stopInlineEdit(false);return}if(event.key==='Enter'&&!event.shiftKey&&inlineEditing!=='intro'){event.preventDefault();event.stopPropagation();stopInlineEdit(true);return}if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();event.stopPropagation();stopInlineEdit(true)}};
+  el.addEventListener('blur',onBlur);el.addEventListener('keydown',onKey);
+  return()=>{el.removeEventListener('blur',onBlur);el.removeEventListener('keydown',onKey)};
+ },[inlineEditing,member,config]);
+ useEffect(()=>{
+  const onKey=(event:KeyboardEvent)=>{const target=event.target as HTMLElement|null;if(target?.closest('input,textarea,select,[contenteditable="true"]'))return;if(selectedText&&(event.key==='Enter'||event.key==='F2')){event.preventDefault();startInlineEdit(selectedText);return}if(selectedText&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){const current=currentTextStyle(selectedText);if(!current)return;event.preventDefault();const step=event.shiftKey?10:1;if(event.key==='ArrowLeft')patchPortfolioTextStyle(selectedText,{x:current.x-step});if(event.key==='ArrowRight')patchPortfolioTextStyle(selectedText,{x:current.x+step});if(event.key==='ArrowUp')patchPortfolioTextStyle(selectedText,{y:current.y-step});if(event.key==='ArrowDown')patchPortfolioTextStyle(selectedText,{y:current.y+step})}};
+  window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
+ },[selectedText,member,config,inlineEditing]);
+ useEffect(()=>{
   const down=(event:PointerEvent)=>{
    if(event.button!==0)return;
    const target=event.target as HTMLElement|null;if(!target||target.closest('[data-visual-editor="true"]'))return;
@@ -119,7 +166,7 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
    const work=target.closest<HTMLElement>('[data-portfolio-work-index]');
    if(work?.dataset.portfolioWorkIndex!==undefined){setSelection(`work:${work.dataset.portfolioWorkIndex}` as Selection);event.preventDefault();event.stopPropagation();return}
    const text=target.closest<HTMLElement>('[data-portfolio-edit]');
-   if(text?.dataset.portfolioEdit){const key=text.dataset.portfolioEdit as TextKey;setSelection(`text:${key}`);event.preventDefault();event.stopPropagation();const fields=textFields[key];if(!fields)return;const sx=event.clientX,sy=event.clientY,startScroll=window.scrollY,baseX=numberValue(member[fields.x]),baseY=numberValue(member[fields.y]);let active=false;const move=(ev:PointerEvent)=>{const dx=ev.clientX-sx,dy=ev.clientY-sy+(window.scrollY-startScroll);if(!active&&Math.hypot(dx,dy)<3)return;active=true;document.documentElement.classList.add('visual-direct-dragging');patchTextFields(key,{x:Math.round(baseX+dx),y:Math.round(baseY+dy)});if(ev.clientY<54)window.scrollBy(0,-18);else if(ev.clientY>window.innerHeight-54)window.scrollBy(0,18)};const up=()=>{document.documentElement.classList.remove('visual-direct-dragging');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});return}
+   if(text?.dataset.portfolioEdit){const key=text.dataset.portfolioEdit as TextKey;setSelection(`text:${key}`);if(inlineEditing===key)return;event.preventDefault();event.stopPropagation();const current=currentTextStyle(key),sx=event.clientX,sy=event.clientY,startScroll=window.scrollY;let active=false;const move=(ev:PointerEvent)=>{const dx=ev.clientX-sx,dy=ev.clientY-sy+(window.scrollY-startScroll);if(!active&&Math.hypot(dx,dy)<5)return;if(!current)return;active=true;document.documentElement.classList.add('visual-direct-dragging');patchPortfolioTextStyle(key,{x:Math.round(current.x+dx),y:Math.round(current.y+dy)});if(ev.clientY<54)window.scrollBy(0,-18);else if(ev.clientY>window.innerHeight-54)window.scrollBy(0,18)};const up=(ev:PointerEvent)=>{document.documentElement.classList.remove('visual-direct-dragging');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);if(active)refresh();else startInlineEdit(key,ev.clientX,ev.clientY)};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});return}
    const section=target.closest<HTMLElement>('[data-portfolio-section]');const key=section?.dataset.portfolioSection as PortfolioSectionKey|undefined;
    if(!section||!key)return;setSelection(key);
    if(target.closest('button,a,input,textarea,select,video,model-viewer')){event.preventDefault();event.stopPropagation();return}
