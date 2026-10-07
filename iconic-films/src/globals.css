@@ -15756,3 +15756,23 @@ html.visual-media-dragging *{
 .portfolio-slider-toolbar-settings .visual-direct-badge{
   white-space:nowrap;
 }
+
+
+/* PROJECT 07 — per-media copy editor. */
+.portfolio-work-copy-editor{
+  margin-top:4px;
+  display:grid;
+  gap:10px;
+  padding-top:12px;
+  border-top:1px solid var(--lg-line);
+}
+.portfolio-work-copy-editor .visual-field textarea{
+  min-height:84px;
+  resize:vertical;
+}
+.media-gallery-caption .media-gallery-caption-credit-label{
+  margin-top:14px;
+  margin-bottom:2px;
+  opacity:.72;
+  letter-spacing:.16em;
+}
