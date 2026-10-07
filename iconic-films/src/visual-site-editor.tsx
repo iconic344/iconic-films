@@ -97,7 +97,7 @@ export default function VisualSiteEditor({
  const deleteBlock=(id:string)=>{setConfig(d=>({...d,pageBlocks:(d.pageBlocks||[]).filter(block=>block.id!==id)}));setSelection(sectionSelection);setTab('layers')};
  const addBlock=(type:PageBlockType)=>{
   const id='page-block-'+Date.now(),after=sectionDefs.some(item=>item.key===sectionSelection)?sectionSelection:'work';
-  const defaults:PageBlock={id,type,after,visible:true,title:type==='slider'?'Slider':type==='text'?'New text':'',text:type==='text'?'내용을 입력하세요.':'',media:'',width:100,height:type==='spacer'?120:type==='media'?520:560,gap:18,radius:24,offsetY:0,background:'',color:'',fontSize:42,align:'left'};
+  const defaults:PageBlock={id,type,after,visible:true,title:type==='slider'?'Slider':type==='text'?'New text':'',text:type==='text'?'내용을 입력하세요.':'',media:'',width:100,height:type==='spacer'?120:type==='media'?620:560,gap:18,radius:24,offsetY:0,background:'',color:'',fontSize:42,align:'left',mediaFit:'contain',mediaPositionX:50,mediaPositionY:50,autoplay:true,pattern:'none',patternSize:32,patternColor:'#888888',patternOpacity:12,fadeEnabled:false,fadeTopSize:14,fadeBottomSize:14,fadeDensity:34,fadeOpacity:72,fadeBlur:0};
   setConfig(d=>({...d,pageBlocks:[...(d.pageBlocks||[]),defaults]}));setSelection(`block:${id}`);setTab('content');
  };
  const uploadBlockMedia=async(id:string,file?:File)=>{if(!file)return;try{setUploading(true);const url=await uploadFile(file);patchBlock(id,{media:url});notify('미디어 업로드 완료. 저장을 눌러 적용하세요.')}catch(error){notify((error as Error).message)}finally{setUploading(false)}};
