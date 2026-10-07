@@ -233,6 +233,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     '--portfolio-slider-width':(member.portfolioSliderWidth||100)+'%',
     '--portfolio-slider-height':(member.portfolioSliderHeight||760)+'px',
     '--portfolio-grid-width':(member.portfolioGridWidth||100)+'%',
+    '--portfolio-work-x':(member.portfolioSections.work.x||0)+'px',
   } as CSSProperties;
   const sectionStyle=(key:PortfolioSectionKey):CSSProperties=>{
     const section=member.portfolioSections[key];
