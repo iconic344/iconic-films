@@ -53,7 +53,7 @@ export default function VisualSiteEditor({
  const [rect,setRect]=useState<DOMRect|null>(null),[uploading,setUploading]=useState(false),[panelSide,setPanelSide]=useState<'left'|'right'>('right'),[panelOpen,setPanelOpen]=useState(true),[tab,setTab]=useState<PanelTab>('layers');
  const [toolbarPos,setToolbarPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-toolbar-pos'));
  const [panelPos,setPanelPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-panel-pos'));
- const dragState=useRef<{y:number;baseY:number}|null>(null),resizeState=useRef<{x:number;y:number;base:number}|null>(null),heightState=useRef<{y:number;base:number}|null>(null),textDragState=useRef<{x:number;y:number;baseX:number;baseY:number}|null>(null);
+ const dragState=useRef<{y:number;baseY:number}|null>(null),resizeState=useRef<{x:number;y:number;base:number}|null>(null),heightState=useRef<{y:number;base:number}|null>(null),textDragState=useRef<{x:number;y:number;baseX:number;baseY:number}|null>(null),dividerDragState=useRef<{y:number;base:number}|null>(null);
  const selectedWorkId=selection.startsWith('work:')?selection.slice(5):'';
  const selectedWork=selectedWorkId?config.works.find(w=>w.id===selectedWorkId)||null:null;
  const selectedDividerId=selection.startsWith('divider:')?selection.slice(8):'';
@@ -126,6 +126,13 @@ export default function VisualSiteEditor({
   const up=()=>{textDragState.current=null;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
   window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
  };
+ const beginDividerMove=(e:PointerEvent<HTMLButtonElement>)=>{
+  if(!selectedDivider)return;e.preventDefault();e.stopPropagation();
+  dividerDragState.current={y:e.clientY,base:selectedDivider.offsetY||0};
+  const move=(event:globalThis.PointerEvent)=>{const start=dividerDragState.current;if(!start)return;patchDivider(selectedDivider.id,{offsetY:clamp(Math.round(start.base+event.clientY-start.y),-800,800)})};
+  const up=()=>{dividerDragState.current=null;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
+  window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
+ };
  const beginChromeDrag=(e:PointerEvent<HTMLElement>,kind:'toolbar'|'panel')=>{
   if(e.button!==0)return;
   const selector=kind==='toolbar'?'.visual-editor-topbar':'.visual-editor-panel';
@@ -155,7 +162,7 @@ export default function VisualSiteEditor({
  const moveWork=(id:string,dir:number)=>setConfig(d=>{const arr=[...d.works],i=arr.findIndex(w=>w.id===id),j=i+dir;if(i<0||j<0||j>=arr.length)return d;[arr[i],arr[j]]=[arr[j],arr[i]];return {...d,works:arr}});
  const reorderWork=(from:string,to:string)=>setConfig(d=>{if(from===to)return d;const arr=[...d.works],a=arr.findIndex(w=>w.id===from),b=arr.findIndex(w=>w.id===to);if(a<0||b<0)return d;const [item]=arr.splice(a,1);arr.splice(b,0,item);return {...d,works:arr}});
  const addWork=()=>{const id='visual-'+Date.now(),work:Work={id,title:'New work',category:'Unassigned',year:new Date().getFullYear().toString(),role:'',description:'',poster:'',video:'',visible:false};setConfig(d=>({...d,works:[...d.works,work]}));setSelection(`work:${id}`);setTab('content')};
- const addDivider=()=>{const id='divider-'+Date.now(),divider:SectionDivider={id,after:sectionSelection||'hero',visible:true,width:100,thickness:1,opacity:22,inset:0,marginTop:0,marginBottom:0,color:''};setConfig(d=>({...d,sectionDividers:[...d.sectionDividers,divider]}));setSelection(`divider:${id}`);setTab('content')};
+ const addDivider=()=>{const id='divider-'+Date.now(),divider:SectionDivider={id,after:sectionSelection||'hero',visible:true,width:100,thickness:1,opacity:22,inset:0,marginTop:0,marginBottom:0,offsetY:0,color:''};setConfig(d=>({...d,sectionDividers:[...d.sectionDividers,divider]}));setSelection(`divider:${id}`);setTab('content')};
  const patchDivider=(id:string,value:Partial<SectionDivider>)=>setConfig(d=>({...d,sectionDividers:d.sectionDividers.map(divider=>divider.id===id?{...divider,...value}:divider)}));
  const deleteDivider=(id:string)=>{setConfig(d=>({...d,sectionDividers:d.sectionDividers.filter(divider=>divider.id!==id)}));setSelection(sectionSelection);setTab('layers')};
  const duplicateWork=(work:Work)=>{const copy={...work,id:'visual-'+Date.now(),title:work.title+' copy'};setConfig(d=>({...d,works:[...d.works,copy]}));setSelection(`work:${copy.id}`);setTab('content')};
@@ -210,6 +217,7 @@ export default function VisualSiteEditor({
   </aside>:<button type="button" className={'visual-panel-reopen is-'+panelSide} onClick={()=>setPanelOpen(true)}><SlidersHorizontal size={16}/><span>편집 패널</span></button>}
 
   {rect&&<div className={'visual-selection-frame is-panel-'+panelSide+(labelInside?' is-label-inside':'')+(selectedTextDef||selectedWorkText||selectedTeamText?' is-text-selection':'')+(selectedDivider?' is-divider-selection':'')} style={{left:rect.left,top:rect.top,width:rect.width,height:rect.height}}><span className="visual-selection-label">{selectionLabel}</span>
+   {selectedDivider&&<button type="button" className="visual-divider-drag-handle" aria-label="구분선 세로 이동" title="구분선을 위아래로 드래그" onPointerDown={beginDividerMove}><span/></button>}
    {meta&&!selectedWork&&!selectedDivider&&!selectedTextDef&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-move-handle" aria-label="영역 세로 이동" title="세로 이동 · X축은 자동 중앙 고정" onPointerDown={beginMove}><Grip size={16}/></button>}
    {selectedTextDef?.styleKey&&<button type="button" className="visual-move-handle is-text" aria-label="텍스트 이동" title="텍스트 자유 이동" onPointerDown={beginTextMove}><Grip size={16}/></button>}
    {meta&&!selectedWork&&!selectedDivider&&!selectedTextDef&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-resize-handle" aria-label="영역 크기 조절" onPointerDown={beginResize}><Maximize2 size={15}/></button>}
@@ -258,7 +266,7 @@ function DividerContent({divider,patch,remove}:{divider:SectionDivider;patch:(va
  return <><div className="visual-editor-panel-head"><h3>구분선</h3><button type="button" className="is-danger" onClick={remove}><Trash2 size={13}/>삭제</button></div><InspectorGroup title="배치" open><label className="visual-field"><span>배치할 영역</span><select value={divider.after} onChange={e=>patch({after:e.target.value as SiteSectionKey})}>{sectionDefs.map(section=><option key={section.key} value={section.key}>{section.label}</option>)}</select></label><label className="visual-toggle"><span>구분선 표시</span><input type="checkbox" checked={divider.visible} onChange={e=>patch({visible:e.target.checked})}/></label></InspectorGroup><p className="visual-help">Layers에서 독립 요소처럼 선택·삭제할 수 있고, Position/Style에서 세밀하게 조절합니다.</p></>;
 }
 function DividerLayout({divider,patch}:{divider:SectionDivider;patch:(value:Partial<SectionDivider>)=>void}){
- return <><div className="visual-editor-panel-head"><strong>구분선 위치·크기</strong></div><Range label="너비" value={divider.width} min={10} max={100} step={1} suffix="%" onChange={v=>patch({width:v})}/><Range label="좌우 여백" value={divider.inset} min={0} max={240} step={1} suffix="px" onChange={v=>patch({inset:v})}/><Range label="위 여백" value={divider.marginTop} min={0} max={240} step={1} suffix="px" onChange={v=>patch({marginTop:v})}/><Range label="아래 여백" value={divider.marginBottom} min={0} max={240} step={1} suffix="px" onChange={v=>patch({marginBottom:v})}/></>;
+ return <><div className="visual-editor-panel-head"><strong>구분선 위치·크기</strong></div><Range label="세로 위치" value={divider.offsetY||0} min={-800} max={800} step={1} suffix="px" onChange={v=>patch({offsetY:v})}/><Range label="너비" value={divider.width} min={10} max={100} step={1} suffix="%" onChange={v=>patch({width:v})}/><Range label="좌우 여백" value={divider.inset} min={0} max={240} step={1} suffix="px" onChange={v=>patch({inset:v})}/><Range label="위 여백" value={divider.marginTop} min={0} max={240} step={1} suffix="px" onChange={v=>patch({marginTop:v})}/><Range label="아래 여백" value={divider.marginBottom} min={0} max={240} step={1} suffix="px" onChange={v=>patch({marginBottom:v})}/><button type="button" className="visual-secondary-button" onClick={()=>patch({offsetY:0})}>세로 위치 초기화</button></>;
 }
 function DividerStyle({divider,patch}:{divider:SectionDivider;patch:(value:Partial<SectionDivider>)=>void}){
  return <InspectorGroup title="구분선 스타일" open><Range label="두께" value={divider.thickness} min={.5} max={12} step={.5} suffix="px" onChange={v=>patch({thickness:v})}/><Range label="불투명도" value={divider.opacity} min={0} max={100} step={1} suffix="%" onChange={v=>patch({opacity:v})}/><label className="visual-color"><span>색상</span><input type="color" value={divider.color||'#ffffff'} onChange={e=>patch({color:e.target.value})}/><b>{divider.color||'AUTO'}</b></label><button type="button" className="visual-secondary-button" onClick={()=>patch({color:''})}>색상 자동</button></InspectorGroup>;

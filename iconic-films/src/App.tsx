@@ -70,7 +70,8 @@ export default function Home(){
   maxWidth:`calc(100% - ${divider.inset*2}px)`,
   borderTop:`${divider.thickness}px solid ${divider.color||'var(--ink)'}`,
   opacity:divider.opacity/100,
-  margin:`${divider.marginTop}px auto ${divider.marginBottom}px`
+  margin:`${divider.marginTop}px auto ${divider.marginBottom}px`,
+  translate:`0 ${divider.offsetY||0}px`
  });
  useEffect(()=>{api('/api/config').then(j=>{const v=normalizeConfig(j.config||{});try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(v))}catch{}setSaved(v);setDraft(v);setTheme(cachedTheme(v.theme));setVolume(v.volume);setShuffle(v.musicShuffle);setRepeat(v.musicRepeatMode==='one'?1:v.musicRepeatMode==='all'?2:0);setLoaded(true)}).catch(e=>{setLoaded(true);setNote(e.message)});},[]);
  useEffect(()=>{document.documentElement.dataset.theme=theme;},[theme]);
