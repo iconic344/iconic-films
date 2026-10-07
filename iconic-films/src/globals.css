@@ -15738,3 +15738,21 @@ html.visual-media-dragging *{
 .site.visual-editing [data-visual-media] video{
   pointer-events:none!important;
 }
+
+
+/* PROJECT 07 — compact slider controls inside portfolio Edit Site. */
+.portfolio-slider-toolbar-settings{
+  margin-top:12px;
+  padding:14px;
+  display:grid;
+  gap:10px;
+  border:1px solid var(--lg-line);
+  border-radius:14px;
+  background:color-mix(in srgb,var(--lg-control) 72%,transparent);
+}
+.portfolio-slider-toolbar-settings .visual-editor-panel-head{
+  margin-bottom:0!important;
+}
+.portfolio-slider-toolbar-settings .visual-direct-badge{
+  white-space:nowrap;
+}
