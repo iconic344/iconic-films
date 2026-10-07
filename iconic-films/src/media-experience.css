@@ -44,6 +44,10 @@
 .media-gallery.has-video:not(.is-fullscreen) .media-gallery-slide{aspect-ratio:16/9}
 .media-gallery.has-video:not(.is-fullscreen) .media-gallery-artwork>video{object-fit:contain!important}
 .team-portfolio-slider:has(.media-gallery){width:100vw!important;max-width:none!important;margin-inline:calc(50% - 50vw)!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;overflow:visible!important}
+@media(min-width:821px){
+ .team-portfolio-slider .media-gallery:not(.is-fullscreen):not(.is-modal){--gallery-card:min(var(--portfolio-slider-card-width,88vw),1600px)!important}
+ .team-portfolio-slider .media-gallery:not(.is-fullscreen):not(.is-modal) .media-gallery-slide{aspect-ratio:var(--portfolio-slider-aspect,16 / 9)!important}
+}
 .media-gallery:fullscreen,.media-gallery.is-expanded{--gallery-card:100vw;--gallery-gap:0px;position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;padding:0;z-index:10040;display:block;color:#fff;background:transparent}
 .media-gallery.is-fullscreen,.unified-media-dialog .media-gallery.is-fullscreen{--gallery-card:100vw;--gallery-gap:0px;position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;margin:0;padding:0;display:block;outline:none}
 .unified-media-dialog:has(.media-gallery.is-fullscreen)>.media-gallery-close{display:none}
@@ -537,15 +541,19 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
 /* 2026-10-07 viewport-center portfolio slider controls */
 .team-portfolio-slider .media-gallery:not(.is-fullscreen):not(.is-modal) .media-gallery-navigation{
   position:relative!important;
-  left:calc(-1 * var(--portfolio-work-x,0px))!important;
+  width:100vw!important;
+  max-width:none!important;
+  left:calc(50% - var(--portfolio-work-x,0px))!important;
   right:auto!important;
-  transform:none!important;
-  margin-left:auto!important;
-  margin-right:auto!important;
+  transform:translateX(-50%)!important;
+  margin-left:0!important;
+  margin-right:0!important;
+  justify-content:center!important;
 }
 @media(max-width:820px){
   .team-portfolio-slider .media-gallery:not(.is-fullscreen):not(.is-modal) .media-gallery-navigation{
-    left:0!important;
+    left:50%!important;
+    transform:translateX(-50%)!important;
   }
 }
 
