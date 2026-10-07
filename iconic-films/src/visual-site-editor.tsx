@@ -3,9 +3,10 @@ import {useEffect,useRef,useState,type CSSProperties,type Dispatch,type PointerE
 import {ArrowDown,ArrowUp,Copy,Eye,EyeOff,Grip,Layers3,Maximize2,PanelLeft,PanelRight,Plus,RotateCcw,Save,Settings2,SlidersHorizontal,Trash2,Type,Undo2,X} from 'lucide-react';
 import type {Config,NavItemKey,SiteSectionKey,Work,SectionDivider} from './defaults';
 import {uploadFile} from './media-upload';
+import EditSiteFullSettings from './edit-site-full-settings';
 
 type SectionKey=SiteSectionKey;
-type PanelTab='layers'|'content'|'layout'|'style';
+type PanelTab='layers'|'content'|'layout'|'style'|'settings';
 type Point={x:number;y:number};
 type TextStyleKey=keyof Config['textStyles'];
 type TextPatch=Partial<{font:string;size:number;color:string;align:'left'|'center'|'right';x:number;y:number;letterSpacing:number;weight:number;opacity:number;textTransform:'none'|'uppercase'|'lowercase'|'capitalize'}>;
@@ -45,10 +46,11 @@ const pointFromStorage=(key:string):Point|null=>{
 };
 
 export default function VisualSiteEditor({
- config,setConfig,selection,setSelection,onSave,onCancel,onOpenAdmin,onUndo,canUndo,busy
+ config,setConfig,selection,setSelection,onSave,onCancel,onOpenAdmin,onUndo,canUndo,busy,setBusy,notify,onThemeChange
 }:{
  config:Config;setConfig:Dispatch<SetStateAction<Config>>;selection:VisualSelection;setSelection:(value:VisualSelection)=>void;
  onSave:()=>void|Promise<void>;onCancel:()=>void;onOpenAdmin:()=>void;onUndo:()=>void;canUndo:boolean;busy:boolean;
+ setBusy:(value:boolean)=>void;notify:(value:string)=>void;onThemeChange?:(value:string)=>void;
 }){
  const [rect,setRect]=useState<DOMRect|null>(null),[uploading,setUploading]=useState(false),[panelSide,setPanelSide]=useState<'left'|'right'>('right'),[panelOpen,setPanelOpen]=useState(true),[tab,setTab]=useState<PanelTab>('layers');
  const [toolbarPos,setToolbarPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-toolbar-pos'));
@@ -241,7 +243,7 @@ export default function VisualSiteEditor({
  const selectedTeamTextMember=selectedTeamText?config.teamMembers.find(member=>member.id===selectedTeamText.id)||null:null;
  const selectedWorkTextStyleKey:TextStyleKey|undefined=selectedWorkText?(selectedWorkText.field==='title'?'workCardTitle':'workCardMeta'):undefined;
  const selectedTeamTextStyleKey:TextStyleKey|undefined=selectedTeamText?(selectedTeamText.field==='name'?'teamMemberName':selectedTeamText.field==='bio'?'teamMemberBio':'teamMemberRole'):undefined;
- const selectionLabel=selectedDivider?'구분선':selectedTextDef?.label||(selectedWorkText?'작품 텍스트':selectedTeamText?'팀 텍스트':selectedWork?'작품 카드':sectionDefs.find(s=>s.key===sectionSelection)?.label);
+ const selectionLabel=tab==='settings'?'전체 사이트 설정':selectedDivider?'구분선':selectedTextDef?.label||(selectedWorkText?'작품 텍스트':selectedTeamText?'팀 텍스트':selectedWork?'작품 카드':sectionDefs.find(s=>s.key===sectionSelection)?.label);
  const toolbarStyle=toolbarPos?{'--ve-toolbar-x':toolbarPos.x+'px','--ve-toolbar-y':toolbarPos.y+'px'} as CSSProperties:undefined;
  const panelStyle=panelPos?{'--ve-panel-x':panelPos.x+'px','--ve-panel-y':panelPos.y+'px'} as CSSProperties:undefined;
 
@@ -255,9 +257,9 @@ export default function VisualSiteEditor({
    </div>
   </div>
 
-  {panelOpen?<aside style={panelStyle} className={'visual-editor-panel is-'+panelSide+(panelPos?' is-free':'')}>
+  {panelOpen?<aside style={panelStyle} className={'visual-editor-panel is-'+panelSide+(panelPos?' is-free':'')+(tab==='settings'?' is-full-settings':'')}>
    <div className="visual-panel-head"><div className="visual-panel-drag-zone" onPointerDown={e=>beginChromeDrag(e,'panel')} onDoubleClick={()=>resetChrome('panel')}><Grip size={13}/><span><strong>{selectionLabel}</strong><small>{selectedTextDef||selectedWorkText||selectedTeamText?'텍스트를 직접 선택해 편집 중':selectedDivider?'독립 구분선 레이어':'끌어서 패널 이동 · 더블클릭 위치 초기화'}</small></span></div><button type="button" aria-label="편집 패널 접기" onClick={()=>setPanelOpen(false)}><X size={15}/></button></div>
-   <div className="visual-editor-tabs" role="tablist"><button className={tab==='layers'?'is-active':''} onClick={()=>setTab('layers')}><Layers3 size={13}/>레이어</button><button className={tab==='content'?'is-active':''} onClick={()=>setTab('content')}><Type size={13}/>편집</button><button className={tab==='layout'?'is-active':''} onClick={()=>setTab('layout')}><Maximize2 size={13}/>위치·크기</button><button className={tab==='style'?'is-active':''} onClick={()=>setTab('style')}><SlidersHorizontal size={13}/>스타일</button></div>
+   <div className="visual-editor-tabs has-five" role="tablist"><button className={tab==='layers'?'is-active':''} onClick={()=>setTab('layers')}><Layers3 size={13}/>레이어</button><button className={tab==='content'?'is-active':''} onClick={()=>setTab('content')}><Type size={13}/>편집</button><button className={tab==='layout'?'is-active':''} onClick={()=>setTab('layout')}><Maximize2 size={13}/>위치·크기</button><button className={tab==='style'?'is-active':''} onClick={()=>setTab('style')}><SlidersHorizontal size={13}/>스타일</button><button className={tab==='settings'?'is-active':''} onClick={()=>{setPanelPos(null);setTab('settings')}}><Settings2 size={13}/>전체 설정</button></div>
    {tab==='layers'&&<LayersPanel config={config} selection={selection} select={selectLayer} isVisible={isVisible} hide={removeSection} restore={restoreSection} reorderSection={reorderSection} moveWork={moveWork} reorderWork={reorderWork} patchWork={patchWork} deleteWork={deleteWork} addWork={addWork} addDivider={addDivider} patchDivider={patchDivider} deleteDivider={deleteDivider}/>}
    {tab==='content'&&<div className="visual-editor-context">
     {selectedDivider?<DividerContent divider={selectedDivider} patch={value=>patchDivider(selectedDivider.id,value)} remove={()=>deleteDivider(selectedDivider.id)}/>:
@@ -279,10 +281,11 @@ export default function VisualSiteEditor({
     selectedTeamText&&selectedTeamTextStyleKey?<InspectorGroup title="팀 글자 스타일" open><TextStyleControl label={String(selectedTeamText.field)} value={config.textStyles[selectedTeamTextStyleKey]} onChange={v=>patchTextStyle(selectedTeamTextStyleKey,v)}/></InspectorGroup>:
     <StylePanel section={sectionSelection} config={config} patch={patch} patchTextStyle={patchTextStyle} uploadConfig={uploadConfig} uploading={uploading}/>
    )}
-   {hiddenSections.length>0&&<div className="visual-editor-restore"><span>숨긴 영역</span><div>{hiddenSections.map(s=><button type="button" key={s.key} onClick={()=>{restoreSection(s.key);selectLayer(s.key)}}><Plus size={13}/>{s.label}</button>)}</div></div>}
+   {tab==='settings'&&<EditSiteFullSettings draft={config} setDraft={setConfig} busy={busy} setBusy={setBusy} notify={notify} onThemeChange={onThemeChange}/>}
+   {tab!=='settings'&&hiddenSections.length>0&&<div className="visual-editor-restore"><span>숨긴 영역</span><div>{hiddenSections.map(s=><button type="button" key={s.key} onClick={()=>{restoreSection(s.key);selectLayer(s.key)}}><Plus size={13}/>{s.label}</button>)}</div></div>}
   </aside>:<button type="button" className={'visual-panel-reopen is-'+panelSide} onClick={()=>setPanelOpen(true)}><SlidersHorizontal size={16}/><span>편집 패널</span></button>}
 
-  {rect&&<div className={'visual-selection-frame is-panel-'+panelSide+(labelInside?' is-label-inside':'')+(selectedTextDef||selectedWorkText||selectedTeamText?' is-text-selection':'')+(selectedDivider?' is-divider-selection':'')} style={{left:rect.left,top:rect.top,width:rect.width,height:rect.height}}><span className="visual-selection-label">{selectionLabel}</span>
+  {tab!=='settings'&&rect&&<div className={'visual-selection-frame is-panel-'+panelSide+(labelInside?' is-label-inside':'')+(selectedTextDef||selectedWorkText||selectedTeamText?' is-text-selection':'')+(selectedDivider?' is-divider-selection':'')} style={{left:rect.left,top:rect.top,width:rect.width,height:rect.height}}><span className="visual-selection-label">{selectionLabel}</span>
    {selectedDivider&&<button type="button" className="visual-divider-drag-handle" aria-label="구분선 세로 이동" title="구분선을 위아래로 드래그" onPointerDown={beginDividerMove}><span/></button>}
    {meta&&!selectedWork&&!selectedDivider&&!selectedTextDef&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-move-handle" aria-label="영역 세로 이동" title="세로 이동 · X축은 자동 중앙 고정" onPointerDown={beginMove}><Grip size={16}/></button>}
    {selectedTextDef?.styleKey&&<button type="button" className="visual-move-handle is-text" aria-label="텍스트 이동" title="텍스트 자유 이동" onPointerDown={beginTextMove}><Grip size={16}/></button>}

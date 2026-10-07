@@ -14174,3 +14174,176 @@ html.visual-direct-dragging .site.visual-editing [data-visual-divider-id]{
     translate:0 clamp(-28px,var(--portfolio-mobile-section-y,0px),28px);
   }
 }
+
+
+/* 2026-10-07 administrator edit migration -> Edit Site full settings */
+.visual-editor-tabs.has-five{
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+}
+.visual-editor-panel.is-full-settings{
+  width:min(920px,calc(100vw - 28px))!important;
+  max-width:calc(100vw - 28px)!important;
+}
+.visual-editor-panel.is-full-settings .visual-panel-head{
+  margin-bottom:8px;
+}
+.edit-site-full-settings{
+  display:grid;
+  gap:12px;
+  min-width:0;
+  padding-bottom:12px;
+}
+.edit-site-full-head{
+  display:grid;
+  gap:7px;
+  padding:2px 2px 8px;
+}
+.edit-site-full-head>div{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.edit-site-full-head>div>span{
+  display:grid;
+  gap:2px;
+}
+.edit-site-full-head strong{
+  font-size:13px;
+  font-weight:650;
+}
+.edit-site-full-head small,
+.edit-site-full-head p{
+  margin:0;
+  color:var(--soft);
+  font-size:9px;
+  line-height:1.55;
+}
+.edit-site-settings-groups{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:5px;
+  padding:4px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:color-mix(in srgb,var(--page) 70%,transparent);
+}
+.edit-site-settings-groups>button{
+  min-height:34px;
+  border:0!important;
+  border-radius:9px!important;
+  background:transparent!important;
+  color:var(--soft)!important;
+  font-size:9px;
+}
+.edit-site-settings-groups>button.is-active{
+  background:var(--ink)!important;
+  color:var(--page)!important;
+}
+.edit-site-settings-pages{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+}
+.edit-site-settings-pages>button{
+  min-height:32px;
+  padding:0 10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  border:1px solid var(--line)!important;
+  border-radius:999px!important;
+  background:color-mix(in srgb,var(--page) 64%,transparent)!important;
+  color:var(--soft)!important;
+  font-size:9px;
+}
+.edit-site-settings-pages>button.is-active{
+  border-color:color-mix(in srgb,var(--ink) 42%,var(--line))!important;
+  background:var(--ink)!important;
+  color:var(--page)!important;
+}
+.edit-site-settings-body{
+  min-width:0;
+}
+.edit-site-settings-body>.editor-grid,
+.edit-site-settings-body .layout-editor .editor-grid,
+.edit-site-settings-body .logo-editor>.editor-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+.edit-site-settings-body .editor-card{
+  min-width:0;
+  padding:14px!important;
+  border-radius:15px!important;
+}
+.edit-site-settings-body .editor-card h3{
+  font-size:14px;
+}
+.edit-site-settings-body .field,
+.edit-site-settings-body .toggle{
+  min-width:0;
+}
+.edit-site-settings-body .field input,
+.edit-site-settings-body .field textarea,
+.edit-site-settings-body .field select{
+  min-width:0;
+  max-width:100%;
+}
+.edit-site-settings-body .editor-preview,
+.edit-site-settings-body .model-editor-preview{
+  max-width:100%;
+}
+.edit-site-settings-body .media-library{
+  min-width:0;
+}
+.edit-site-settings-body .media-library .library-body{
+  grid-template-columns:150px minmax(240px,1fr) minmax(250px,.9fr)!important;
+  gap:8px!important;
+}
+.edit-site-settings-body .media-library .library-toolbar{
+  gap:10px;
+  align-items:flex-start;
+}
+.edit-site-settings-body .media-library .library-actions{
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.edit-site-settings-body .team-editor-stack{
+  min-width:0;
+}
+.edit-site-settings-body .team-editor-stack .editor-card{
+  width:auto!important;
+  max-width:100%!important;
+}
+.edit-site-settings-body .logo-live-preview{
+  min-height:260px;
+}
+@media(max-width:760px){
+  .visual-editor-panel.is-full-settings{
+    left:8px!important;
+    right:8px!important;
+    width:auto!important;
+    max-width:none!important;
+  }
+  .visual-editor-tabs.has-five{
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    gap:3px!important;
+  }
+  .visual-editor-tabs.has-five button{
+    padding-inline:3px!important;
+    gap:3px!important;
+    font-size:7px!important;
+  }
+  .edit-site-settings-body>.editor-grid,
+  .edit-site-settings-body .layout-editor .editor-grid,
+  .edit-site-settings-body .logo-editor>.editor-grid{
+    grid-template-columns:1fr!important;
+  }
+  .edit-site-settings-body .media-library .library-body{
+    grid-template-columns:1fr!important;
+  }
+  .edit-site-settings-body .media-library .library-groups{
+    display:flex;
+    overflow-x:auto;
+    gap:5px;
+  }
+}

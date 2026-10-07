@@ -3,8 +3,9 @@ import {useEffect,useMemo,useRef,useState,type CSSProperties,type Dispatch,type 
 import {ArrowDown,ArrowUp,Copy,Eye,EyeOff,Grip,Layers3,Maximize2,PanelLeft,PanelRight,Plus,RotateCcw,Save,Settings2,SlidersHorizontal,Trash2,Type,Undo2,X} from 'lucide-react';
 import type {Config,PortfolioDivider,PortfolioSectionKey,TeamMember,TextAlign} from './defaults';
 import {uploadFile} from './media-upload';
+import EditSiteFullSettings from './edit-site-full-settings';
 
-type PanelTab='layers'|'content'|'layout'|'style';
+type PanelTab='layers'|'content'|'layout'|'style'|'settings';
 type Point={x:number;y:number};
 type TextKey='siteName'|'navWorkLabel'|'navAboutLabel'|'navTeamLabel'|'navContactLabel'|'indexLabel'|'name'|'title'|'intro'|'footerReturn';
 type Selection=PortfolioSectionKey|`text:${TextKey}`|`work:${number}`|`divider:${string}`;
@@ -27,9 +28,10 @@ const textFields:Partial<Record<TextKey,TextFields>>={
 };
 const pointFromStorage=(key:string):Point|null=>{try{const raw=localStorage.getItem(key);if(!raw)return null;const p=JSON.parse(raw);return Number.isFinite(p?.x)&&Number.isFinite(p?.y)?p:null}catch{return null}};
 
-export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,onCancel,onOpenAdmin,onUndo,canUndo,busy}:{
+export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,onCancel,onOpenAdmin,onUndo,canUndo,busy,setBusy,notify,onThemeChange}:{
  config:Config;memberId:string;setConfig:Dispatch<SetStateAction<Config>>;
  onSave:()=>void|Promise<void>;onCancel:()=>void;onOpenAdmin:()=>void;onUndo:()=>void;canUndo:boolean;busy:boolean;
+ setBusy:(value:boolean)=>void;notify:(value:string)=>void;onThemeChange?:(value:string)=>void;
 }){
  const [selection,setSelection]=useState<Selection>('work');
  const [rect,setRect]=useState<DOMRect|null>(null),[uploading,setUploading]=useState(false),[tab,setTab]=useState<PanelTab>('layers');
@@ -131,7 +133,7 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  const beginChromeDrag=(e:ReactPointerEvent<HTMLElement>,kind:'toolbar'|'panel')=>{if(e.button!==0)return;const selector=kind==='toolbar'?'.visual-editor-topbar':'.visual-editor-panel';const node=(e.currentTarget as HTMLElement).closest<HTMLElement>(selector);if(!node)return;e.preventDefault();const r=node.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,setPos=kind==='toolbar'?setToolbarPos:setPanelPos,storageKey=kind==='toolbar'?'viivii-visual-toolbar-pos':'viivii-visual-panel-pos';const move=(ev:PointerEvent)=>setPos({x:Math.round(clamp(r.left+ev.clientX-sx,8,Math.max(8,window.innerWidth-r.width-8))),y:Math.round(clamp(r.top+ev.clientY-sy,8,Math.max(8,window.innerHeight-r.height-8)))});const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);requestAnimationFrame(()=>{const el=document.querySelector<HTMLElement>(selector);if(!el)return;const rr=el.getBoundingClientRect(),p={x:Math.round(rr.left),y:Math.round(rr.top)};setPos(p);try{localStorage.setItem(storageKey,JSON.stringify(p))}catch{}})};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true})};
  const resetChrome=(kind:'toolbar'|'panel')=>{if(kind==='toolbar'){setToolbarPos(null);try{localStorage.removeItem('viivii-visual-toolbar-pos')}catch{}}else{setPanelPos(null);try{localStorage.removeItem('viivii-visual-panel-pos')}catch{}}};
 
- const label=selectedDivider?'구분선':selectedText?textLabels[selectedText]:selectedWorkIndex>=0?'작품 미디어':sectionDefs.find(item=>item.key===selectedSection)?.label||'포트폴리오';
+ const label=tab==='settings'?'전체 사이트 설정':selectedDivider?'구분선':selectedText?textLabels[selectedText]:selectedWorkIndex>=0?'작품 미디어':sectionDefs.find(item=>item.key===selectedSection)?.label||'포트폴리오';
  const toolbarBottom=!toolbarPos&&!!rect&&rect.top<112&&window.innerWidth>820,labelInside=!!rect&&rect.top<28;
  const toolbarStyle=toolbarPos?{'--ve-toolbar-x':toolbarPos.x+'px','--ve-toolbar-y':toolbarPos.y+'px'} as CSSProperties:undefined;
  const panelStyle=panelPos?{'--ve-panel-x':panelPos.x+'px','--ve-panel-y':panelPos.y+'px'} as CSSProperties:undefined;
@@ -147,9 +149,9 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
    </div>
   </div>
 
-  {panelOpen?<aside style={panelStyle} className={'visual-editor-panel is-'+panelSide+(panelPos?' is-free':'')}>
+  {panelOpen?<aside style={panelStyle} className={'visual-editor-panel is-'+panelSide+(panelPos?' is-free':'')+(tab==='settings'?' is-full-settings':'')}>
    <div className="visual-panel-head"><div className="visual-panel-drag-zone" onPointerDown={e=>beginChromeDrag(e,'panel')} onDoubleClick={()=>resetChrome('panel')}><Grip size={13}/><span><strong>{label}</strong><small>포트폴리오 페이지 전용 편집 · 메인과 독립</small></span></div><button type="button" onClick={()=>setPanelOpen(false)} aria-label="편집 패널 접기"><X size={15}/></button></div>
-   <div className="visual-editor-tabs"><button className={tab==='layers'?'is-active':''} onClick={()=>setTab('layers')}><Layers3 size={13}/>레이어</button><button className={tab==='content'?'is-active':''} onClick={()=>setTab('content')}><Type size={13}/>편집</button><button className={tab==='layout'?'is-active':''} onClick={()=>setTab('layout')}><Maximize2 size={13}/>위치·크기</button><button className={tab==='style'?'is-active':''} onClick={()=>setTab('style')}><SlidersHorizontal size={13}/>스타일</button></div>
+   <div className="visual-editor-tabs has-five"><button className={tab==='layers'?'is-active':''} onClick={()=>setTab('layers')}><Layers3 size={13}/>레이어</button><button className={tab==='content'?'is-active':''} onClick={()=>setTab('content')}><Type size={13}/>편집</button><button className={tab==='layout'?'is-active':''} onClick={()=>setTab('layout')}><Maximize2 size={13}/>위치·크기</button><button className={tab==='style'?'is-active':''} onClick={()=>setTab('style')}><SlidersHorizontal size={13}/>스타일</button><button className={tab==='settings'?'is-active':''} onClick={()=>{setPanelPos(null);setTab('settings')}}><Settings2 size={13}/>전체 설정</button></div>
 
    {tab==='layers'&&<div className="visual-layers">
     <div className="visual-layer-heading"><span>이 포트폴리오 페이지의 레이어</span><div><button type="button" onClick={addDivider}><Plus size={13}/>구분선</button><button type="button" onClick={addWork}><Plus size={13}/>작품</button></div></div>
@@ -181,9 +183,10 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
      selectedWorkIndex>=0?<><div className="visual-editor-panel-head"><strong>작품 카드 스타일</strong></div><Range label="모서리" value={member.portfolioRadius} min={0} max={48} step={1} suffix="px" onChange={value=>patchMember({portfolioRadius:value})}/><Range label="미디어 간격" value={member.portfolioGap} min={4} max={48} step={1} suffix="px" onChange={value=>patchMember({portfolioGap:value})}/></>:
      <><div className="visual-editor-panel-head"><strong>영역 스타일</strong></div><Range label="불투명도" value={selectedLayout.opacity} min={0} max={100} step={1} suffix="%" onChange={value=>patchSection(selectedSection,{opacity:value})}/><Range label="모서리" value={selectedLayout.radius} min={0} max={80} step={1} suffix="px" onChange={value=>patchSection(selectedSection,{radius:value})}/><ColorInput label="배경색" value={selectedLayout.background||'#000000'} onChange={value=>patchSection(selectedSection,{background:value})}/><button className="visual-secondary-button" onClick={()=>patchSection(selectedSection,{background:''})}>배경 자동 / 투명</button>{selectedSection==='nav'&&<><Range label="메뉴바 불투명도" value={config.navOpacity} min={0} max={100} step={1} suffix="%" onChange={value=>patchConfig('navOpacity',value)}/><Range label="글래스 블러" value={config.blur} min={0} max={50} step={1} suffix="px" onChange={value=>patchConfig('blur',value)}/></>}</>}
    </div>}
+   {tab==='settings'&&<EditSiteFullSettings draft={config} setDraft={setConfig} busy={busy} setBusy={setBusy} notify={notify} onThemeChange={onThemeChange}/>}
   </aside>:<button type="button" className={'visual-panel-reopen is-'+panelSide} onClick={()=>setPanelOpen(true)}><SlidersHorizontal size={16}/><span>편집 패널</span></button>}
 
-  {rect&&<div className={'visual-selection-frame is-panel-'+panelSide+(labelInside?' is-label-inside':'')+(selectedText?' is-text-selection':'')+(selectedDivider?' is-divider-selection':'')} style={{left:rect.left,top:rect.top,width:rect.width,height:rect.height}}><span className="visual-selection-label">{label}</span>
+  {tab!=='settings'&&rect&&<div className={'visual-selection-frame is-panel-'+panelSide+(labelInside?' is-label-inside':'')+(selectedText?' is-text-selection':'')+(selectedDivider?' is-divider-selection':'')} style={{left:rect.left,top:rect.top,width:rect.width,height:rect.height}}><span className="visual-selection-label">{label}</span>
    {selectedDivider&&<button type="button" className="visual-divider-drag-handle" onPointerDown={beginDividerMove} aria-label="구분선 세로 이동"><span/></button>}
    {!selectedDivider&&!selectedText&&selectedWorkIndex<0&&<button type="button" className="visual-move-handle" onPointerDown={beginSectionMove} aria-label="영역 세로 이동"><Grip size={16}/></button>}
    {selectedText&&style&&<button type="button" className="visual-move-handle is-text" onPointerDown={beginTextMove} aria-label="텍스트 이동"><Grip size={16}/></button>}
