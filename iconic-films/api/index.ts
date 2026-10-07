@@ -374,7 +374,7 @@ const memberNumberFields=[
   'portfolioNameSize','portfolioNameX','portfolioNameY','portfolioRoleSize','portfolioRoleX','portfolioRoleY',
   'portfolioBioSize','portfolioBioX','portfolioBioY','portfolioTitleSize','portfolioTitleX','portfolioTitleY',
   'portfolioIntroSize','portfolioIntroX','portfolioIntroY','portfolioUtilitySize','portfolioUtilityX','portfolioUtilityY',
-  'portfolioReturnX','portfolioReturnY','portfolioSliderWidth','portfolioSliderHeight','portfolioGridWidth'
+  'portfolioReturnX','portfolioReturnY','portfolioSliderWidth','portfolioSliderHeight','portfolioSliderAutoplayMs','portfolioSliderTransitionMs','portfolioGridWidth'
 ] as const;
 const memberAlignFields=['portfolioNameAlign','portfolioRoleAlign','portfolioBioAlign','portfolioTitleAlign','portfolioIntroAlign','portfolioUtilityAlign'] as const;
 function cleanMemberUpdate(current:any,input:any){
@@ -402,6 +402,14 @@ function cleanMemberUpdate(current:any,input:any){
   if(input.portfolioLayout!==undefined){
     if(input.portfolioLayout!=='grid'&&input.portfolioLayout!=='slider')throw new HttpError(400,'포트폴리오 보기 방식이 올바르지 않습니다.');
     next.portfolioLayout=input.portfolioLayout;
+  }
+  if(input.portfolioSliderAutoplay!==undefined){
+    if(typeof input.portfolioSliderAutoplay!=='boolean')throw new HttpError(400,'슬라이더 자동재생 설정이 올바르지 않습니다.');
+    next.portfolioSliderAutoplay=input.portfolioSliderAutoplay;
+  }
+  if(input.portfolioSliderEasing!==undefined){
+    if(!['smooth','soft','snappy','linear'].includes(input.portfolioSliderEasing))throw new HttpError(400,'슬라이더 애니메이션 설정이 올바르지 않습니다.');
+    next.portfolioSliderEasing=input.portfolioSliderEasing;
   }
   if(input.works!==undefined){
     if(!Array.isArray(input.works)||input.works.length>240||input.works.some((url:any)=>typeof url!=='string'||url.length>2048||!/^(https?:\/\/|\/)/i.test(url)))throw new HttpError(400,'포트폴리오 미디어 목록이 올바르지 않습니다.');
