@@ -15296,3 +15296,50 @@ html.visual-direct-dragging [data-visual-team-text]{
     height:min(var(--page-block-height,520px),68dvh);
   }
 }
+
+
+/* 2026-10-07 contrast safety + editable global motion timings */
+.site{
+  transition:background var(--ui-transition-ms,350ms) ease,color var(--ui-transition-ms,350ms) ease!important;
+}
+.site .icon,
+.site .filters button,
+.site .group-chips button,
+.site .work-play,
+.site .work-image img,
+.site .nav nav a,
+.site .contact-link,
+.site .team-member-index-list>button,
+.site .team-member-index-arrows button,
+.site .team-portfolio-member-switch button{
+  transition-duration:var(--hover-transition-ms,300ms)!important;
+}
+.site .music-panel,
+.site .contact-dialog,
+.site .team-portfolio-page{
+  animation-duration:var(--ui-transition-ms,350ms)!important;
+}
+
+/* Never let an active/selected surface inherit a same-color custom text style. */
+.team-portfolio-member-index .team-member-index-list>button.active,
+.team-portfolio-member-index .team-member-index-list>button.active .team-member-code,
+.team-portfolio-member-index .team-member-index-list>button.active .team-member-index-name,
+.team-portfolio-member-index .team-member-index-list>button.active .team-member-index-number{
+  color:var(--page)!important;
+  text-shadow:none!important;
+}
+.filters button.selected,
+.group-chips button.selected,
+.portfolio-filter button.is-active{
+  color:var(--page)!important;
+}
+.filters button.selected *,
+.group-chips button.selected *,
+.portfolio-filter button.is-active *{
+  color:inherit!important;
+}
+
+/* Give text a safe foreground whenever a custom color was left empty. */
+.team-member-index-list>button:not(.active) .team-member-index-name{
+  color:var(--ink)!important;
+}
