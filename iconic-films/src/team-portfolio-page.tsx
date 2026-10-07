@@ -179,13 +179,14 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     }
   };
 
+  const globalTextStyle=(key:'navBrand'|'navMenu'):CSSProperties=>{const s=config.textStyles[key];return {fontFamily:s.font||undefined,fontSize:s.size+'px',color:s.color||undefined,textAlign:s.align,translate:s.x+'px '+s.y+'px',letterSpacing:(s.letterSpacing??0)+'px',fontWeight:s.weight??undefined,opacity:(s.opacity??100)/100,textTransform:s.textTransform&&s.textTransform!=='none'?s.textTransform:undefined}};
   const renderSiteNavItem=(item:NavItemKey)=>item==='work'?
-    <a key={item} href="/#work" data-portfolio-edit="navWorkLabel" onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('work')}}>{config.navWorkLabel}</a>
+    <a key={item} href="/#work" data-portfolio-edit="navWorkLabel" style={globalTextStyle('navMenu')} onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('work')}}>{config.navWorkLabel}</a>
     :item==='about'?
-    (config.showAbout?<a key={item} href="/#about" data-portfolio-edit="navAboutLabel" onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('about')}}>{config.navAboutLabel}</a>:null)
+    (config.showAbout?<a key={item} href="/#about" data-portfolio-edit="navAboutLabel" style={globalTextStyle('navMenu')} onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('about')}}>{config.navAboutLabel}</a>:null)
     :item==='team'?
-    (config.showTeam?<a key={item} href="/#team" data-portfolio-edit="navTeamLabel" onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('team')}}>{config.navTeamLabel}</a>:null)
-    :<button key={item} type="button" className="nav-contact" data-portfolio-edit="navContactLabel" onClick={()=>{if(!visualEditing)onContact()}}>{config.navContactLabel}</button>;
+    (config.showTeam?<a key={item} href="/#team" data-portfolio-edit="navTeamLabel" style={globalTextStyle('navMenu')} onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('team')}}>{config.navTeamLabel}</a>:null)
+    :<button key={item} type="button" className="nav-contact" data-portfolio-edit="navContactLabel" style={globalTextStyle('navMenu')} onClick={()=>{if(!visualEditing)onContact()}}>{config.navContactLabel}</button>;
 
   const pageStyle={
     '--portfolio-columns':String(member.portfolioColumns||3),
@@ -258,7 +259,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     <header className="nav nav-recomposed team-portfolio-site-nav" data-portfolio-section="nav" data-portfolio-hidden={member.portfolioSections.nav.visible?'false':'true'} style={sectionStyle('nav')}>
       <div className="nav-left-tools"><button type="button" className="icon" aria-label={theme==='light'?'다크 모드':'라이트 모드'} title={theme==='light'?'다크 모드':'라이트 모드'} onClick={()=>{if(!visualEditing)onToggleTheme()}}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</button></div>
       <nav className="nav-menu nav-menu-left">{config.navOrder.slice(0,2).map(renderSiteNavItem)}</nav>
-      <a href="/" className="brand nav-centered-brand" data-portfolio-edit="siteName" onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:config.name}<span>®</span></a>
+      <a href="/" className="brand nav-centered-brand" onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:<span className="brand-editable-text" data-portfolio-edit="siteName" style={globalTextStyle('navBrand')}>{config.name}</span>}<span>®</span></a>
       <nav className="nav-menu nav-menu-right">{config.navOrder.slice(2).map(renderSiteNavItem)}</nav>
       <div className="nav-tools">
         <button type="button" className="admin-link" onClick={()=>{if(!visualEditing)onAdmin()}}>Admin</button>
@@ -278,7 +279,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
 
       {teamMembers.length>1&&<section className="team-portfolio-member-index" data-portfolio-section="index" data-portfolio-hidden={member.portfolioSections.index.visible?'false':'true'} style={sectionStyle('index')} aria-label="Portfolio category navigation">
         <div className="team-member-index-head">
-          <span data-portfolio-edit="indexLabel">{member.portfolioTeamIndexLabel||'CATEGORY INDEX'} / {String(memberIndex+1).padStart(2,'0')} — {String(teamMembers.length).padStart(2,'0')}</span>
+          <span><span data-portfolio-edit="indexLabel">{member.portfolioTeamIndexLabel||'CATEGORY INDEX'}</span> <span className="team-member-index-static">/ {String(memberIndex+1).padStart(2,'0')} — {String(teamMembers.length).padStart(2,'0')}</span></span>
           <div className="team-member-index-arrows">
             <button type="button" aria-label="이전 카테고리" onClick={memberPrev}><ChevronLeft size={17}/></button>
             <button type="button" aria-label="다음 카테고리" onClick={memberNext}><ChevronRight size={17}/></button>
