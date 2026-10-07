@@ -45,7 +45,7 @@
 .media-gallery.has-video:not(.is-fullscreen) .media-gallery-artwork>video{object-fit:contain!important}
 .team-portfolio-slider:has(.media-gallery){width:100vw!important;max-width:none!important;margin-inline:calc(50% - 50vw)!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;overflow:visible!important}
 @media(min-width:821px){
- .team-portfolio-slider .media-gallery:not(.is-fullscreen):not(.is-modal){--gallery-card:min(var(--portfolio-slider-card-width,88vw),1600px)!important}
+ .team-portfolio-slider .media-gallery:not(.is-fullscreen):not(.is-modal){--gallery-card:min(var(--portfolio-slider-card-width,88vw),110.2dvh,1600px)!important}
  .team-portfolio-slider .media-gallery:not(.is-fullscreen):not(.is-modal) .media-gallery-slide{aspect-ratio:var(--portfolio-slider-aspect,16 / 9)!important}
 }
 .media-gallery:fullscreen,.media-gallery.is-expanded{--gallery-card:100vw;--gallery-gap:0px;position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;padding:0;z-index:10040;display:block;color:#fff;background:transparent}
