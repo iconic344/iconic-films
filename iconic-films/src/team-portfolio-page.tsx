@@ -241,8 +241,8 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
       <a href="/" className="brand nav-centered-brand" onClick={e=>{e.preventDefault();onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:config.name}<span>®</span></a>
       <nav className="nav-menu nav-menu-right">{config.navOrder.slice(2).map(renderSiteNavItem)}</nav>
       <div className="nav-tools">
-        <button type="button" className="admin-link" onClick={onAdmin}>{config.footerAdminLabel||'admin'}</button>
-        <button type="button" className="nav-edit-link" disabled={visualEditing} onClick={onEditSite}>{visualEditing?'EDITING':'EDIT SITE'}</button>
+        <button type="button" className="admin-link" onClick={onAdmin}>Admin</button>
+        <button type="button" className="nav-edit-link" disabled={visualEditing} onClick={onEditSite}>{visualEditing?'Editing':'Edit Site'}</button>
       </div>
     </header>
 

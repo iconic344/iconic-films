@@ -13824,3 +13824,39 @@ html.visual-direct-dragging .site.visual-editing [data-visual-divider-id]{
 .nav.nav-recomposed .nav-edit-link:not(:disabled):active{
   transform:scale(.96)!important;
 }
+
+
+/* 2026-10-07 final top-nav typography normalization.
+   Every textual nav control uses one font system and Title Case presentation. */
+.nav.nav-recomposed>.nav-menu>a,
+.nav.nav-recomposed>.nav-menu>.nav-contact,
+.nav.nav-recomposed .admin-link,
+.nav.nav-recomposed .nav-edit-link{
+  font-family:Arial,Helvetica,sans-serif!important;
+  font-size:12px!important;
+  font-weight:500!important;
+  font-style:normal!important;
+  font-variant:normal!important;
+  font-stretch:normal!important;
+  font-synthesis:none!important;
+  line-height:1!important;
+  letter-spacing:0!important;
+  text-transform:capitalize!important;
+  text-decoration:none!important;
+}
+@media(max-width:1024px), (max-width:1400px) and (any-pointer:coarse){
+  .nav.nav-recomposed>.nav-menu>a,
+  .nav.nav-recomposed>.nav-menu>.nav-contact,
+  .nav.nav-recomposed .admin-link,
+  .nav.nav-recomposed .nav-edit-link{
+    font-size:11px!important;
+  }
+}
+@media(max-width:640px){
+  .nav.nav-recomposed>.nav-menu>a,
+  .nav.nav-recomposed>.nav-menu>.nav-contact,
+  .nav.nav-recomposed .admin-link,
+  .nav.nav-recomposed .nav-edit-link{
+    font-size:9px!important;
+  }
+}
