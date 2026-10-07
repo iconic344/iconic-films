@@ -6,7 +6,7 @@ import type {Config,TeamMember} from './defaults';
 import TeamMedia,{teamMediaType} from './team-media';
 
 
-export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onSelectMember,onToggleTheme,onContact,onAdmin,onVideoViewerOpen,onVideoViewerClose,onMemberEdit,visualEditing=false}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onSelectMember:(member:TeamMember,direction?:1|-1)=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void;onVideoViewerOpen:()=>void;onVideoViewerClose:()=>void;onMemberEdit:(member:TeamMember)=>void;visualEditing?:boolean}){
+export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onSelectMember,onToggleTheme,onContact,onAdmin,onVideoViewerOpen,onVideoViewerClose,onMemberEdit,onEditSite,visualEditing=false}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onSelectMember:(member:TeamMember,direction?:1|-1)=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void;onVideoViewerOpen:()=>void;onVideoViewerClose:()=>void;onMemberEdit:(member:TeamMember)=>void;onEditSite:()=>void;visualEditing?:boolean}){
   const [index,setIndex]=useState(0);
   const [subcategory,setSubcategory]=useState('All');
   const [viewerIndex,setViewerIndex]=useState<number|null>(null);
@@ -227,17 +227,18 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   } as CSSProperties;
 
   return <div className={'team-portfolio-page'+(visualEditing?' is-visual-editing':'')} style={pageStyle}>
-    <header className="nav team-portfolio-site-nav">
-      <a href="/" className="brand" onClick={e=>{e.preventDefault();onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:config.name}<span>®</span></a>
+    <header className="nav nav-recomposed team-portfolio-site-nav">
+      <div className="nav-left-tools"><button type="button" className="icon" aria-label={theme==='light'?'다크 모드':'라이트 모드'} title={theme==='light'?'다크 모드':'라이트 모드'} onClick={onToggleTheme}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</button></div>
       <nav>
         <a href="/#work" onClick={e=>{e.preventDefault();onNavigate('work')}}>{config.navWorkLabel}</a>
         {config.showAbout&&<a href="/#about" onClick={e=>{e.preventDefault();onNavigate('about')}}>{config.navAboutLabel}</a>}
         {config.showTeam&&<a href="/#team" onClick={e=>{e.preventDefault();onNavigate('team')}}>{config.navTeamLabel}</a>}
         <button type="button" className="nav-contact" onClick={onContact}>{config.navContactLabel}</button>
       </nav>
+      <a href="/" className="brand nav-centered-brand" onClick={e=>{e.preventDefault();onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:config.name}<span>®</span></a>
       <div className="nav-tools">
-        <button type="button" className="icon" aria-label={theme==='light'?'다크 모드':'라이트 모드'} title={theme==='light'?'다크 모드':'라이트 모드'} onClick={onToggleTheme}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</button>
         <button type="button" className="admin-link" onClick={onAdmin}>{config.footerAdminLabel||'admin'}</button>
+        <button type="button" className="nav-edit-link" disabled={visualEditing} onClick={onEditSite}>{visualEditing?'EDITING':'EDIT SITE'}</button>
       </div>
     </header>
 

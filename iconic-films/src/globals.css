@@ -13583,3 +13583,146 @@ html.visual-direct-dragging .site.visual-editing [data-visual-divider-id]{
   background:var(--ink);
   color:var(--page);
 }
+
+
+/* 2026-10-07 top navigation recomposition.
+   Left = theme, center = VIIVII sara brand, right = ADMIN + EDIT SITE. */
+.nav.nav-recomposed{
+  display:grid!important;
+  grid-template-columns:220px minmax(0,1fr) auto minmax(0,1fr) 220px!important;
+  align-items:center!important;
+  justify-content:stretch!important;
+  column-gap:0!important;
+}
+.nav.nav-recomposed>.nav-left-tools{
+  grid-column:1;
+  justify-self:start;
+  display:flex;
+  align-items:center;
+  min-width:0;
+}
+.nav.nav-recomposed>nav{
+  grid-column:2;
+  justify-self:end;
+  margin-right:clamp(28px,3.2vw,62px);
+  min-width:0;
+}
+.nav.nav-recomposed>.nav-centered-brand{
+  grid-column:3;
+  justify-self:center;
+  align-self:center;
+  margin:0!important;
+  min-width:max-content;
+  z-index:2;
+}
+.nav.nav-recomposed>.nav-tools{
+  grid-column:5;
+  justify-self:end;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px!important;
+  min-width:0;
+}
+.nav.nav-recomposed>.nav-left-tools .icon{
+  width:40px;
+  height:40px;
+}
+.nav.nav-recomposed .admin-link,
+.nav.nav-recomposed .nav-edit-link{
+  min-height:38px;
+  padding:0 12px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:0;
+  border-radius:999px;
+  background:transparent;
+  color:var(--ink);
+  font-size:11px;
+  line-height:1;
+  white-space:nowrap;
+  transition:background .25s ease,transform .3s cubic-bezier(.16,1,.3,1),opacity .2s ease;
+}
+.nav.nav-recomposed .admin-link{opacity:.72}
+.nav.nav-recomposed .nav-edit-link{
+  min-width:72px;
+  font-size:10px;
+  letter-spacing:.04em;
+}
+.nav.nav-recomposed .nav-edit-link:disabled{
+  opacity:.42;
+  cursor:default;
+}
+@media(hover:hover) and (pointer:fine){
+  .nav.nav-recomposed .admin-link:hover,
+  .nav.nav-recomposed .nav-edit-link:not(:disabled):hover{
+    background:color-mix(in srgb,var(--ink) 7%,transparent);
+    transform:translateY(-1px);
+  }
+}
+
+/* Tablet/phone keeps the same requested hierarchy without collisions:
+   theme left, logo centered, admin/edit right, links on the second row. */
+@media(max-width:1024px), (max-width:1400px) and (any-pointer:coarse){
+  .nav.nav-recomposed{
+    grid-template-columns:auto minmax(90px,1fr) auto!important;
+    grid-template-areas:"left brand tools" "links links links"!important;
+    row-gap:8px!important;
+  }
+  .nav.nav-recomposed>.nav-left-tools{
+    grid-area:left!important;
+    justify-self:start!important;
+  }
+  .nav.nav-recomposed>.nav-centered-brand{
+    grid-area:brand!important;
+    justify-self:center!important;
+    max-width:150px;
+  }
+  .nav.nav-recomposed>.nav-tools{
+    grid-area:tools!important;
+    justify-self:end!important;
+    gap:2px!important;
+  }
+  .nav.nav-recomposed>nav{
+    grid-area:links!important;
+    justify-self:stretch!important;
+    margin-right:0!important;
+    width:100%!important;
+  }
+  .nav.nav-recomposed .nav-edit-link,
+  .nav.nav-recomposed .admin-link{
+    min-height:36px!important;
+    padding:0 8px!important;
+    font-size:9px!important;
+  }
+}
+@media(max-width:640px){
+  .nav.nav-recomposed{
+    grid-template-columns:38px minmax(76px,1fr) auto!important;
+    padding-left:10px!important;
+    padding-right:10px!important;
+    column-gap:4px!important;
+  }
+  .nav.nav-recomposed>.nav-left-tools .icon{
+    width:34px!important;
+    height:34px!important;
+  }
+  .nav.nav-recomposed>.nav-centered-brand{
+    max-width:104px!important;
+  }
+  .nav.nav-recomposed>.nav-centered-brand img{
+    max-width:92px!important;
+  }
+  .nav.nav-recomposed>.nav-tools{
+    gap:0!important;
+  }
+  .nav.nav-recomposed .admin-link{
+    padding-inline:5px!important;
+  }
+  .nav.nav-recomposed .nav-edit-link{
+    min-width:58px!important;
+    padding-inline:6px!important;
+    font-size:8px!important;
+  }
+}
