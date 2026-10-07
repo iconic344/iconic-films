@@ -15343,3 +15343,237 @@ html.visual-direct-dragging [data-visual-team-text]{
 .team-member-index-list>button:not(.active) .team-member-index-name{
   color:var(--ink)!important;
 }
+
+
+/* 2026-10-07 EDIT SITE complete-item inspector overhaul.
+   One selected item = one complete editor. No jumping between content/layout/style pages. */
+.visual-editor-panel,
+.portfolio-visual-editor .visual-editor-panel,
+.visual-editor-panel.is-full-settings{
+  width:min(488px,calc(100vw - 24px))!important;
+  max-width:calc(100vw - 24px)!important;
+  padding:16px!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain!important;
+}
+.visual-panel-head{
+  margin:-16px -16px 10px!important;
+  padding:14px 16px 12px!important;
+}
+.visual-panel-head strong{
+  font-size:15px!important;
+  letter-spacing:-.015em!important;
+}
+.visual-panel-head small{
+  max-width:330px;
+  font-size:10.5px!important;
+  line-height:1.45!important;
+}
+.visual-editor-primary-tabs{
+  top:53px!important;
+  margin:0 -1px 10px!important;
+  padding:5px!important;
+  gap:5px!important;
+}
+.visual-editor-primary-tabs>button{
+  min-height:44px!important;
+  padding:0 8px!important;
+  font-size:10.5px!important;
+}
+.visual-editor-primary-tabs>button:nth-child(2){
+  min-width:0;
+}
+.visual-editor-primary-tabs>button:nth-child(2)>span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.visual-complete-hint{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-height:42px;
+  margin:0 0 12px;
+  padding:8px 10px 8px 12px;
+  border:1px solid color-mix(in srgb,var(--ink) 12%,transparent);
+  border-radius:11px;
+  background:color-mix(in srgb,var(--ink) 3%,transparent);
+}
+.visual-complete-hint>span{
+  flex:0 0 auto;
+  font-size:10.5px;
+  font-weight:720;
+  color:var(--ink);
+}
+.visual-complete-hint>small{
+  min-width:0;
+  color:var(--soft);
+  font-size:9.5px;
+  line-height:1.35;
+  text-align:right;
+}
+.visual-complete-editor,
+.visual-complete-extras{
+  display:grid;
+  gap:10px;
+  min-width:0;
+}
+.visual-complete-editor>.visual-editor-panel-head{
+  margin:0 0 2px!important;
+  padding:0!important;
+  min-height:38px!important;
+  position:static!important;
+  background:transparent!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border:0!important;
+}
+.visual-complete-editor>.visual-editor-panel-head h3{
+  font-size:17px!important;
+  font-weight:720!important;
+}
+.visual-complete-editor>.visual-editor-panel-head button{
+  min-height:35px!important;
+  padding-inline:10px!important;
+}
+.visual-complete-editor .visual-inspector-group,
+.visual-complete-extras .visual-inspector-group,
+.visual-editor-context>.visual-inspector-group{
+  margin:0 0 8px!important;
+  border-color:color-mix(in srgb,var(--ink) 13%,transparent)!important;
+  background:color-mix(in srgb,var(--page) 78%,transparent)!important;
+}
+.visual-complete-editor .visual-inspector-group>summary,
+.visual-complete-extras .visual-inspector-group>summary,
+.visual-editor-context>.visual-inspector-group>summary{
+  min-height:52px!important;
+  padding:0 13px!important;
+}
+.visual-complete-editor .visual-inspector-group>summary strong,
+.visual-complete-extras .visual-inspector-group>summary strong,
+.visual-editor-context>.visual-inspector-group>summary strong{
+  font-size:12.5px!important;
+}
+.visual-complete-editor .visual-inspector-body,
+.visual-complete-extras .visual-inspector-body,
+.visual-editor-context>.visual-inspector-group .visual-inspector-body{
+  padding:5px 13px 14px!important;
+}
+.visual-complete-editor .visual-field,
+.visual-complete-editor .visual-range,
+.visual-complete-editor .visual-upload,
+.visual-complete-editor .visual-toggle,
+.visual-complete-extras .visual-field,
+.visual-complete-extras .visual-range,
+.visual-complete-extras .visual-upload,
+.visual-complete-extras .visual-toggle{
+  margin-bottom:12px!important;
+}
+.visual-complete-editor .visual-field input,
+.visual-complete-editor .visual-field textarea,
+.visual-complete-editor .visual-field select,
+.visual-complete-extras .visual-field input,
+.visual-complete-extras .visual-field textarea,
+.visual-complete-extras .visual-field select{
+  min-height:43px!important;
+  font-size:12.5px!important;
+}
+.visual-complete-editor .visual-secondary-button,
+.visual-complete-extras .visual-secondary-button{
+  min-height:40px!important;
+  justify-content:center;
+}
+.visual-complete-editor .visual-editor-danger,
+.visual-complete-extras .visual-editor-danger{
+  min-height:42px!important;
+}
+.visual-complete-editor .visual-block-library{
+  margin:4px 0 2px!important;
+  padding-top:8px!important;
+}
+.visual-complete-editor .visual-block-library .media-library{
+  border-radius:12px!important;
+}
+.visual-complete-editor .visual-block-library .library-body{
+  max-height:none!important;
+}
+.visual-complete-editor .visual-block-library .library-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+.visual-editor-context{
+  min-width:0!important;
+  padding:0 1px 18px!important;
+}
+.visual-layers{
+  padding-bottom:18px;
+}
+.visual-layer-row{
+  min-height:52px!important;
+}
+.visual-layer-select span{
+  font-size:12.5px!important;
+}
+.visual-layer-select small{
+  font-size:8.5px!important;
+}
+.visual-add-palette{
+  margin-bottom:10px!important;
+}
+.visual-editor-restore{
+  margin-top:8px!important;
+  border-top:1px solid color-mix(in srgb,var(--ink) 10%,transparent);
+}
+
+/* Keep the panel dimensions identical when entering Site Settings. */
+.visual-editor-panel.is-full-settings{
+  width:min(488px,calc(100vw - 24px))!important;
+}
+.edit-site-settings-body>.editor-grid,
+.edit-site-settings-body .layout-editor .editor-grid,
+.edit-site-settings-body .logo-editor>.editor-grid{
+  grid-template-columns:1fr!important;
+}
+.edit-site-settings-body .editor-card{
+  padding:14px!important;
+}
+
+/* Direct-selection frame should identify the target without covering it. */
+.visual-selection-frame.is-block-selection{
+  border-width:1px!important;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent-color) 13%,transparent)!important;
+}
+.visual-selection-frame.is-block-selection .visual-selection-label{
+  min-height:26px!important;
+  font-size:9px!important;
+}
+
+@media(max-width:820px){
+  .visual-editor-panel,
+  .visual-editor-panel.is-full-settings,
+  .portfolio-visual-editor .visual-editor-panel{
+    left:8px!important;
+    right:8px!important;
+    width:auto!important;
+    max-width:none!important;
+    max-height:72dvh!important;
+  }
+  .visual-editor-primary-tabs{
+    top:48px!important;
+  }
+  .visual-editor-primary-tabs>button{
+    min-height:41px!important;
+    padding-inline:5px!important;
+    font-size:9.5px!important;
+  }
+  .visual-complete-hint{
+    min-height:38px;
+    padding:7px 9px;
+  }
+  .visual-complete-hint>small{
+    display:none;
+  }
+  .visual-complete-editor .visual-block-library .library-grid{
+    grid-template-columns:1fr!important;
+  }
+}
