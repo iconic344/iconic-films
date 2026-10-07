@@ -13765,3 +13765,62 @@ html.visual-direct-dragging .site.visual-editing [data-visual-divider-id]{
   }
   .nav.nav-recomposed .nav-edit-link{min-width:54px!important}
 }
+
+
+/* 2026-10-07 unify every textual top-nav hover/press animation.
+   Anchors and buttons now share the exact same motion + liquid highlight. */
+.nav.nav-recomposed>.nav-menu>a,
+.nav.nav-recomposed>.nav-menu>.nav-contact,
+.nav.nav-recomposed .admin-link,
+.nav.nav-recomposed .nav-edit-link{
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  transition:
+    transform .42s cubic-bezier(.2,.9,.2,1.18),
+    background-color .30s ease,
+    box-shadow .30s ease,
+    color .30s ease,
+    opacity .30s ease!important;
+}
+.nav.nav-recomposed>.nav-menu>a::before,
+.nav.nav-recomposed>.nav-menu>.nav-contact::before,
+.nav.nav-recomposed .admin-link::before,
+.nav.nav-recomposed .nav-edit-link::before{
+  content:''!important;
+  position:absolute!important;
+  inset:0!important;
+  border-radius:inherit!important;
+  background:radial-gradient(
+    110px circle at var(--pointer-x,50%) var(--pointer-y,50%),
+    rgba(255,255,255,.28),
+    transparent 68%
+  )!important;
+  opacity:0!important;
+  pointer-events:none!important;
+  z-index:-1!important;
+  transition:opacity .28s ease!important;
+}
+@media(hover:hover) and (pointer:fine){
+  .nav.nav-recomposed>.nav-menu>a:hover,
+  .nav.nav-recomposed>.nav-menu>.nav-contact:hover,
+  .nav.nav-recomposed .admin-link:hover,
+  .nav.nav-recomposed .nav-edit-link:not(:disabled):hover{
+    color:var(--ink)!important;
+    background-color:color-mix(in srgb,var(--ink) 7%,transparent)!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 5px 16px rgba(0,0,0,.06)!important;
+    transform:translateY(-1px) scale(1.015)!important;
+  }
+  .nav.nav-recomposed>.nav-menu>a:hover::before,
+  .nav.nav-recomposed>.nav-menu>.nav-contact:hover::before,
+  .nav.nav-recomposed .admin-link:hover::before,
+  .nav.nav-recomposed .nav-edit-link:not(:disabled):hover::before{
+    opacity:1!important;
+  }
+}
+.nav.nav-recomposed>.nav-menu>a:active,
+.nav.nav-recomposed>.nav-menu>.nav-contact:active,
+.nav.nav-recomposed .admin-link:active,
+.nav.nav-recomposed .nav-edit-link:not(:disabled):active{
+  transform:scale(.96)!important;
+}
