@@ -1,4 +1,9 @@
 import {adminHeaders} from './admin-session';
+const inferredMime=(name:string,type:string)=>{
+  if(type)return type;
+  const ext=name.split('.').pop()?.toLowerCase();
+  return ({mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',m4v:'video/x-m4v',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',mp3:'audio/mpeg',m4a:'audio/mp4',wav:'audio/wav',ogg:'audio/ogg',flac:'audio/flac',aac:'audio/aac'} as Record<string,string>)[ext||'']||type;
+};
 export async function uploadFile(file:File,progress?:(percent:number)=>void,signal?:AbortSignal):Promise<string> {
   if(/\.exr$/i.test(file.name))throw Error('EXR은 현재 3D 뷰어에서 지원하지 않습니다. Radiance HDR(.hdr) 파일을 사용해 주세요.');
   if(/\.hdr$/i.test(file.name)) {
