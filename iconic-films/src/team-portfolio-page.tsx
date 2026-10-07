@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent} from 'react';
 import {ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,Moon,Sun} from 'lucide-react';
 import MediaGalleryDialog,{MediaGallery} from './media-gallery';
-import type {Config,TeamMember} from './defaults';
+import type {Config,NavItemKey,TeamMember} from './defaults';
 import TeamMedia,{teamMediaType} from './team-media';
 
 
@@ -179,6 +179,14 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     }
   };
 
+  const renderSiteNavItem=(item:NavItemKey)=>item==='work'?
+    <a key={item} href="/#work" onClick={e=>{e.preventDefault();onNavigate('work')}}>{config.navWorkLabel}</a>
+    :item==='about'?
+    (config.showAbout?<a key={item} href="/#about" onClick={e=>{e.preventDefault();onNavigate('about')}}>{config.navAboutLabel}</a>:null)
+    :item==='team'?
+    (config.showTeam?<a key={item} href="/#team" onClick={e=>{e.preventDefault();onNavigate('team')}}>{config.navTeamLabel}</a>:null)
+    :<button key={item} type="button" className="nav-contact" onClick={onContact}>{config.navContactLabel}</button>;
+
   const pageStyle={
     '--portfolio-columns':String(member.portfolioColumns||3),
     '--portfolio-gap':(member.portfolioGap||14)+'px',
@@ -229,13 +237,9 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   return <div className={'team-portfolio-page'+(visualEditing?' is-visual-editing':'')} style={pageStyle}>
     <header className="nav nav-recomposed team-portfolio-site-nav">
       <div className="nav-left-tools"><button type="button" className="icon" aria-label={theme==='light'?'다크 모드':'라이트 모드'} title={theme==='light'?'다크 모드':'라이트 모드'} onClick={onToggleTheme}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</button></div>
-      <nav>
-        <a href="/#work" onClick={e=>{e.preventDefault();onNavigate('work')}}>{config.navWorkLabel}</a>
-        {config.showAbout&&<a href="/#about" onClick={e=>{e.preventDefault();onNavigate('about')}}>{config.navAboutLabel}</a>}
-        {config.showTeam&&<a href="/#team" onClick={e=>{e.preventDefault();onNavigate('team')}}>{config.navTeamLabel}</a>}
-        <button type="button" className="nav-contact" onClick={onContact}>{config.navContactLabel}</button>
-      </nav>
+      <nav className="nav-menu nav-menu-left">{config.navOrder.slice(0,2).map(renderSiteNavItem)}</nav>
       <a href="/" className="brand nav-centered-brand" onClick={e=>{e.preventDefault();onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:config.name}<span>®</span></a>
+      <nav className="nav-menu nav-menu-right">{config.navOrder.slice(2).map(renderSiteNavItem)}</nav>
       <div className="nav-tools">
         <button type="button" className="admin-link" onClick={onAdmin}>{config.footerAdminLabel||'admin'}</button>
         <button type="button" className="nav-edit-link" disabled={visualEditing} onClick={onEditSite}>{visualEditing?'EDITING':'EDIT SITE'}</button>

@@ -300,6 +300,15 @@ export default function Home(){
   };
  }
  const navDragClass=(item:NavItemKey)=>visualEdit?' visual-nav-draggable'+(navDraggingItem===item?' is-nav-dragging':'')+(navDropItem===item&&navDraggingItem!==item?' is-nav-drop-target':''):'';
+ const renderTopNavItem=(item:NavItemKey)=>item==='work'?
+  <a key={item} href="#work" data-visual-text="navWorkLabel" data-visual-nav-key={item} className={navDragClass(item).trim()} {...navDragProps(item)}>{c.navWorkLabel}</a>
+  :item==='about'?
+  <a key={item} href="#about" data-visual-text="navAboutLabel" data-visual-nav-key={item} className={navDragClass(item).trim()} {...navDragProps(item)}>{c.navAboutLabel}</a>
+  :item==='team'?
+  (c.showTeam&&c.teamMembers.some(m=>m.visible)?
+   <a key={item} href="#team" data-visual-text="navTeamLabel" data-visual-nav-key={item} className={navDragClass(item).trim()} {...navDragProps(item)}>{c.navTeamLabel}</a>
+   :null)
+  :<button key={item} type="button" className={'nav-contact'+navDragClass(item)} data-visual-text="navContactLabel" data-visual-nav-key={item} {...navDragProps(item)} onClick={()=>setContactOpen(true)}>{c.navContactLabel}</button>;
  function selectVisualTarget(e:React.MouseEvent<HTMLDivElement>){
   if(!visualEdit)return;
   const target=e.target as HTMLElement;
@@ -443,18 +452,9 @@ export default function Home(){
   {teamPage?teamPage:<>
   {c.showNav&&<header data-visual-section="nav" className="nav nav-recomposed" style={sectionStyle('nav')}>
    <div className="nav-left-tools"><Btn label={theme==='light'?'다크 모드':'라이트 모드'} onClick={()=>{const v=theme==='light'?'dark':'light';setTheme(v);localStorage.setItem('iconic-theme',v)}}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</Btn></div>
-   <nav>
-    {c.navOrder.map((item:NavItemKey)=>item==='work'?
-     <a key={item} href="#work" data-visual-text="navWorkLabel" data-visual-nav-key={item} className={navDragClass(item).trim()} {...navDragProps(item)}>{c.navWorkLabel}</a>
-     :item==='about'?
-     <a key={item} href="#about" data-visual-text="navAboutLabel" data-visual-nav-key={item} className={navDragClass(item).trim()} {...navDragProps(item)}>{c.navAboutLabel}</a>
-     :item==='team'?
-     (c.showTeam&&c.teamMembers.some(m=>m.visible)?
-      <a key={item} href="#team" data-visual-text="navTeamLabel" data-visual-nav-key={item} className={navDragClass(item).trim()} {...navDragProps(item)}>{c.navTeamLabel}</a>
-      :null)
-     :<button key={item} type="button" className={'nav-contact'+navDragClass(item)} data-visual-text="navContactLabel" data-visual-nav-key={item} {...navDragProps(item)} onClick={()=>setContactOpen(true)}>{c.navContactLabel}</button>)}
-   </nav>
+   <nav className="nav-menu nav-menu-left">{c.navOrder.slice(0,2).map(renderTopNavItem)}</nav>
    <a href="#" className="brand nav-centered-brand" data-visual-text="name">{c.logo?<img src={c.logo} alt={c.name}/>:c.name}<span>®</span></a>
+   <nav className="nav-menu nav-menu-right">{c.navOrder.slice(2).map(renderTopNavItem)}</nav>
    <div className="nav-tools"><button className="admin-link" onPointerEnter={()=>fetch('/api/auth',{method:'GET',cache:'no-store'}).catch(()=>{})} onFocus={()=>fetch('/api/auth',{method:'GET',cache:'no-store'}).catch(()=>{})} onClick={enter}>admin</button><button type="button" className="nav-edit-link" disabled={visualEdit} onClick={startVisualEdit}>{visualEdit?'EDITING':'EDIT SITE'}</button></div>
   </header>}
  <main>{c.showHero&&<section data-visual-section="hero" className="hero" style={sectionStyle('hero')}>{c.eyebrow&&<div className="hero-top"><span data-visual-text="eyebrow">{c.eyebrow}</span></div>}<div className="hero-gallery"><MediaGallery items={heroItems} captionTitleStyle={textCss('heroCaption')} captionVisualText="heroCaption" onExpand={()=>openFilm({id:'reel',title:'Director’s cut',category:'Showreel',year:'2026',role:'Direction / Cinematography / Edit',description:'',poster:c.heroVideo?'':c.heroPoster,video:c.heroVideo,visible:true})}/></div><MainLogo config={c}/>{c.subtitle&&<div className="hero-bottom"><p data-visual-text="subtitle">{c.subtitle}</p></div>}</section>}
