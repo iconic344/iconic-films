@@ -4,7 +4,7 @@ import {createElement,useEffect,useRef,useState} from 'react';
 const ext=(url:string)=>url.split('?')[0].split('#')[0].toLowerCase();
 export const teamMediaType=(url:string)=>{
   const value=ext(url);
-  if(/\.(mp4|webm|mov)$/.test(value))return 'video';
+  if(/\.(mp4|webm|mov|m4v)$/.test(value))return 'video';
   if(/\.(glb|gltf)$/.test(value))return 'model';
   return 'image';
 };
