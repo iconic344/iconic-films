@@ -103,12 +103,12 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   if(e.key===' '&&!((e.target as HTMLElement).closest('button'))){e.preventDefault();toggle()}
  };
  if(!item)return null;
- const balancedPreview=balanceEdges&&!modal&&!isFullscreen&&items.length>=1;
- const previewItems:Array<{entry:GalleryItem|null;sourceIndex:number;ghost:boolean;key:string}>=balancedPreview?[
-  {entry:null,sourceIndex:-1,ghost:true,key:'ghost-pre'},
-  ...items.map((entry,sourceIndex)=>({entry,sourceIndex,ghost:false,key:'main-'+entry.id})),
-  {entry:null,sourceIndex:-1,ghost:true,key:'ghost-post'}
- ]:items.map((entry,sourceIndex)=>({entry,sourceIndex,ghost:false,key:'main-'+entry.id}));
+ const balancedPreview=balanceEdges&&!modal&&!isFullscreen&&items.length>1;
+ const previewItems:Array<{entry:GalleryItem;sourceIndex:number;duplicate:boolean;key:string}>=balancedPreview?[
+  {entry:items[items.length-1],sourceIndex:items.length-1,duplicate:true,key:'wrap-pre-'+items[items.length-1].id},
+  ...items.map((entry,sourceIndex)=>({entry,sourceIndex,duplicate:false,key:'main-'+entry.id})),
+  {entry:items[0],sourceIndex:0,duplicate:true,key:'wrap-post-'+items[0].id}
+ ]:items.map((entry,sourceIndex)=>({entry,sourceIndex,duplicate:false,key:'main-'+entry.id}));
  const displayIndex=balancedPreview?index+1:index;
  const gallery=<div ref={root} className={'media-gallery '+(balancedPreview?'is-balanced-preview ':'')+(cleanPreview&&!isFullscreen&&!modal?'is-clean-preview ':'')+(modal?'is-modal ':'')+(expanded?'is-expanded ':'')+(isFullscreen?'is-fullscreen ':'')+(items.length<=1?'is-single ':'')+(type==='video'?'has-video ':'has-image ')+(landscape?'is-landscape':'is-portrait')} style={{'--gallery-media-fit':mediaFit,'--gallery-media-position':mediaPositionX+'% '+mediaPositionY+'%'} as CSSProperties} role="region" aria-roledescription="carousel" aria-label="미디어 갤러리" tabIndex={0} data-native-cursor={cleanPreview&&!isFullscreen&&!modal?'true':undefined} data-cursor-idle={idle?'true':'false'} onPointerMove={wake} onPointerDown={wake} onFocusCapture={wake} onKeyDown={e=>{wake();key(e)}}>
   {showBackdrop&&<><div className="media-gallery-backdrop" aria-hidden="true">
@@ -118,10 +118,9 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   {isFullscreen&&<button type="button" className="media-gallery-close" aria-label={modal?'미디어 닫기':'전체 화면 종료'} onClick={()=>{if(modal)onExpand?.();else exitFullscreen()}}><X size={23}/></button>}
   <div className="media-gallery-viewport" onPointerDown={e=>{if(e.button!==0||(e.target as HTMLElement).closest('button,input,model-viewer'))return;drag.current={x:e.clientX,y:e.clientY};dragged.current=false;e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={e=>{if(!drag.current)return;const dx=e.clientX-drag.current.x,dy=e.clientY-drag.current.y;drag.current=null;const swiped=Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy);if(swiped){dragged.current=true;choose(index+(dx<0?1:-1))}else if(type==='video'&&(modal||isFullscreen)){dragged.current=true;toggle()}e.currentTarget.releasePointerCapture?.(e.pointerId)}} onPointerCancel={()=>{drag.current=null}}>
    <div className="media-gallery-track" style={{'--gallery-index':displayIndex} as CSSProperties}>
-    {previewItems.map(({entry,sourceIndex,ghost,key:slideKey},i)=>{
-     if(ghost||!entry)return <article className="media-gallery-slide is-placeholder" key={slideKey} aria-hidden="true"><div className="media-gallery-placeholder-stack" aria-hidden="true"/></article>;
-     const active=sourceIndex===index,kind=teamMediaType(entry.src);
-     return <article className={'media-gallery-slide '+(active?'is-active ':'')} key={slideKey} aria-hidden={!active} inert={!active&&!balancedPreview}>
+    {previewItems.map(({entry,sourceIndex,duplicate,key:slideKey},i)=>{
+     const active=!duplicate&&sourceIndex===index,kind=teamMediaType(entry.src);
+     return <article className={'media-gallery-slide '+(active?'is-active ':'')+(duplicate?'is-edge-copy ':'')} key={slideKey} aria-hidden={!active} inert={!active&&!balancedPreview}>
       <div className="media-gallery-artwork" data-cursor-label={cleanPreview&&!isFullscreen&&!modal?undefined:(kind==='video'?'VIDEO':kind==='model'?'3D':'IMAGE')} data-native-cursor={cleanPreview&&!isFullscreen&&!modal?'true':undefined} onClick={()=>{if(dragged.current){dragged.current=false;return}if(!active)return;if(modal&&kind==='video'){toggle();return}if(onExpand&&kind!=='model'){if(kind==='video'&&video.current){video.current.muted=false;setMuted(false);void video.current.play().catch(()=>{})}onExpand();return}if(kind==='video')toggle()}}>
        {kind==='video'?<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-displayIndex)<=1?entry.src:undefined} poster={entry.poster} muted={active?muted:true} data-site-autoplay={!modal&&active?'true':undefined} autoPlay={active} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setReady(n=>n+1);onReady?.();if(playing&&visible){const v=video.current;if(v&&!modal){v.muted=true;setMuted(true)}v?.play().catch(()=>setPlaying(false))}}}} onCanPlay={e=>{if(active&&playing&&visible){if(!modal)e.currentTarget.muted=true;void e.currentTarget.play().catch(()=>{})}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setLandscape((e.currentTarget.videoWidth||0)/(e.currentTarget.videoHeight||1)>=1.45);if(modal){e.currentTarget.volume=mediaVolume;e.currentTarget.muted=mediaVolume<=0;setMuted(mediaVolume<=0)}setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setPlaying(false);onReady?.()}}}/>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
       </div>
