@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent} from 'react';
 import {ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,Moon,Sun} from 'lucide-react';
 import MediaGalleryDialog,{MediaGallery} from './media-gallery';
-import type {Config,NavItemKey,TeamMember} from './defaults';
+import type {Config,NavItemKey,PortfolioDivider,PortfolioSectionKey,TeamMember} from './defaults';
 import TeamMedia,{teamMediaType} from './team-media';
 
 
@@ -180,12 +180,12 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   };
 
   const renderSiteNavItem=(item:NavItemKey)=>item==='work'?
-    <a key={item} href="/#work" onClick={e=>{e.preventDefault();onNavigate('work')}}>{config.navWorkLabel}</a>
+    <a key={item} href="/#work" data-portfolio-edit="navWorkLabel" onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('work')}}>{config.navWorkLabel}</a>
     :item==='about'?
-    (config.showAbout?<a key={item} href="/#about" onClick={e=>{e.preventDefault();onNavigate('about')}}>{config.navAboutLabel}</a>:null)
+    (config.showAbout?<a key={item} href="/#about" data-portfolio-edit="navAboutLabel" onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('about')}}>{config.navAboutLabel}</a>:null)
     :item==='team'?
-    (config.showTeam?<a key={item} href="/#team" onClick={e=>{e.preventDefault();onNavigate('team')}}>{config.navTeamLabel}</a>:null)
-    :<button key={item} type="button" className="nav-contact" onClick={onContact}>{config.navContactLabel}</button>;
+    (config.showTeam?<a key={item} href="/#team" data-portfolio-edit="navTeamLabel" onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('team')}}>{config.navTeamLabel}</a>:null)
+    :<button key={item} type="button" className="nav-contact" data-portfolio-edit="navContactLabel" onClick={()=>{if(!visualEditing)onContact()}}>{config.navContactLabel}</button>;
 
   const pageStyle={
     '--portfolio-columns':String(member.portfolioColumns||3),
@@ -233,28 +233,50 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     '--portfolio-slider-height':(member.portfolioSliderHeight||760)+'px',
     '--portfolio-grid-width':(member.portfolioGridWidth||100)+'%',
   } as CSSProperties;
+  const sectionStyle=(key:PortfolioSectionKey):CSSProperties=>{
+    const section=member.portfolioSections[key];
+    return {
+      translate:`${section.x||0}px ${section.y||0}px`,
+      scale:String(section.scale||1),
+      minHeight:section.minHeight>0?section.minHeight+'px':undefined,
+      opacity:(section.opacity??100)/100,
+      background:section.background||undefined,
+      borderRadius:section.radius?section.radius+'px':undefined
+    };
+  };
+  const dividerStyle=(divider:PortfolioDivider):CSSProperties=>({
+    width:divider.width+'%',
+    maxWidth:`calc(100% - ${divider.inset*2}px)`,
+    borderTop:`${divider.thickness}px solid ${divider.color||'var(--ink)'}`,
+    opacity:divider.opacity/100,
+    margin:`${divider.marginTop}px auto ${divider.marginBottom}px`,
+    translate:`0 ${divider.offsetY||0}px`
+  });
+  const renderDividers=(after:PortfolioSectionKey)=>(member.portfolioDividers||[]).filter(divider=>divider.after===after&&divider.visible).map(divider=><div key={divider.id} className="portfolio-section-divider" data-portfolio-divider-id={divider.id} style={dividerStyle(divider)} aria-hidden="true"/>);
 
   return <div className={'team-portfolio-page'+(visualEditing?' is-visual-editing':'')} style={pageStyle}>
-    <header className="nav nav-recomposed team-portfolio-site-nav">
-      <div className="nav-left-tools"><button type="button" className="icon" aria-label={theme==='light'?'다크 모드':'라이트 모드'} title={theme==='light'?'다크 모드':'라이트 모드'} onClick={onToggleTheme}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</button></div>
+    <header className="nav nav-recomposed team-portfolio-site-nav" data-portfolio-section="nav" data-portfolio-hidden={member.portfolioSections.nav.visible?'false':'true'} style={sectionStyle('nav')}>
+      <div className="nav-left-tools"><button type="button" className="icon" aria-label={theme==='light'?'다크 모드':'라이트 모드'} title={theme==='light'?'다크 모드':'라이트 모드'} onClick={()=>{if(!visualEditing)onToggleTheme()}}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</button></div>
       <nav className="nav-menu nav-menu-left">{config.navOrder.slice(0,2).map(renderSiteNavItem)}</nav>
-      <a href="/" className="brand nav-centered-brand" onClick={e=>{e.preventDefault();onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:config.name}<span>®</span></a>
+      <a href="/" className="brand nav-centered-brand" data-portfolio-edit="siteName" onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:config.name}<span>®</span></a>
       <nav className="nav-menu nav-menu-right">{config.navOrder.slice(2).map(renderSiteNavItem)}</nav>
       <div className="nav-tools">
-        <button type="button" className="admin-link" onClick={onAdmin}>Admin</button>
+        <button type="button" className="admin-link" onClick={()=>{if(!visualEditing)onAdmin()}}>Admin</button>
         <button type="button" className="nav-edit-link" disabled={visualEditing} onClick={onEditSite}>{visualEditing?'Editing':'Edit Site'}</button>
       </div>
     </header>
+    {renderDividers('nav')}
 
     <main className="team-portfolio-main">
-      <section ref={heroRef} data-portfolio-edit="hero" className={'team-portfolio-hero'+(member.photo?' has-hero-media':'')}>
+      <section ref={heroRef} data-portfolio-section="hero" data-portfolio-hidden={member.portfolioSections.hero.visible?'false':'true'} style={sectionStyle('hero')} className={'team-portfolio-hero'+(member.photo?' has-hero-media':'')}>
         {member.photo&&<div className="team-portfolio-hero-media" aria-hidden="true">
           <TeamMedia src={member.photo} alt="" className="team-portfolio-hero-media-element" autoPlay/>
         </div>}
         {member.photo&&<div className="team-portfolio-hero-light" aria-hidden="true"/>}
       </section>
+      {renderDividers('hero')}
 
-      {teamMembers.length>1&&<section className="team-portfolio-member-index" aria-label="Portfolio category navigation">
+      {teamMembers.length>1&&<section className="team-portfolio-member-index" data-portfolio-section="index" data-portfolio-hidden={member.portfolioSections.index.visible?'false':'true'} style={sectionStyle('index')} aria-label="Portfolio category navigation">
         <div className="team-member-index-head">
           <span data-portfolio-edit="indexLabel">{member.portfolioTeamIndexLabel||'CATEGORY INDEX'} / {String(memberIndex+1).padStart(2,'0')} — {String(teamMembers.length).padStart(2,'0')}</span>
           <div className="team-member-index-arrows">
@@ -266,15 +288,16 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           {teamMembers.map((item,i)=>{
             const active=item.id===member.id;
             const direction:1|-1=i>memberIndex?1:-1;
-            return <button type="button" key={item.id} className={(active?'active ':'')+'member-reactive'} aria-current={active?'page':undefined} onPointerMove={reactPointer} onPointerLeave={resetPointer} onClick={()=>{if(memberSwipeMoved.current){memberSwipeMoved.current=false;return}if(!active)selectMember(item,direction)}}>
+            return <button type="button" key={item.id} className={(active?'active ':'')+'member-reactive'} aria-current={active?'page':undefined} onPointerMove={reactPointer} onPointerLeave={resetPointer} onClick={()=>{if(visualEditing)return;if(memberSwipeMoved.current){memberSwipeMoved.current=false;return}if(!active)selectMember(item,direction)}}>
               <span className="team-member-index-name" data-portfolio-edit={active?'name':undefined}>{item.name||'Portfolio'}</span>
               <span className="team-member-index-number">{String(i+1).padStart(2,'0')}</span>
             </button>;
           })}
         </div>
       </section>}
+      {renderDividers('index')}
 
-      <section className="team-portfolio-work" data-portfolio-edit="layout">
+      <section className="team-portfolio-work" data-portfolio-section="work" data-portfolio-hidden={member.portfolioSections.work.visible?'false':'true'} style={sectionStyle('work')}>
         <div className="team-portfolio-work-head">
           <div>
             <h2 data-portfolio-edit="title">{member.portfolioTitle||'Selected works'}</h2>
@@ -298,14 +321,17 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
 
         {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider" data-portfolio-edit="layout"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={()=>{if(!visualEditing)openViewer(index)}}/></div>}
       </section>
+      {renderDividers('work')}
     </main>
 
-    {teamMembers.length>1&&<nav className="team-portfolio-member-switch" aria-label="Previous and next portfolio category">
-      <button type="button" onClick={memberPrev}><ChevronLeft size={17}/><span><small>PREVIOUS</small>{teamMembers[(memberIndex-1+teamMembers.length)%teamMembers.length]?.name}</span></button>
-      <button type="button" onClick={memberNext}><span><small>NEXT</small>{teamMembers[(memberIndex+1)%teamMembers.length]?.name}</span><ChevronRight size={17}/></button>
+    {teamMembers.length>1&&<nav className="team-portfolio-member-switch" data-portfolio-section="switcher" data-portfolio-hidden={member.portfolioSections.switcher.visible?'false':'true'} style={sectionStyle('switcher')} aria-label="Previous and next portfolio category">
+      <button type="button" onClick={()=>{if(!visualEditing)memberPrev()}}><ChevronLeft size={17}/><span><small>PREVIOUS</small>{teamMembers[(memberIndex-1+teamMembers.length)%teamMembers.length]?.name}</span></button>
+      <button type="button" onClick={()=>{if(!visualEditing)memberNext()}}><span><small>NEXT</small>{teamMembers[(memberIndex+1)%teamMembers.length]?.name}</span><ChevronRight size={17}/></button>
     </nav>}
+    {renderDividers('switcher')}
 
-        <footer className="team-portfolio-footer"><span>© 2026 {config.name}</span><button type="button" onClick={onBack}>Back to team</button></footer>
+    <footer className="team-portfolio-footer" data-portfolio-section="footer" data-portfolio-hidden={member.portfolioSections.footer.visible?'false':'true'} style={sectionStyle('footer')}><span>© 2026 {config.name}</span><button type="button" data-portfolio-edit="footerReturn" onClick={()=>{if(!visualEditing)onBack()}}>{member.portfolioReturnLabel||'Back to team'}</button></footer>
+    {renderDividers('footer')}
 
     <MediaGalleryDialog items={galleryItems} index={viewerIndex} onClose={closeViewer} onIndexChange={setViewerIndex}/>
   </div>

@@ -14084,3 +14084,93 @@ html.visual-direct-dragging .site.visual-editing [data-visual-divider-id]{
     scroll-behavior:auto!important;
   }
 }
+
+
+/* 2026-10-07 full VISUAL EDIT parity for team portfolio pages. */
+.team-portfolio-page [data-portfolio-section][data-portfolio-hidden="true"]{
+  display:none!important;
+}
+.team-portfolio-page [data-portfolio-section]{
+  transform-origin:center top;
+}
+.team-portfolio-page.is-visual-editing [data-portfolio-section],
+.team-portfolio-page.is-visual-editing [data-portfolio-edit],
+.team-portfolio-page.is-visual-editing [data-portfolio-work-index],
+.team-portfolio-page.is-visual-editing [data-portfolio-divider-id]{
+  cursor:pointer!important;
+}
+.team-portfolio-page.is-visual-editing [data-portfolio-section]:hover,
+.team-portfolio-page.is-visual-editing [data-portfolio-edit]:hover,
+.team-portfolio-page.is-visual-editing [data-portfolio-work-index]:hover,
+.team-portfolio-page.is-visual-editing [data-portfolio-divider-id]:hover{
+  outline:1px dashed color-mix(in srgb,var(--accent-color) 72%,transparent);
+  outline-offset:4px;
+}
+.portfolio-section-divider{
+  position:relative;
+  z-index:3;
+  height:0;
+  pointer-events:auto;
+}
+.portfolio-visual-editor .visual-editor-panel{
+  z-index:11018;
+}
+.portfolio-visual-editor .visual-selection-frame{
+  z-index:11017;
+}
+.portfolio-visual-editor .visual-layer-heading>div{
+  display:flex;
+  gap:5px;
+}
+.portfolio-visual-editor .visual-layer-row{
+  grid-template-columns:minmax(0,1fr) auto;
+}
+.portfolio-visual-editor .portfolio-editor-stack{
+  display:grid;
+  gap:10px;
+}
+.portfolio-visual-editor .portfolio-editor-stack textarea{
+  min-height:88px;
+  resize:vertical;
+}
+.portfolio-visual-editor .portfolio-editor-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.portfolio-visual-editor .portfolio-editor-row>button{
+  min-height:38px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:transparent;
+  color:var(--ink);
+}
+.portfolio-visual-editor .portfolio-editor-row>button.is-active{
+  background:var(--ink);
+  color:var(--page);
+}
+.team-portfolio-member-index .team-member-index-name{
+  font-family:var(--portfolio-name-font,Arial,Helvetica,sans-serif)!important;
+  color:var(--portfolio-name-color,currentColor)!important;
+  text-align:var(--portfolio-name-align,left)!important;
+  translate:var(--portfolio-name-x,0px) var(--portfolio-name-y,0px)!important;
+}
+.team-member-index-head>span{
+  font-family:var(--portfolio-utility-font,Arial,Helvetica,sans-serif)!important;
+  font-size:var(--portfolio-utility-size,11px)!important;
+  color:var(--portfolio-utility-color,var(--soft))!important;
+  text-align:var(--portfolio-utility-align,left)!important;
+  translate:var(--portfolio-utility-x,0px) var(--portfolio-utility-y,0px)!important;
+}
+.team-portfolio-footer button[data-portfolio-edit="footerReturn"]{
+  font-family:var(--portfolio-utility-font,Arial,Helvetica,sans-serif)!important;
+  font-size:var(--portfolio-utility-size,11px)!important;
+  color:var(--portfolio-utility-color,var(--soft))!important;
+  translate:var(--portfolio-return-x,0px) var(--portfolio-return-y,0px)!important;
+}
+@media(max-width:820px){
+  .team-portfolio-page [data-portfolio-section]{
+    scale:1!important;
+    translate:0 clamp(-28px,var(--portfolio-mobile-section-y,0px),28px);
+  }
+}
