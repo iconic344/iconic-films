@@ -875,8 +875,8 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
     overflow:visible!important;
   }
   .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen){
-    --gallery-card:clamp(780px,66.5vw,1260px)!important;
-    --gallery-gap:18px!important;
+    --gallery-card:min(var(--portfolio-slider-landscape-vw,66.5vw),var(--gallery-height-cap-width,1260px),1260px)!important;
+    --gallery-gap:var(--portfolio-gap,18px)!important;
     width:100vw!important;
     max-width:none!important;
     margin:0!important;
@@ -892,7 +892,7 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
   }
   .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-track{
     gap:18px!important;
-    transition:transform 820ms cubic-bezier(.16,1,.3,1)!important;
+    transition:transform var(--gallery-transition-ms,820ms) var(--gallery-easing,cubic-bezier(.16,1,.3,1))!important;
   }
   .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
     flex:0 0 var(--gallery-card)!important;
@@ -904,17 +904,17 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
     min-height:0!important;
     max-height:none!important;
     margin:0!important;
-    border-radius:28px!important;
+    border-radius:var(--portfolio-radius,28px)!important;
     background:transparent!important;
   }
   .team-portfolio-slider .media-gallery.is-frame-portrait:not(.is-modal):not(.is-fullscreen){
-    --gallery-card:min(42vw,46dvh,720px)!important;
+    --gallery-card:min(var(--portfolio-slider-portrait-vw,42vw),var(--gallery-height-cap-width,720px),720px)!important;
   }
   .team-portfolio-slider .media-gallery.is-frame-square:not(.is-modal):not(.is-fullscreen){
-    --gallery-card:min(54vw,70dvh,900px)!important;
+    --gallery-card:min(var(--portfolio-slider-square-vw,54vw),var(--gallery-height-cap-width,900px),900px)!important;
   }
   .team-portfolio-slider .media-gallery.is-frame-landscape:not(.is-modal):not(.is-fullscreen){
-    --gallery-card:clamp(780px,66.5vw,1260px)!important;
+    --gallery-card:min(var(--portfolio-slider-landscape-vw,66.5vw),var(--gallery-height-cap-width,1260px),1260px)!important;
   }
   .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>img,
   .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>video{
