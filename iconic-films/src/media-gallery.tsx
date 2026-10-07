@@ -105,7 +105,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   const intervalMs=Math.max(1200,Number(autoplayMs)||6500);
   const timer=window.setInterval(()=>{const now=performance.now();elapsed.current+=now-last;last=now;setProgress(Math.min(1,elapsed.current/intervalMs));if(elapsed.current>=intervalMs)advance()},120);
   return()=>window.clearInterval(timer);
- },[type,playing,visible,index,items.length,error]);
+ },[type,playing,visible,index,items.length,error,autoplayMs]);
  const toggle=()=>setPlaying(v=>!v);
  const exitFullscreen=()=>{
   restoreTime.current=video.current?.currentTime??null;
