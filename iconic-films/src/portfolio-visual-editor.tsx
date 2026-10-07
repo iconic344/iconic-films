@@ -130,7 +130,45 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
   document.addEventListener('pointerdown',down,true);return()=>{document.removeEventListener('pointerdown',down,true);document.documentElement.classList.remove('visual-direct-dragging')};
  },[member,selection]);
 
- const beginChromeDrag=(e:ReactPointerEvent<HTMLElement>,kind:'toolbar'|'panel')=>{if(e.button!==0)return;const selector=kind==='toolbar'?'.visual-editor-topbar':'.visual-editor-panel';const node=(e.currentTarget as HTMLElement).closest<HTMLElement>(selector);if(!node)return;e.preventDefault();const r=node.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,setPos=kind==='toolbar'?setToolbarPos:setPanelPos,storageKey=kind==='toolbar'?'viivii-visual-toolbar-pos':'viivii-visual-panel-pos';const move=(ev:PointerEvent)=>setPos({x:Math.round(clamp(r.left+ev.clientX-sx,8,Math.max(8,window.innerWidth-r.width-8))),y:Math.round(clamp(r.top+ev.clientY-sy,8,Math.max(8,window.innerHeight-r.height-8)))});const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);requestAnimationFrame(()=>{const el=document.querySelector<HTMLElement>(selector);if(!el)return;const rr=el.getBoundingClientRect(),p={x:Math.round(rr.left),y:Math.round(rr.top)};setPos(p);try{localStorage.setItem(storageKey,JSON.stringify(p))}catch{}})};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true})};
+ const beginChromeDrag=(e:ReactPointerEvent<HTMLElement>,kind:'toolbar'|'panel')=>{
+  if(e.button!==0)return;
+  const origin=e.target as HTMLElement|null;
+  if(origin?.closest('button,a,input,textarea,select,label,summary,[role="button"],[contenteditable="true"]'))return;
+  const selector=kind==='toolbar'?'.visual-editor-topbar':'.visual-editor-panel';
+  const node=(e.currentTarget as HTMLElement).closest<HTMLElement>(selector);
+  if(!node)return;
+  e.preventDefault();
+  const r=node.getBoundingClientRect(),sx=e.clientX,sy=e.clientY;
+  const setPos=kind==='toolbar'?setToolbarPos:setPanelPos;
+  const storageKey=kind==='toolbar'?'viivii-visual-toolbar-pos':'viivii-visual-panel-pos';
+  const xVar=kind==='toolbar'?'--ve-toolbar-x':'--ve-panel-x';
+  const yVar=kind==='toolbar'?'--ve-toolbar-y':'--ve-panel-y';
+  let x=r.left,y=r.top,raf=0;
+  node.classList.add('is-free','is-dragging');
+  document.documentElement.classList.add('visual-chrome-dragging');
+  const paint=()=>{raf=0;node.style.setProperty(xVar,x+'px');node.style.setProperty(yVar,y+'px')};
+  paint();
+  const move=(ev:PointerEvent)=>{
+   x=r.left+(ev.clientX-sx);
+   y=r.top+(ev.clientY-sy);
+   if(!raf)raf=requestAnimationFrame(paint);
+  };
+  const finish=()=>{
+   if(raf){cancelAnimationFrame(raf);raf=0}
+   paint();
+   window.removeEventListener('pointermove',move);
+   window.removeEventListener('pointerup',finish);
+   window.removeEventListener('pointercancel',finish);
+   node.classList.remove('is-dragging');
+   document.documentElement.classList.remove('visual-chrome-dragging');
+   const p={x:Math.round(x),y:Math.round(y)};
+   setPos(p);
+   try{localStorage.setItem(storageKey,JSON.stringify(p))}catch{}
+  };
+  window.addEventListener('pointermove',move,{passive:true});
+  window.addEventListener('pointerup',finish,{once:true});
+  window.addEventListener('pointercancel',finish,{once:true});
+ };
  const resetChrome=(kind:'toolbar'|'panel')=>{if(kind==='toolbar'){setToolbarPos(null);try{localStorage.removeItem('viivii-visual-toolbar-pos')}catch{}}else{setPanelPos(null);try{localStorage.removeItem('viivii-visual-panel-pos')}catch{}}};
 
  const label=tab==='settings'?'사이트 설정':selectedDivider?'구분선':selectedText?textLabels[selectedText]:selectedWorkIndex>=0?'작품 미디어':sectionDefs.find(item=>item.key===selectedSection)?.label||'포트폴리오';
@@ -140,8 +178,8 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  const style=currentTextStyle(selectedText||'siteName');
 
  return <div className={'visual-editor-ui portfolio-visual-editor is-panel-'+panelSide} data-visual-editor="true">
-  <div style={toolbarStyle} className={'visual-editor-topbar '+(toolbarPos?'is-free ':toolbarBottom?'is-bottom ':'is-top ')}>
-   <div className="visual-editor-title visual-editor-drag-zone" onPointerDown={e=>beginChromeDrag(e,'toolbar')} onDoubleClick={()=>resetChrome('toolbar')}><Grip size={14}/><Settings2 size={16}/><strong>VISUAL EDIT / PORTFOLIO</strong><span>현재 페이지 전용 레이어 · 직접 선택 · 드래그 · 크기 · 스타일</span></div>
+  <div style={toolbarStyle} className={'visual-editor-topbar '+(toolbarPos?'is-free ':toolbarBottom?'is-bottom ':'is-top ')} onPointerDown={e=>beginChromeDrag(e,'toolbar')}>
+   <div className="visual-editor-title visual-editor-drag-zone" onDoubleClick={()=>resetChrome('toolbar')}><Grip size={14}/><Settings2 size={16}/><strong>VISUAL EDIT / PORTFOLIO</strong><span>현재 페이지 전용 레이어 · 직접 선택 · 드래그 · 크기 · 스타일</span></div>
    <div className="visual-editor-toolbar-tools">
     <button type="button" className="visual-toolbar-icon" title="패널 위치 전환" onClick={()=>{setPanelPos(null);setPanelSide(value=>value==='right'?'left':'right')}}>{panelSide==='right'?<PanelLeft size={15}/>:<PanelRight size={15}/>}</button>
     <button type="button" className="visual-toolbar-icon" title={panelOpen?'패널 접기':'패널 열기'} onClick={()=>setPanelOpen(value=>!value)}><SlidersHorizontal size={15}/></button>
@@ -149,8 +187,8 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
    </div>
   </div>
 
-  {panelOpen?<aside style={panelStyle} className={'visual-editor-panel is-'+panelSide+(panelPos?' is-free':'')+(tab==='settings'?' is-full-settings':'')}>
-   <div className="visual-panel-head"><div className="visual-panel-drag-zone" onPointerDown={e=>beginChromeDrag(e,'panel')} onDoubleClick={()=>resetChrome('panel')}><Grip size={13}/><span><strong>{label}</strong><small>포트폴리오 페이지 전용 편집 · 메인과 독립</small></span></div><button type="button" onClick={()=>setPanelOpen(false)} aria-label="편집 패널 접기"><X size={15}/></button></div>
+  {panelOpen?<aside style={panelStyle} className={'visual-editor-panel is-'+panelSide+(panelPos?' is-free':'')+(tab==='settings'?' is-full-settings':'')} onPointerDown={e=>beginChromeDrag(e,'panel')}>
+   <div className="visual-panel-head"><div className="visual-panel-drag-zone" onDoubleClick={()=>resetChrome('panel')}><Grip size={13}/><span><strong>{label}</strong><small>포트폴리오 페이지 전용 편집 · 메인과 독립</small></span></div><button type="button" onClick={()=>setPanelOpen(false)} aria-label="편집 패널 접기"><X size={15}/></button></div>
    <div className="visual-editor-primary-tabs" role="tablist" aria-label="Edit Site 주요 메뉴"><button className={tab==='layers'?'is-active':''} onClick={()=>setTab('layers')}><Layers3 size={14}/><span>페이지 구성</span></button><button className={tab==='content'||tab==='layout'||tab==='style'?'is-active':''} onClick={()=>setTab('content')}><Type size={14}/><span>선택 항목</span></button><button className={tab==='settings'?'is-active':''} onClick={()=>setTab('settings')}><Settings2 size={14}/><span>사이트 설정</span></button></div>
    {(tab==='content'||tab==='layout'||tab==='style')&&<div className="visual-editor-subtabs" role="tablist" aria-label="선택 항목 편집"><button className={tab==='content'?'is-active':''} onClick={()=>setTab('content')}>내용</button><button className={tab==='layout'?'is-active':''} onClick={()=>setTab('layout')}><Maximize2 size={12}/>배치</button><button className={tab==='style'?'is-active':''} onClick={()=>setTab('style')}><SlidersHorizontal size={12}/>디자인</button></div>}
 
