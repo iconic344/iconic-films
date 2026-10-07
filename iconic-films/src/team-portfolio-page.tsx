@@ -231,9 +231,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     '--portfolio-return-x':(member.portfolioReturnX||0)+'px',
     '--portfolio-return-y':(member.portfolioReturnY||0)+'px',
     '--portfolio-slider-width':(member.portfolioSliderWidth||100)+'%',
-    '--portfolio-slider-card-width':Math.max(39.6,Math.min(88,(member.portfolioSliderWidth||100)*.88))+'vw',
     '--portfolio-slider-height':(member.portfolioSliderHeight||760)+'px',
-    '--portfolio-slider-aspect':member.portfolioSliderAspect==='standard'?'4 / 5':member.portfolioSliderAspect==='square'?'1 / 1':member.portfolioSliderAspect==='photo'?'3 / 2':'16 / 9',
     '--portfolio-grid-width':(member.portfolioGridWidth||100)+'%',
     '--portfolio-work-x':(member.portfolioSections.work.x||0)+'px',
   } as CSSProperties;
