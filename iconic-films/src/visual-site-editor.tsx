@@ -1,17 +1,18 @@
 'use client';
 import {useEffect,useRef,useState,type CSSProperties,type Dispatch,type PointerEvent,type SetStateAction} from 'react';
 import {ArrowDown,ArrowUp,Copy,Eye,EyeOff,Grip,Layers3,Maximize2,PanelLeft,PanelRight,Plus,RotateCcw,Save,Settings2,SlidersHorizontal,Trash2,Type,Undo2,X} from 'lucide-react';
-import type {Config,NavItemKey,SiteSectionKey,Work,SectionDivider} from './defaults';
+import type {Config,NavItemKey,SiteSectionKey,Work,SectionDivider,PageBlock,PageBlockType} from './defaults';
 import {uploadFile} from './media-upload';
 import EditSiteFullSettings from './edit-site-full-settings';
 import FontPicker from './font-picker';
+import MediaLibrary from './media-library';
 
 type SectionKey=SiteSectionKey;
 type PanelTab='layers'|'content'|'layout'|'style'|'settings';
 type Point={x:number;y:number};
 type TextStyleKey=keyof Config['textStyles'];
 type TextPatch=Partial<{font:string;size:number;color:string;align:'left'|'center'|'right';x:number;y:number;letterSpacing:number;weight:number;opacity:number;textTransform:'none'|'uppercase'|'lowercase'|'capitalize'}>;
-export type VisualSelection=SectionKey|`work:${string}`|`divider:${string}`|`text:${string}`|`worktext:${string}:${string}`|`teamtext:${string}:${string}`;
+export type VisualSelection=SectionKey|`work:${string}`|`divider:${string}`|`block:${string}`|`text:${string}`|`worktext:${string}:${string}`|`teamtext:${string}:${string}`;
 
 const clamp=(n:number,min:number,max:number)=>Math.min(max,Math.max(min,n));
 const sectionDefs:{key:SectionKey;label:string}[]=[
@@ -63,13 +64,15 @@ export default function VisualSiteEditor({
  const selectedWork=selectedWorkId?config.works.find(w=>w.id===selectedWorkId)||null:null;
  const selectedDividerId=selection.startsWith('divider:')?selection.slice(8):'';
  const selectedDivider=selectedDividerId?config.sectionDividers.find(d=>d.id===selectedDividerId)||null:null;
+ const selectedBlockId=selection.startsWith('block:')?selection.slice(6):'';
+ const selectedBlock=selectedBlockId?(config.pageBlocks||[]).find(block=>block.id===selectedBlockId)||null:null;
  const selectedTextKey=selection.startsWith('text:')?selection.slice(5):'';
  const selectedTextDef=selectedTextKey?directTextDefs[selectedTextKey]||null:null;
  const workTextParts=selection.startsWith('worktext:')?selection.slice(9).split(':'):[];
  const selectedWorkText=workTextParts.length>=2?{id:workTextParts[0],field:workTextParts.slice(1).join(':') as keyof Work}:null;
  const teamTextParts=selection.startsWith('teamtext:')?selection.slice(9).split(':'):[];
  const selectedTeamText=teamTextParts.length>=2?{id:teamTextParts[0],field:teamTextParts.slice(1).join(':')}:null;
- const sectionSelection=(selectedDivider?.after||selectedTextDef?.section||(selectedWork||selectedWorkText?'work':selectedTeamText?'team':selection)) as SectionKey;
+ const sectionSelection=(selectedBlock?.after||selectedDivider?.after||selectedTextDef?.section||(selectedWork||selectedWorkText?'work':selectedTeamText?'team':selection)) as SectionKey;
 
  const targetFor=(value:VisualSelection=selection)=>{
   if(typeof document==='undefined')return null;
@@ -77,18 +80,27 @@ export default function VisualSiteEditor({
   if(value.startsWith('worktext:'))return document.querySelector<HTMLElement>(`[data-visual-work-text="${CSS.escape(value.slice(9))}"]`);
   if(value.startsWith('teamtext:'))return document.querySelector<HTMLElement>(`[data-visual-team-text="${CSS.escape(value.slice(9))}"]`);
   if(value.startsWith('divider:'))return document.querySelector<HTMLElement>(`[data-visual-divider-id="${CSS.escape(value.slice(8))}"]`);
+  if(value.startsWith('block:'))return document.querySelector<HTMLElement>(`[data-visual-block-id="${CSS.escape(value.slice(6))}"]`);
   if(value.startsWith('work:')){const id=value.slice(5);return Array.from(document.querySelectorAll<HTMLElement>('[data-visual-work-id]')).find(el=>el.dataset.visualWorkId===id)||null}
   return document.querySelector<HTMLElement>(`[data-visual-section="${value}"]`);
  };
  const refresh=()=>{const el=targetFor();setRect(el?el.getBoundingClientRect():null)};
  useEffect(()=>{let raf=0;const sync=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(refresh)};sync();window.addEventListener('scroll',sync,{passive:true});window.addEventListener('resize',sync);return()=>{cancelAnimationFrame(raf);window.removeEventListener('scroll',sync);window.removeEventListener('resize',sync)}},[selection,config]);
- useEffect(()=>{if(selection.startsWith('text:')||selection.startsWith('worktext:')||selection.startsWith('teamtext:')||selection.startsWith('divider:'))setTab('content')},[selection]);
+ useEffect(()=>{if(selection.startsWith('text:')||selection.startsWith('worktext:')||selection.startsWith('teamtext:')||selection.startsWith('divider:')||selection.startsWith('block:'))setTab('content')},[selection]);
  useEffect(()=>{if(panelPos)return;const el=targetFor();if(!el)return;const r=el.getBoundingClientRect();if(r.width<window.innerWidth*.76)setPanelSide(r.left+r.width/2>window.innerWidth/2?'left':'right');else if(selection==='nav')setPanelSide('right')},[selection,panelPos]);
 
  const patch=<K extends keyof Config>(key:K,value:Config[K])=>setConfig(d=>({...d,[key]:value}));
  const patchTextStyle=(key:TextStyleKey,value:TextPatch)=>setConfig(d=>({...d,textStyles:{...d.textStyles,[key]:{...d.textStyles[key],...value}}}));
  const patchWork=(id:string,key:keyof Work,value:Work[keyof Work])=>setConfig(d=>({...d,works:d.works.map(w=>w.id===id?{...w,[key]:value}:w)}));
  const patchTeam=(id:string,key:string,value:unknown)=>setConfig(d=>({...d,teamMembers:d.teamMembers.map(m=>m.id===id?{...m,[key]:value}:m)}));
+ const patchBlock=(id:string,value:Partial<PageBlock>)=>setConfig(d=>({...d,pageBlocks:(d.pageBlocks||[]).map(block=>block.id===id?{...block,...value}:block)}));
+ const deleteBlock=(id:string)=>{setConfig(d=>({...d,pageBlocks:(d.pageBlocks||[]).filter(block=>block.id!==id)}));setSelection(sectionSelection);setTab('layers')};
+ const addBlock=(type:PageBlockType)=>{
+  const id='page-block-'+Date.now(),after=sectionDefs.some(item=>item.key===sectionSelection)?sectionSelection:'work';
+  const defaults:PageBlock={id,type,after,visible:true,title:type==='slider'?'Slider':type==='text'?'New text':'',text:type==='text'?'내용을 입력하세요.':'',media:'',width:100,height:type==='spacer'?120:type==='media'?520:560,gap:18,radius:24,offsetY:0,background:'',color:'',fontSize:42,align:'left'};
+  setConfig(d=>({...d,pageBlocks:[...(d.pageBlocks||[]),defaults]}));setSelection(`block:${id}`);setTab('content');
+ };
+ const uploadBlockMedia=async(id:string,file?:File)=>{if(!file)return;try{setUploading(true);const url=await uploadFile(file);patchBlock(id,{media:url});notify('미디어 업로드 완료. 저장을 눌러 적용하세요.')}catch(error){notify((error as Error).message)}finally{setUploading(false)}};
  const textStyleKeyFor=(value:VisualSelection):TextStyleKey|undefined=>{
   if(value.startsWith('text:'))return directTextDefs[value.slice(5)]?.styleKey;
   if(value.startsWith('worktext:')){const field=value.slice(9).split(':').slice(1).join(':');return field==='title'?'workCardTitle':'workCardMeta'}
@@ -359,7 +371,7 @@ export default function VisualSiteEditor({
  const selectedTeamTextMember=selectedTeamText?config.teamMembers.find(member=>member.id===selectedTeamText.id)||null:null;
  const selectedWorkTextStyleKey:TextStyleKey|undefined=selectedWorkText?(selectedWorkText.field==='title'?'workCardTitle':'workCardMeta'):undefined;
  const selectedTeamTextStyleKey:TextStyleKey|undefined=selectedTeamText?(selectedTeamText.field==='name'?'teamMemberName':selectedTeamText.field==='bio'?'teamMemberBio':'teamMemberRole'):undefined;
- const selectionLabel=tab==='settings'?'사이트 설정':selectedDivider?'구분선':selectedTextDef?.label||(selectedWorkText?'작품 텍스트':selectedTeamText?'팀 텍스트':selectedWork?'작품 카드':sectionDefs.find(s=>s.key===sectionSelection)?.label);
+ const selectionLabel=tab==='settings'?'사이트 설정':selectedBlock?(selectedBlock.type==='slider'?'슬라이더':selectedBlock.type==='text'?'텍스트 블록':selectedBlock.type==='media'?'미디어 블록':'여백'):selectedDivider?'구분선':selectedTextDef?.label||(selectedWorkText?'작품 텍스트':selectedTeamText?'팀 텍스트':selectedWork?'작품 카드':sectionDefs.find(s=>s.key===sectionSelection)?.label);
  const toolbarStyle=toolbarPos?{'--ve-toolbar-x':toolbarPos.x+'px','--ve-toolbar-y':toolbarPos.y+'px'} as CSSProperties:undefined;
  const panelStyle=panelPos?{'--ve-panel-x':panelPos.x+'px','--ve-panel-y':panelPos.y+'px'} as CSSProperties:undefined;
  const quickStyleKey=textStyleKeyFor(selection),quickTextStyle=quickStyleKey?config.textStyles[quickStyleKey]:null;
@@ -376,7 +388,7 @@ export default function VisualSiteEditor({
   </div>
 
   {panelOpen?<aside style={panelStyle} className={'visual-editor-panel is-'+panelSide+(panelPos?' is-free':'')+(tab==='settings'?' is-full-settings':'')} onPointerDown={e=>beginChromeDrag(e,'panel')}>
-   <div className="visual-panel-head"><div className="visual-panel-drag-zone" onDoubleClick={()=>resetChrome('panel')}><Grip size={13}/><span><strong>{selectionLabel}</strong><small>{selectedTextDef||selectedWorkText||selectedTeamText?'텍스트를 직접 선택해 편집 중':selectedDivider?'독립 구분선 레이어':'끌어서 패널 이동 · 더블클릭 위치 초기화'}</small></span></div><button type="button" aria-label="편집 패널 접기" onClick={()=>setPanelOpen(false)}><X size={15}/></button></div>
+   <div className="visual-panel-head"><div className="visual-panel-drag-zone" onDoubleClick={()=>resetChrome('panel')}><Grip size={13}/><span><strong>{selectionLabel}</strong><small>{selectedTextDef||selectedWorkText||selectedTeamText?'텍스트를 직접 선택해 편집 중':selectedBlock?'추가한 페이지 요소 편집 중':selectedDivider?'독립 구분선 레이어':'끌어서 패널 이동 · 더블클릭 위치 초기화'}</small></span></div><button type="button" aria-label="편집 패널 접기" onClick={()=>setPanelOpen(false)}><X size={15}/></button></div>
    <div className="visual-editor-primary-tabs" role="tablist" aria-label="Edit Site 주요 메뉴"><button className={tab==='layers'?'is-active':''} onClick={()=>setTab('layers')}><Layers3 size={14}/><span>페이지 구성</span></button><button className={tab==='content'||tab==='layout'||tab==='style'?'is-active':''} onClick={()=>setTab('content')}><Type size={14}/><span>선택 항목</span></button><button className={tab==='settings'?'is-active':''} onClick={()=>setTab('settings')}><Settings2 size={14}/><span>사이트 설정</span></button></div>
    {(tab==='content'||tab==='layout'||tab==='style')&&<div className="visual-editor-subtabs" role="tablist" aria-label="선택 항목 편집"><button className={tab==='content'?'is-active':''} onClick={()=>setTab('content')}>내용</button><button className={tab==='layout'?'is-active':''} onClick={()=>setTab('layout')}><Maximize2 size={12}/>배치</button><button className={tab==='style'?'is-active':''} onClick={()=>setTab('style')}><SlidersHorizontal size={12}/>디자인</button></div>}
    {tab==='layers'&&<LayersPanel config={config} selection={selection} select={selectLayer} isVisible={isVisible} hide={removeSection} restore={restoreSection} reorderSection={reorderSection} moveWork={moveWork} reorderWork={reorderWork} patchWork={patchWork} deleteWork={deleteWork} addWork={addWork} addDivider={addDivider} patchDivider={patchDivider} deleteDivider={deleteDivider}/>}
