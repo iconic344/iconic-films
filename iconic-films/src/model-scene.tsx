@@ -127,7 +127,7 @@ export default function ModelScene({
     spring.current = controller;
 
     const down = (e: PointerEvent) => {
-      if (!v.loaded || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      if (!c.modelDrag || !v.loaded || (e.pointerType === 'mouse' && e.button !== 0)) return;
       controller.begin(e.pointerId);
       dragging.current = true;
     };
@@ -158,7 +158,20 @@ export default function ModelScene({
       spring.current = null;
       dragging.current = false;
     };
-  }, [ready, source, c.modelReturnToCenter, c.modelReturnBounce, c.modelAutoRotate, c.modelZoom, c.modelRotateX, c.modelRotateY, c.modelRotateZ, c.motion]);
+  }, [ready, source, c.modelDrag, c.modelReturnToCenter, c.modelReturnBounce, c.modelAutoRotate, c.modelZoom, c.modelRotateX, c.modelRotateY, c.modelRotateZ, c.motion]);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!ready || !v) return;
+    if (c.modelDrag) v.setAttribute('camera-controls', '');
+    else v.removeAttribute('camera-controls');
+    if (c.modelZoom) v.removeAttribute('disable-zoom');
+    else v.setAttribute('disable-zoom', '');
+    if (c.modelAutoRotate && c.motion > 0 && !matchMedia('(prefers-reduced-motion: reduce)').matches) v.setAttribute('auto-rotate', '');
+    else v.removeAttribute('auto-rotate');
+    v.setAttribute('rotation-per-second', `${c.modelSpeed}deg`);
+    v.style.touchAction = c.modelDrag ? 'none' : 'pan-y';
+  }, [ready, c.modelDrag, c.modelZoom, c.modelAutoRotate, c.modelSpeed, c.motion]);
 
   const reduced = typeof window !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
