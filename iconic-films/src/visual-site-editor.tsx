@@ -191,12 +191,23 @@ export default function VisualSiteEditor({
   window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
  };
  const beginHeightResize=(e:PointerEvent<HTMLButtonElement>)=>{
-  if(selectedWork||selectedDivider||selectedTextDef||selectedWorkText||selectedTeamText)return;e.preventDefault();e.stopPropagation();
-  const current=config.sectionHeights?.[sectionSelection]||rect?.height||0;
+  if(selectedWork||selectedDivider||selectedTextDef||selectedWorkText||selectedTeamText)return;
+  e.preventDefault();e.stopPropagation();
+  const section=sectionSelection,pointerId=e.pointerId,handle=e.currentTarget;
+  const current=Number(config.sectionHeights?.[section])>0?Number(config.sectionHeights?.[section]):Math.max(0,Math.round(rect?.height||0));
   heightState.current={y:e.clientY,base:current};
-  const move=(event:globalThis.PointerEvent)=>{const start=heightState.current;if(!start)return;const next=clamp(Math.round(start.base+event.clientY-start.y),sectionSelection==='nav'?48:120,1800);setConfig(d=>({...d,sectionHeights:{...d.sectionHeights,[sectionSelection]:next}}))};
-  const up=()=>{heightState.current=null;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};
-  window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
+  try{handle.setPointerCapture(pointerId)}catch{}
+  let raf=0,pendingY=e.clientY;
+  const commit=()=>{
+   raf=0;
+   const start=heightState.current;if(!start)return;
+   const minimum=section==='nav'?48:0;
+   const next=Math.max(minimum,Math.round(start.base+pendingY-start.y));
+   setConfig(d=>({...d,sectionHeights:{...(d.sectionHeights||{}),[section]:next}}));
+  };
+  const move=(event:globalThis.PointerEvent)=>{if(!heightState.current||event.pointerId!==pointerId)return;pendingY=event.clientY;if(!raf)raf=requestAnimationFrame(commit)};
+  const finish=(event?:globalThis.PointerEvent)=>{if(event&&event.pointerId!==pointerId)return;cancelAnimationFrame(raf);if(heightState.current){pendingY=event?.clientY??pendingY;commit()}heightState.current=null;try{if(handle.hasPointerCapture(pointerId))handle.releasePointerCapture(pointerId)}catch{}window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',finish);window.removeEventListener('pointercancel',finish);refresh()};
+  window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',finish);window.addEventListener('pointercancel',finish);
  };
  const beginTextMove=(e:PointerEvent<HTMLButtonElement>)=>{
   if(!selectedTextDef?.styleKey)return;e.preventDefault();e.stopPropagation();
@@ -428,7 +439,7 @@ export default function VisualSiteEditor({
     {selectedBlock?<PageBlockLayout block={selectedBlock} patch={value=>patchBlock(selectedBlock.id,value)}/>:
      selectedDivider?<DividerLayout divider={selectedDivider} patch={value=>patchDivider(selectedDivider.id,value)}/>:
      selectedTextDef?.styleKey?<><div className="visual-editor-panel-head"><strong>텍스트 위치</strong><button type="button" onClick={()=>patchTextStyle(selectedTextDef.styleKey!,{x:selectedTextKey==='footerCopyright'?0:config.textStyles[selectedTextDef.styleKey!].x,y:0})}><RotateCcw size={13}/>Reset</button></div>{selectedTextKey==='footerCopyright'?<div className="visual-axis-lock"><span>가로 위치</span><b>화면 정중앙 고정</b></div>:<NumberField label="가로 위치" value={config.textStyles[selectedTextDef.styleKey].x} suffix="px" onChange={v=>patchTextStyle(selectedTextDef.styleKey!,{x:v})}/>}<NumberField label="세로 위치" value={config.textStyles[selectedTextDef.styleKey].y} suffix="px" onChange={v=>patchTextStyle(selectedTextDef.styleKey!,{y:v})}/></>:
-     <><div className="visual-editor-panel-head"><strong>영역 위치·크기</strong>{meta&&!selectedWork&&<button type="button" onClick={resetLayout}><RotateCcw size={13}/>Reset</button>}</div>{meta&&!selectedWork&&!selectedWorkText&&!selectedTeamText&&<><div className="visual-axis-lock"><span>가로 위치</span><b>중앙 고정 · 0px</b><button onClick={()=>patch(meta.x,0 as never)}>중앙 복귀</button></div><NumberField label="세로 위치 · 제한 없음" value={Number(config[meta.y])} suffix="px" onChange={v=>patch(meta.y,v as never)}/><Range label="크기" value={Math.round(Number(config[meta.scale])*100)} min={65} max={145} step={1} suffix="%" onChange={v=>patch(meta.scale,(v/100) as never)}/><Range label="영역 높이 · 0 = 자동" value={config.sectionHeights?.[sectionSelection]||0} min={0} max={1600} step={10} suffix="px" onChange={v=>patch('sectionHeights',{...config.sectionHeights,[sectionSelection]:v})}/></>}{sectionSelection==='work'&&!selectedWorkText&&<Range label="그리드 열 개수" value={config.columns} min={1} max={4} step={1} onChange={v=>patch('columns',v)}/>} {sectionSelection==='team'&&!selectedTeamText&&<><Range label="미디어 크기" value={config.teamMediaSize} min={120} max={520} step={1} suffix="px" onChange={v=>patch('teamMediaSize',v)}/><Range label="행 간격" value={config.teamRowGap} min={12} max={180} step={1} suffix="px" onChange={v=>patch('teamRowGap',v)}/></>}<Range label="전체 영역 간격" value={config.spacing} min={28} max={180} step={1} suffix="px" onChange={v=>patch('spacing',v)}/>{!selectedWork&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-editor-danger" onClick={()=>removeSection(sectionSelection)}><EyeOff size={14}/> 이 영역 숨기기</button>}</>}
+     <><div className="visual-editor-panel-head"><strong>영역 위치·크기</strong>{meta&&!selectedWork&&<button type="button" onClick={resetLayout}><RotateCcw size={13}/>Reset</button>}</div>{meta&&!selectedWork&&!selectedWorkText&&!selectedTeamText&&<><div className="visual-axis-lock"><span>가로 위치</span><b>중앙 고정 · 0px</b><button onClick={()=>patch(meta.x,0 as never)}>중앙 복귀</button></div><NumberField label="세로 위치 · 제한 없음" value={Number(config[meta.y])} suffix="px" onChange={v=>patch(meta.y,v as never)}/><Range label="크기" value={Math.round(Number(config[meta.scale])*100)} min={65} max={145} step={1} suffix="%" onChange={v=>patch(meta.scale,(v/100) as never)}/><NumberField label="영역 높이 · 0 = 자동 · 제한 없음" value={config.sectionHeights?.[sectionSelection]||0} suffix="px" onChange={v=>patch('sectionHeights',{...(config.sectionHeights||{}),[sectionSelection]:Math.max(sectionSelection==='nav'?48:0,v)})}/></>}{sectionSelection==='work'&&!selectedWorkText&&<Range label="그리드 열 개수" value={config.columns} min={1} max={4} step={1} onChange={v=>patch('columns',v)}/>} {sectionSelection==='team'&&!selectedTeamText&&<><Range label="미디어 크기" value={config.teamMediaSize} min={120} max={520} step={1} suffix="px" onChange={v=>patch('teamMediaSize',v)}/><Range label="행 간격" value={config.teamRowGap} min={12} max={180} step={1} suffix="px" onChange={v=>patch('teamRowGap',v)}/></>}<Range label="전체 영역 간격" value={config.spacing} min={28} max={180} step={1} suffix="px" onChange={v=>patch('spacing',v)}/>{!selectedWork&&!selectedWorkText&&!selectedTeamText&&<button type="button" className="visual-editor-danger" onClick={()=>removeSection(sectionSelection)}><EyeOff size={14}/> 이 영역 숨기기</button>}</>}
    </div>}
    {tab==='style'&&(
     selectedBlock?<PageBlockStyle block={selectedBlock} patch={value=>patchBlock(selectedBlock.id,value)}/>:
