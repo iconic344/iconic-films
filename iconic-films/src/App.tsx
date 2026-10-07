@@ -76,7 +76,7 @@ export default function Home(){
  useEffect(()=>{document.documentElement.dataset.theme=theme;},[theme]);
  useEffect(()=>{if(!loaded)return;try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(saved))}catch{}},[loaded,saved]);
  useEffect(()=>{draftRef.current=draft},[draft]);
- useEffect(()=>{if(!visualEdit)return;const onKey=(e:KeyboardEvent)=>{if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'){e.preventDefault();undoVisualEdit()}};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey)},[visualEdit]);
+ useEffect(()=>{if(!visualEdit)return;const onKey=(e:KeyboardEvent)=>{const target=e.target as HTMLElement|null;if(target?.closest('input,textarea,select,[contenteditable="true"]'))return;if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'){e.preventDefault();undoVisualEdit();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();void saveVisualEdit()}};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey)},[visualEdit]);
  useEffect(()=>{
   const query=window.matchMedia('(max-width: 820px), (max-width: 1180px) and (any-pointer: coarse)');
   const sync=()=>setCompactViewport(query.matches);
@@ -307,7 +307,7 @@ export default function Home(){
  function selectVisualTarget(e:React.MouseEvent<HTMLDivElement>){
   if(!visualEdit)return;
   const target=e.target as HTMLElement;
-  if(target.closest('[data-visual-editor="true"]'))return;
+  if(target.closest('[data-visual-editor="true"]')||target.closest('[contenteditable="true"]'))return;
   const globalText=target.closest<HTMLElement>('[data-visual-text]');
   const workText=target.closest<HTMLElement>('[data-visual-work-text]');
   const teamText=target.closest<HTMLElement>('[data-visual-team-text]');
@@ -458,7 +458,7 @@ export default function Home(){
   {c.showNav&&<header data-visual-section="nav" className="nav nav-recomposed" style={sectionStyle('nav')}>
    <div className="nav-left-tools" data-cursor-label="THEME"><Btn label={theme==='light'?'다크 모드':'라이트 모드'} onClick={()=>{const v=theme==='light'?'dark':'light';setTheme(v);localStorage.setItem('iconic-theme',v)}}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</Btn></div>
    <nav className="nav-menu nav-menu-left">{c.navOrder.slice(0,2).map(renderTopNavItem)}</nav>
-   <a href="#" className="brand nav-centered-brand" data-cursor-label="LOGO" data-visual-text="name" style={textCss('navBrand')}>{c.logo?<img src={c.logo} alt={c.name}/>:c.name}<span>®</span></a>
+   <a href="#" className="brand nav-centered-brand" data-cursor-label="LOGO">{c.logo?<img src={c.logo} alt={c.name}/>:<span className="brand-editable-text" data-visual-text="name" style={textCss('navBrand')}>{c.name}</span>}<span>®</span></a>
    <nav className="nav-menu nav-menu-right">{c.navOrder.slice(2).map(renderTopNavItem)}</nav>
    <div className="nav-tools"><button className="admin-link" data-cursor-label="ADMIN" onPointerEnter={()=>fetch('/api/auth',{method:'GET',cache:'no-store'}).catch(()=>{})} onFocus={()=>fetch('/api/auth',{method:'GET',cache:'no-store'}).catch(()=>{})} onClick={enter}>Admin</button><button type="button" className="nav-edit-link" data-cursor-label="EDIT" disabled={visualEdit} onClick={startVisualEdit}>{visualEdit?'Editing':'Edit Site'}</button></div>
   </header>}
