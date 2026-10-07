@@ -72,7 +72,8 @@ export default function VisualSiteEditor({
  const selectedWorkText=workTextParts.length>=2?{id:workTextParts[0],field:workTextParts.slice(1).join(':') as keyof Work}:null;
  const teamTextParts=selection.startsWith('teamtext:')?selection.slice(9).split(':'):[];
  const selectedTeamText=teamTextParts.length>=2?{id:teamTextParts[0],field:teamTextParts.slice(1).join(':')}:null;
- const sectionSelection=(selectedBlock?.after||selectedDivider?.after||selectedTextDef?.section||(selectedWork||selectedWorkText?'work':selectedTeamText?'team':selection)) as SectionKey;
+ const sectionCandidate=selectedBlock?.after||selectedDivider?.after||selectedTextDef?.section||(selectedWork||selectedWorkText?'work':selectedTeamText?'team':selection);
+ const sectionSelection=(sectionDefs.some(item=>item.key===sectionCandidate)?sectionCandidate:'work') as SectionKey;
 
  const targetFor=(value:VisualSelection=selection)=>{
   if(typeof document==='undefined')return null;
@@ -253,7 +254,14 @@ export default function VisualSiteEditor({
    if(!target||target.closest('[data-visual-editor="true"]')||target.closest('[data-visual-nav-key]'))return;
    const anyText=target.closest<HTMLElement>('[data-visual-text],[data-visual-work-text],[data-visual-team-text]');
    if(anyText){
-    const value=(anyText.dataset.visualText?('text:'+anyText.dataset.visualText):anyText.dataset.visualWorkText?('worktext:'+anyText.dataset.visualWorkText):('teamtext:'+anyText.dataset.visualTeamText)) as VisualSelection;
+    const directKey=anyText.dataset.visualText||'';
+    if(directKey&&!directTextDefs[directKey]){
+     const section=anyText.closest<HTMLElement>('[data-visual-section]');
+     const key=section?.dataset.visualSection||'work';
+     setSelection((sectionDefs.some(item=>item.key===key)?key:'work') as VisualSelection);
+     event.preventDefault();event.stopPropagation();return;
+    }
+    const value=(directKey?('text:'+directKey):anyText.dataset.visualWorkText?('worktext:'+anyText.dataset.visualWorkText):('teamtext:'+anyText.dataset.visualTeamText)) as VisualSelection;
     setSelection(value);
     if(inlineEditing===value)return;
     event.preventDefault();event.stopPropagation();
