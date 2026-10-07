@@ -865,3 +865,125 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
   border-top:0!important;
   border-bottom:0!important;
 }
+
+
+/* PROJECT 07 — reference carousel pass.
+   Scope is intentionally limited to the team portfolio slider. */
+@media (min-width:1025px){
+  .team-portfolio-slider{
+    background:transparent!important;
+    overflow:visible!important;
+  }
+  .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen){
+    --gallery-card:clamp(780px,66.5vw,1260px)!important;
+    --gallery-gap:18px!important;
+    width:100vw!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0 0 24px!important;
+    background:transparent!important;
+    overflow:visible!important;
+  }
+  .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-viewport{
+    width:100vw!important;
+    max-width:none!important;
+    overflow:hidden!important;
+    background:transparent!important;
+  }
+  .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-track{
+    gap:18px!important;
+    transition:transform 820ms cubic-bezier(.16,1,.3,1)!important;
+  }
+  .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
+    flex:0 0 var(--gallery-card)!important;
+    width:var(--gallery-card)!important;
+    min-width:var(--gallery-card)!important;
+    max-width:var(--gallery-card)!important;
+    aspect-ratio:1.85 / 1!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    border-radius:28px!important;
+    background:transparent!important;
+  }
+  .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>img,
+  .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>video{
+    object-fit:cover!important;
+    object-position:center!important;
+  }
+
+  .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-navigation{
+    position:relative!important;
+    left:50%!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:max-content!important;
+    max-width:calc(100vw - 32px)!important;
+    min-height:48px!important;
+    margin:28px 0 0!important;
+    padding:0!important;
+    transform:translateX(-50%)!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:8px!important;
+    overflow:visible!important;
+    z-index:8!important;
+    animation:portfolio-slider-controls-in .62s cubic-bezier(.16,1,.3,1) .12s both;
+  }
+  .team-portfolio-slider .media-gallery-navigation>.media-gallery-arrow,
+  .team-portfolio-slider .media-gallery-navigation>.media-gallery-toggle{
+    width:44px!important;
+    height:44px!important;
+    opacity:1!important;
+    visibility:visible!important;
+    color:#fff!important;
+    background:rgba(58,58,62,.88)!important;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.12)!important;
+    backdrop-filter:blur(20px) saturate(1.08)!important;
+    -webkit-backdrop-filter:blur(20px) saturate(1.08)!important;
+  }
+  .team-portfolio-slider .media-gallery-navigation>.media-gallery-indicators{
+    min-height:44px!important;
+    height:44px!important;
+    max-width:min(48vw,500px)!important;
+    padding:0 17px!important;
+    gap:12px!important;
+    border-radius:999px!important;
+    background:rgba(58,58,62,.88)!important;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.12)!important;
+    backdrop-filter:blur(20px) saturate(1.08)!important;
+    -webkit-backdrop-filter:blur(20px) saturate(1.08)!important;
+    overflow:hidden!important;
+  }
+  .team-portfolio-slider .media-gallery-indicators button{
+    width:7px!important;
+    height:7px!important;
+    background:rgba(255,255,255,.62)!important;
+    transition:width .52s cubic-bezier(.16,1,.3,1),opacity .3s ease!important;
+  }
+  .team-portfolio-slider .media-gallery-indicators button.is-active{
+    width:46px!important;
+    height:7px!important;
+    background:rgba(255,255,255,.34)!important;
+  }
+  .team-portfolio-slider .media-gallery-navigation>.media-gallery-arrow{
+    animation:portfolio-slider-control-pop .48s cubic-bezier(.16,1,.3,1) .18s both;
+  }
+  .team-portfolio-slider .media-gallery-navigation>.media-gallery-indicators{
+    animation:portfolio-slider-control-pop .52s cubic-bezier(.16,1,.3,1) .12s both;
+  }
+  .team-portfolio-slider .media-gallery-navigation>.media-gallery-toggle{
+    animation:portfolio-slider-control-pop .52s cubic-bezier(.16,1,.3,1) .22s both;
+  }
+}
+
+@keyframes portfolio-slider-controls-in{
+  from{opacity:0;filter:blur(5px);transform:translateX(-50%) translateY(10px) scale(.94)}
+  to{opacity:1;filter:blur(0);transform:translateX(-50%) translateY(0) scale(1)}
+}
+@keyframes portfolio-slider-control-pop{
+  from{opacity:0;transform:translateY(7px) scale(.78)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
