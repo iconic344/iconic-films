@@ -6,13 +6,6 @@ const inferredMime=(name:string,type:string)=>{
 };
 
 type UploadTicket={uploadUrl:string;url:string;method:string;multipart?:boolean;contentType?:string;resumable?:boolean;tusEndpoint?:string;token?:string;bucketName?:string;objectName?:string};
-const uploadError=async(response:Response)=>{
-  let detail='';try{const body=await response.json();detail=body?.message||body?.error||body?.code||''}catch{detail=await response.text().catch(()=>'')}
-  if(response.status===413||/payload too large|entity too large/i.test(detail))return Error('파일 크기가 현재 Supabase Storage 한도를 초과했습니다. 사이트 코드는 1GB까지 허용하지만 Storage의 Global/Bucket 파일 크기 제한도 같은 크기로 열려 있어야 합니다.');
-  return Error(detail||('업로드에 실패했습니다. HTTP '+response.status));
-};
-const b64=(value:string)=>btoa(unescape(encodeURIComponent(value)));
-
 function signedUpload(ticket:UploadTicket,file:File,progress?:(percent:number)=>void,signal?:AbortSignal):Promise<string>{
   return new Promise((resolve,reject)=>{
     if(!ticket.uploadUrl){reject(Error('서명 업로드 주소를 만들지 못했습니다.'));return}
@@ -38,57 +31,6 @@ function signedUpload(ticket:UploadTicket,file:File,progress?:(percent:number)=>
   });
 }
 
-async function resumableUpload(ticket:UploadTicket,file:File,progress?:(percent:number)=>void,signal?:AbortSignal){
-  if(!ticket.tusEndpoint||!ticket.token||!ticket.bucketName||!ticket.objectName)throw Error('대용량 업로드 정보를 만들지 못했습니다.');
-  const common={'Tus-Resumable':'1.0.0','x-signature':ticket.token};
-  const metadata=[
-    ['bucketName',ticket.bucketName],
-    ['objectName',ticket.objectName],
-    ['contentType',ticket.contentType||file.type||'application/octet-stream'],
-    ['cacheControl','86400']
-  ].map(([key,value])=>key+' '+b64(value)).join(',');
-  const created=await fetch(ticket.tusEndpoint,{method:'POST',signal,headers:{...common,'Upload-Length':String(file.size),'Upload-Metadata':metadata,'x-upsert':'false'}});
-  if(!created.ok)throw await uploadError(created);
-  const location=created.headers.get('Location');
-  if(!location)throw Error('대용량 업로드 주소를 받지 못했습니다.');
-  const uploadUrl=new URL(location,ticket.tusEndpoint).toString();
-  const chunkSize=6*1024*1024;
-  let offset=Number(created.headers.get('Upload-Offset')||0);
-  progress?.(Math.round(offset/file.size*100));
-  while(offset<file.size){
-    if(signal?.aborted)throw new DOMException('업로드 중지','AbortError');
-    const chunk=file.slice(offset,Math.min(file.size,offset+chunkSize));
-    let completed=false,lastError:unknown;
-    for(let attempt=0;attempt<5&&!completed;attempt++){
-      try{
-        const response=await fetch(uploadUrl,{method:'PATCH',signal,headers:{...common,'Content-Type':'application/offset+octet-stream','Upload-Offset':String(offset)},body:chunk});
-        if(response.ok){
-          const next=Number(response.headers.get('Upload-Offset'));
-          offset=Number.isFinite(next)&&next>offset?next:offset+chunk.size;
-          progress?.(Math.min(100,Math.round(offset/file.size*100)));
-          completed=true;break;
-        }
-        if(response.status===413)throw await uploadError(response);
-        lastError=await uploadError(response);
-      }catch(error){
-        if((error as Error).name==='AbortError')throw error;
-        lastError=error;
-      }
-      try{
-        const head=await fetch(uploadUrl,{method:'HEAD',signal,headers:common});
-        if(head.ok){
-          const serverOffset=Number(head.headers.get('Upload-Offset'));
-          if(Number.isFinite(serverOffset)&&serverOffset>offset){
-            offset=serverOffset;progress?.(Math.min(100,Math.round(offset/file.size*100)));completed=true;break;
-          }
-        }
-      }catch(error){if((error as Error).name==='AbortError')throw error}
-      await new Promise(resolve=>setTimeout(resolve,[0,800,1800,3500,6000][attempt]||6000));
-    }
-    if(!completed)throw lastError instanceof Error?lastError:Error('대용량 업로드가 중단되었습니다. 다시 시도해 주세요.');
-  }
-  return ticket.url;
-}
 
 export async function uploadFile(file:File,progress?:(percent:number)=>void,signal?:AbortSignal):Promise<string> {
   const mime=inferredMime(file.name,file.type);
@@ -111,6 +53,5 @@ export async function uploadFile(file:File,progress?:(percent:number)=>void,sign
   // goes browser -> Supabase Storage, never through Vercel, so app request-size
   // limits do not apply.
   return signedUpload(ticket,file,progress,signal);
-}
 }
 export function videoPoster(file:File):Promise<File|null>{return new Promise(resolve=>{const video=document.createElement('video');video.muted=true;video.playsInline=true;const url=URL.createObjectURL(file);let done=false;const finish=(f:File|null)=>{if(done)return;done=true;clearTimeout(timer);video.removeAttribute('src');video.load();URL.revokeObjectURL(url);resolve(f)};const timer=setTimeout(()=>finish(null),5000);const capture=()=>{try{if(!video.videoWidth)return;const canvas=document.createElement('canvas');canvas.width=960;canvas.height=Math.round(960*video.videoHeight/video.videoWidth);canvas.getContext('2d')!.drawImage(video,0,0,canvas.width,canvas.height);canvas.toBlob(b=>finish(b?new File([b],'cover.jpg',{type:'image/jpeg'}):null),'image/jpeg',.82)}catch{finish(null)}};video.onloadeddata=()=>{if(Number.isFinite(video.duration)&&video.duration>1)video.currentTime=Math.min(1,video.duration/3);else capture()};video.onseeked=capture;video.onerror=()=>finish(null);video.src=url;video.load()})}
