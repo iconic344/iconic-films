@@ -899,13 +899,22 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
     width:var(--gallery-card)!important;
     min-width:var(--gallery-card)!important;
     max-width:var(--gallery-card)!important;
-    aspect-ratio:1.85 / 1!important;
+    aspect-ratio:var(--gallery-frame-ratio,16 / 9)!important;
     height:auto!important;
     min-height:0!important;
     max-height:none!important;
     margin:0!important;
     border-radius:28px!important;
     background:transparent!important;
+  }
+  .team-portfolio-slider .media-gallery.is-frame-portrait:not(.is-modal):not(.is-fullscreen){
+    --gallery-card:min(42vw,46dvh,720px)!important;
+  }
+  .team-portfolio-slider .media-gallery.is-frame-square:not(.is-modal):not(.is-fullscreen){
+    --gallery-card:min(54vw,70dvh,900px)!important;
+  }
+  .team-portfolio-slider .media-gallery.is-frame-landscape:not(.is-modal):not(.is-fullscreen){
+    --gallery-card:clamp(780px,66.5vw,1260px)!important;
   }
   .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>img,
   .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>video{
@@ -986,4 +995,22 @@ body:has(.unified-media-dialog) .music-panel{visibility:hidden;pointer-events:no
 @keyframes portfolio-slider-control-pop{
   from{opacity:0;transform:translateY(7px) scale(.78)}
   to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+
+/* Tablet keeps the same centered carousel geometry while the active card
+   derives its frame from the uploaded media. */
+@media (min-width:821px) and (max-width:1024px){
+  .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
+    aspect-ratio:var(--gallery-frame-ratio,16 / 9)!important;
+  }
+  .team-portfolio-slider .media-gallery.is-frame-landscape:not(.is-modal):not(.is-fullscreen){
+    --gallery-card:min(82vw,980px)!important;
+  }
+  .team-portfolio-slider .media-gallery.is-frame-portrait:not(.is-modal):not(.is-fullscreen){
+    --gallery-card:min(48vw,45dvh,560px)!important;
+  }
+  .team-portfolio-slider .media-gallery.is-frame-square:not(.is-modal):not(.is-fullscreen){
+    --gallery-card:min(68vw,68dvh,720px)!important;
+  }
 }
