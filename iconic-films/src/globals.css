@@ -14380,3 +14380,216 @@ html.visual-direct-dragging .site.visual-editing [data-visual-divider-id]{
  .visual-editor-tabs,.visual-editor-tabs.has-five{top:46px;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:4px!important;margin:0 -1px 12px!important;padding:4px!important}.visual-editor-tabs button,.visual-editor-tabs.has-five button{min-height:40px!important;height:40px!important;padding:0 3px!important;gap:3px!important;font-size:9.5px!important}.visual-editor-tabs button svg{width:13px;height:13px}
  .visual-layer-heading{align-items:flex-start!important;gap:8px!important}.visual-layer-heading>div{flex:0 0 auto}.visual-layer-heading button{min-height:33px!important;padding:0 8px!important;font-size:9.5px!important}.visual-layer-row{min-height:48px!important;padding:5px!important}.visual-layer-select span{font-size:12px!important}.visual-layer-select small{font-size:8.5px!important}.visual-number-field{grid-template-columns:minmax(0,1fr) 104px!important}.edit-site-settings-pages{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))}.edit-site-settings-pages>button{justify-content:space-between}
 }
+
+
+/* 2026-10-07 EDIT SITE navigation hierarchy / fixed-width settings pass.
+   Inspired by professional side-panel editors: page structure, selected item, site settings. */
+.visual-editor-panel,
+.portfolio-visual-editor .visual-editor-panel,
+.visual-editor-panel.is-full-settings{
+  width:min(430px,calc(100vw - 24px))!important;
+  max-width:calc(100vw - 24px)!important;
+  transition:width .28s cubic-bezier(.16,1,.3,1),max-width .28s cubic-bezier(.16,1,.3,1),left .28s cubic-bezier(.16,1,.3,1),right .28s cubic-bezier(.16,1,.3,1)!important;
+}
+.visual-editor-primary-tabs{
+  position:sticky;
+  top:51px;
+  z-index:3;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+  margin:0 -2px 10px;
+  padding:5px;
+  border:1px solid color-mix(in srgb,var(--ink) 18%,transparent);
+  border-radius:15px;
+  background:color-mix(in srgb,var(--page) 97%,transparent);
+  -webkit-backdrop-filter:blur(26px);
+  backdrop-filter:blur(26px);
+  box-shadow:0 8px 24px rgba(0,0,0,.08);
+}
+.visual-editor-primary-tabs>button{
+  min-width:0;
+  min-height:43px;
+  padding:0 9px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  border:0!important;
+  border-radius:10px!important;
+  background:transparent!important;
+  color:var(--soft)!important;
+  font-size:11px!important;
+  font-weight:650!important;
+  white-space:nowrap;
+}
+.visual-editor-primary-tabs>button.is-active{
+  background:var(--ink)!important;
+  color:var(--page)!important;
+  box-shadow:0 5px 16px rgba(0,0,0,.14);
+}
+.visual-editor-primary-tabs>button svg{flex:0 0 auto}
+.visual-editor-subtabs{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:5px;
+  margin:0 0 14px;
+  padding:4px;
+  border:1px solid color-mix(in srgb,var(--ink) 12%,transparent);
+  border-radius:12px;
+  background:color-mix(in srgb,var(--page) 65%,transparent);
+}
+.visual-editor-subtabs>button{
+  min-height:36px;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+  border:0!important;
+  border-radius:9px!important;
+  background:transparent!important;
+  color:color-mix(in srgb,var(--ink) 62%,transparent)!important;
+  font-size:10.5px!important;
+  font-weight:600!important;
+}
+.visual-editor-subtabs>button.is-active{
+  background:color-mix(in srgb,var(--ink) 8%,var(--page))!important;
+  color:var(--ink)!important;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 12%,transparent);
+}
+.visual-layer-details{
+  margin:2px 0 4px 19px;
+  border:1px solid color-mix(in srgb,var(--ink) 11%,transparent);
+  border-radius:11px;
+  overflow:hidden;
+  background:color-mix(in srgb,var(--page) 55%,transparent);
+}
+.visual-layer-details>summary{
+  min-height:38px;
+  padding:0 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  list-style:none;
+  cursor:pointer;
+  user-select:none;
+  color:var(--ink);
+}
+.visual-layer-details>summary::-webkit-details-marker{display:none}
+.visual-layer-details>summary>span{
+  font-size:10.5px;
+  font-weight:650;
+}
+.visual-layer-details>summary>small{
+  padding:3px 6px;
+  border-radius:999px;
+  background:color-mix(in srgb,var(--ink) 6%,transparent);
+  color:var(--soft);
+  font-size:9px;
+}
+.visual-layer-details[open]>summary{
+  border-bottom:1px solid color-mix(in srgb,var(--ink) 10%,transparent);
+}
+.visual-layer-details>.visual-layer-children{
+  margin:0!important;
+  padding:6px!important;
+}
+.portfolio-visual-editor .visual-layer-details{
+  margin-left:0;
+}
+
+/* Site settings no longer expands the inspector into a modal-like workspace. */
+.visual-editor-panel.is-full-settings{
+  width:min(430px,calc(100vw - 24px))!important;
+}
+.edit-site-full-settings{
+  gap:10px!important;
+}
+.edit-site-full-head{
+  padding:1px 1px 5px!important;
+}
+.edit-site-settings-groups{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+}
+.edit-site-settings-pages{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:5px!important;
+}
+.edit-site-settings-pages>button{
+  width:100%!important;
+  justify-content:space-between!important;
+  border-radius:10px!important;
+}
+.edit-site-settings-body>.editor-grid,
+.edit-site-settings-body .layout-editor .editor-grid,
+.edit-site-settings-body .logo-editor>.editor-grid{
+  grid-template-columns:1fr!important;
+}
+.edit-site-settings-body .media-library .library-body{
+  grid-template-columns:1fr!important;
+}
+.edit-site-settings-body .media-library .library-groups{
+  display:flex!important;
+  gap:5px!important;
+  overflow-x:auto!important;
+  padding-bottom:3px;
+  scrollbar-width:none;
+}
+.edit-site-settings-body .media-library .library-groups::-webkit-scrollbar{display:none}
+.edit-site-settings-body .media-library .library-groups button{
+  flex:0 0 auto;
+}
+.edit-site-settings-body .media-library .library-toolbar{
+  align-items:stretch!important;
+  flex-direction:column!important;
+}
+.edit-site-settings-body .media-library .library-actions{
+  justify-content:flex-start!important;
+}
+.edit-site-settings-body .editor-card{
+  padding:13px!important;
+}
+.edit-site-settings-body .editor-card+.editor-card{
+  margin-top:8px;
+}
+
+/* The old five-tab strip is kept styled only for legacy fallback, never used in the current editor. */
+.visual-editor-tabs.has-five{display:none!important}
+
+@media(max-width:620px){
+  .visual-editor-panel,
+  .visual-editor-panel.is-left,
+  .visual-editor-panel.is-right,
+  .visual-editor-panel.is-full-settings,
+  .portfolio-visual-editor .visual-editor-panel{
+    left:8px!important;
+    right:8px!important;
+    width:auto!important;
+    max-width:none!important;
+  }
+  .visual-editor-primary-tabs{
+    top:46px;
+    gap:4px;
+    margin:0 -1px 9px;
+    padding:4px;
+  }
+  .visual-editor-primary-tabs>button{
+    min-height:40px;
+    padding:0 5px!important;
+    gap:4px!important;
+    font-size:10px!important;
+  }
+  .visual-editor-primary-tabs>button svg{
+    width:13px;
+    height:13px;
+  }
+  .visual-editor-subtabs{
+    margin-bottom:11px;
+  }
+  .visual-editor-subtabs>button{
+    min-height:34px;
+    font-size:10px!important;
+  }
+}
