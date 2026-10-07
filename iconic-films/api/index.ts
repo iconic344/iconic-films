@@ -415,6 +415,11 @@ function cleanMemberUpdate(current:any,input:any){
     if(!Array.isArray(input.portfolioWorkCategories)||input.portfolioWorkCategories.length>240||input.portfolioWorkCategories.some((v:any)=>typeof v!=='string'||v.length>40))throw new HttpError(400,'작품 세부 카테고리 정보가 올바르지 않습니다.');
     next.portfolioWorkCategories=[...input.portfolioWorkCategories];
   }
+  if(input.portfolioWorkRatios!==undefined){
+    const allowed=new Set(['auto','16:9','4:5','4:3','3:2','1:1','9:16']);
+    if(!Array.isArray(input.portfolioWorkRatios)||input.portfolioWorkRatios.length>240||input.portfolioWorkRatios.some((v:any)=>typeof v!=='string'||!allowed.has(v)))throw new HttpError(400,'작품 표시 비율 정보가 올바르지 않습니다.');
+    next.portfolioWorkRatios=[...input.portfolioWorkRatios];
+  }
   // Member editors can never change routing, ownership, or public visibility.
   next.id=current.id;
   next.portfolioSlug=current.portfolioSlug;
