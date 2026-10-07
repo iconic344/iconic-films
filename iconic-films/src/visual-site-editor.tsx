@@ -20,14 +20,14 @@ const navLabels:Record<NavItemKey,string>={work:'작품',about:'소개',team:'�
 const labelKeys:Record<NavItemKey,'navWorkLabel'|'navAboutLabel'|'navTeamLabel'|'navContactLabel'>={work:'navWorkLabel',about:'navAboutLabel',team:'navTeamLabel',contact:'navContactLabel'};
 type DirectTextDef={section:SectionKey;label:string;configKey:keyof Config;styleKey?:TextStyleKey;multi?:boolean};
 const directTextDefs:Record<string,DirectTextDef>={
- name:{section:'nav',label:'브랜드 이름',configKey:'name'},
- navWorkLabel:{section:'nav',label:'작품 메뉴',configKey:'navWorkLabel'},
- navAboutLabel:{section:'nav',label:'소개 메뉴',configKey:'navAboutLabel'},
- navTeamLabel:{section:'nav',label:'팀 메뉴',configKey:'navTeamLabel'},
- navContactLabel:{section:'nav',label:'문의 메뉴',configKey:'navContactLabel'},
+ name:{section:'nav',label:'브랜드 이름',configKey:'name',styleKey:'navBrand'},
+ navWorkLabel:{section:'nav',label:'작품 메뉴',configKey:'navWorkLabel',styleKey:'navMenu'},
+ navAboutLabel:{section:'nav',label:'소개 메뉴',configKey:'navAboutLabel',styleKey:'navMenu'},
+ navTeamLabel:{section:'nav',label:'팀 메뉴',configKey:'navTeamLabel',styleKey:'navMenu'},
+ navContactLabel:{section:'nav',label:'문의 메뉴',configKey:'navContactLabel',styleKey:'navMenu'},
  heroCaption:{section:'hero',label:'마우스 오버 제목',configKey:'heroCaption',styleKey:'heroCaption'},
- eyebrow:{section:'hero',label:'상단 보조 문구',configKey:'eyebrow'},
- subtitle:{section:'hero',label:'하단 문구',configKey:'subtitle'},
+ eyebrow:{section:'hero',label:'상단 보조 문구',configKey:'eyebrow',styleKey:'heroEyebrow'},
+ subtitle:{section:'hero',label:'하단 문구',configKey:'subtitle',styleKey:'heroSubtitle'},
  workKicker:{section:'work',label:'작은 제목',configKey:'workKicker',styleKey:'workKicker'},
  headline:{section:'work',label:'큰 제목',configKey:'headline',styleKey:'workHeadline',multi:true},
  workAside:{section:'work',label:'보조 문구',configKey:'workAside',styleKey:'workAside',multi:true},
@@ -38,8 +38,8 @@ const directTextDefs:Record<string,DirectTextDef>={
  teamKicker:{section:'team',label:'작은 제목',configKey:'teamKicker',styleKey:'teamKicker'},
  teamHeadline:{section:'team',label:'큰 제목',configKey:'teamHeadline',styleKey:'teamHeadline',multi:true},
  teamViewLabel:{section:'team',label:'보기 버튼',configKey:'teamViewLabel',styleKey:'teamView'},
- footerAdminLabel:{section:'footer',label:'관리자 문구',configKey:'footerAdminLabel'},
- footerCopyright:{section:'footer',label:'저작권 브랜드명',configKey:'name'}
+ footerAdminLabel:{section:'footer',label:'관리자 문구',configKey:'footerAdminLabel',styleKey:'footerAdmin'},
+ footerCopyright:{section:'footer',label:'저작권 브랜드명',configKey:'name',styleKey:'footerCopyright'}
 };
 const pointFromStorage=(key:string):Point|null=>{
  try{if(typeof window==='undefined')return null;const raw=localStorage.getItem(key);if(!raw)return null;const p=JSON.parse(raw);return Number.isFinite(p?.x)&&Number.isFinite(p?.y)?p:null}catch{return null}
@@ -344,7 +344,7 @@ function InspectorGroup({title,children,open=false,meta}:{title:string;children:
 
 function DirectTextEditor({def,config,patch,patchTextStyle}:{def:DirectTextDef;config:Config;patch:<K extends keyof Config>(key:K,value:Config[K])=>void;patchTextStyle:(key:TextStyleKey,value:TextPatch)=>void}){
  const value=String(config[def.configKey]??'');
- return <><div className="visual-editor-panel-head"><h3>{def.label}</h3><span className="visual-direct-badge">직접 편집</span></div><TextField label="Text" value={value} multi={!!def.multi} onChange={v=>patch(def.configKey,v as never)}/>{def.styleKey&&<InspectorGroup title="글자 스타일" open meta="position · size · weight · spacing"><TextStyleControl label={def.label} value={config.textStyles[def.styleKey]} onChange={v=>patchTextStyle(def.styleKey!,v)}/></InspectorGroup>}</>;
+ return <><div className="visual-editor-panel-head"><h3>{def.label}</h3><span className="visual-direct-badge">직접 편집</span></div><TextField label="텍스트" value={value} multi={!!def.multi} onChange={v=>patch(def.configKey,v as never)}/>{def.styleKey&&<InspectorGroup title="글자 디자인" open meta="글꼴 · 색상 · 크기 · 굵기 · 자간"><TextStyleControl label={def.label} value={config.textStyles[def.styleKey]} onChange={v=>patchTextStyle(def.styleKey!,v)}/></InspectorGroup>}</>;
 }
 
 function WorkTextEditor({work,field,patch,style,patchStyle}:{work:Work;field:keyof Work;patch:(key:keyof Work,value:Work[keyof Work])=>void;style:Config['textStyles'][TextStyleKey];patchStyle:(value:TextPatch)=>void}){
@@ -398,18 +398,21 @@ function StylePanel({section,config,patch,patchTextStyle,uploadConfig,uploading}
 
 function TextStyleControl({label,value,onChange}:{label:string;value:Config['textStyles'][TextStyleKey];onChange:(value:TextPatch)=>void}){
  const weight=value.weight??500,opacity=value.opacity??100,letterSpacing=value.letterSpacing??0,textTransform=value.textTransform??'none';
- return <details className="visual-text-style"><summary>{label}<span>{value.size}px · {weight}</span></summary>
-  <label className="visual-field"><span>Font</span><select value={value.font} onChange={e=>onChange({font:e.target.value})}><option>Arial, Helvetica, sans-serif</option><option>Helvetica Neue, Arial, sans-serif</option><option>Georgia, serif</option><option>Times New Roman, serif</option><option>Verdana, sans-serif</option><option>Trebuchet MS, sans-serif</option><option>Courier New, monospace</option><option>system-ui, sans-serif</option></select></label>
+ const fontOptions=['Arial, Helvetica, sans-serif','Helvetica Neue, Arial, sans-serif','system-ui, sans-serif','Apple SD Gothic Neo, sans-serif','Malgun Gothic, sans-serif','Noto Sans KR, sans-serif','Georgia, serif','Times New Roman, serif','Verdana, sans-serif','Trebuchet MS, sans-serif','Courier New, monospace'];
+ return <div className="visual-text-style visual-text-style-open">
+  <div className="visual-typography-head"><strong>{label} 스타일</strong><span>{value.size}px · {weight}</span></div>
+  <label className="visual-field"><span>글꼴</span><input list="visual-font-options" value={value.font} onChange={e=>onChange({font:e.target.value})} placeholder="폰트 이름 또는 CSS font-family"/><datalist id="visual-font-options">{fontOptions.map(font=><option key={font} value={font}/>)}</datalist></label>
+  <div className="visual-quick-style-grid">
+   <label className="visual-color"><span>글자 색상</span><input type="color" value={value.color||'#ffffff'} onChange={e=>onChange({color:e.target.value})}/><b>{value.color||'AUTO'}</b></label>
+   <label className="visual-field"><span>정렬</span><select value={value.align} onChange={e=>onChange({align:e.target.value as TextPatch['align']})}><option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option></select></label>
+  </div>
   <Range label="크기" value={value.size} min={8} max={180} step={1} suffix="px" onChange={v=>onChange({size:v})}/>
-  <Range label="X" value={value.x} min={-600} max={600} step={1} suffix="px" onChange={v=>onChange({x:v})}/>
-  <Range label="Y" value={value.y} min={-420} max={420} step={1} suffix="px" onChange={v=>onChange({y:v})}/>
-  <Range label="자간" value={letterSpacing} min={-8} max={24} step={.25} suffix="px" onChange={v=>onChange({letterSpacing:v})}/>
   <Range label="굵기" value={weight} min={100} max={900} step={100} onChange={v=>onChange({weight:v})}/>
+  <Range label="자간" value={letterSpacing} min={-8} max={24} step={.25} suffix="px" onChange={v=>onChange({letterSpacing:v})}/>
   <Range label="불투명도" value={opacity} min={0} max={100} step={1} suffix="%" onChange={v=>onChange({opacity:v})}/>
-  <label className="visual-color"><span>색상</span><input type="color" value={value.color||'#ffffff'} onChange={e=>onChange({color:e.target.value})}/><b>{value.color||'AUTO'}</b></label>
   <label className="visual-field"><span>영문 대소문자</span><select value={textTransform} onChange={e=>onChange({textTransform:e.target.value as TextPatch['textTransform']})}><option value="none">입력한 그대로</option><option value="uppercase">UPPERCASE</option><option value="lowercase">lowercase</option><option value="capitalize">Capitalize</option></select></label>
-  <div className="visual-align-buttons">{(['left','center','right'] as const).map(a=><button key={a} className={value.align===a?'is-active':''} onClick={()=>onChange({align:a})}>{a}</button>)}</div>
- </details>;
+  <details className="visual-advanced-text-controls"><summary>고급 위치 조절</summary><Range label="가로 위치" value={value.x} min={-600} max={600} step={1} suffix="px" onChange={v=>onChange({x:v})}/><Range label="세로 위치" value={value.y} min={-420} max={420} step={1} suffix="px" onChange={v=>onChange({y:v})}/></details>
+ </div>;
 }
 function WorkEditor({work,patch,onUpload,uploading,onDuplicate,onDelete}:{work:Work;patch:(key:keyof Work,value:Work[keyof Work])=>void;onUpload:(file:File|undefined,field:'poster'|'video')=>void;uploading:boolean;onDuplicate:()=>void;onDelete:()=>void}){
  return <><div className="visual-editor-panel-head"><h3>작품 카드</h3><div><button type="button" title="복제" onClick={onDuplicate}><Copy size={13}/></button><button type="button" className="is-danger" title="삭제" onClick={onDelete}><Trash2 size={13}/></button></div></div><TextField label="제목" value={work.title} onChange={v=>patch('title',v)}/><TextField label="카테고리" value={work.category} onChange={v=>patch('category',v)}/><TextField label="연도" value={work.year} onChange={v=>patch('year',v)}/><TextField label="역할" value={work.role} onChange={v=>patch('role',v)}/><TextField label="설명" value={work.description} multi onChange={v=>patch('description',v)}/><label className="visual-toggle"><span>공개</span><input type="checkbox" checked={work.visible} onChange={e=>patch('visible',e.target.checked)}/></label><FileField label="포스터 / 이미지" accept="image/jpeg,image/png,image/webp" disabled={uploading} value={work.poster} onFile={f=>onUpload(f,'poster')} onClear={()=>patch('poster','')}/><FileField label="영상" accept="video/mp4,video/webm" disabled={uploading} value={work.video} onFile={f=>onUpload(f,'video')} onClear={()=>patch('video','')}/></>;
