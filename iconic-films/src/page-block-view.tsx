@@ -2,7 +2,6 @@
 import type {CSSProperties} from 'react';
 import type {Config,PageBlock} from './defaults';
 import {MediaGallery,type GalleryItem} from './media-gallery';
-import {teamMediaType} from './team-media';
 
 const patternImage=(pattern:string,color:string,size:number)=>({none:'none',dots:`radial-gradient(circle, ${color} 1px, transparent 1.5px)`,grid:`linear-gradient(${color} 1px,transparent 1px),linear-gradient(90deg,${color} 1px,transparent 1px)`,diagonal:`repeating-linear-gradient(45deg,${color} 0px,${color} 1px,transparent 1px,transparent ${size}px)`,checker:`conic-gradient(${color} 25%,transparent 0 50%,${color} 0 75%,transparent 0)`,lines:`linear-gradient(${color} 1px, transparent 1px)`,rings:`repeating-radial-gradient(circle at center,transparent 0,transparent ${Math.max(1,size-1)}px,${color} ${size}px,transparent ${size+1}px)`} as Record<string,string>)[pattern]||'none';
 
