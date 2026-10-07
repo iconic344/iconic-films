@@ -6,7 +6,7 @@ import TeamMedia,{teamMediaType} from './team-media';
 import type {PortfolioMediaRatio} from './defaults';
 import {scopeGallery} from './gallery-scope';
 
-export type GalleryItem={id:string;src:string;poster?:string;title:string;description?:string;kicker?:string;category?:string;sourceIndex?:number;ratio?:PortfolioMediaRatio};
+export type GalleryItem={id:string;src:string;poster?:string;title:string;description?:string;info?:string;credits?:string;kicker?:string;category?:string;sourceIndex?:number;ratio?:PortfolioMediaRatio};
 type MediaFrameMode='landscape'|'portrait'|'square';
 const mediaFrameCache=new Map<string,{mode:MediaFrameMode;ratio:number}>();
 const ratioValue=(ratio:PortfolioMediaRatio|undefined)=>{
@@ -179,7 +179,8 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
         <span className="media-gallery-slide-caption-label">INFO</span>
         {entry.kicker&&<span className="media-gallery-slide-caption-kicker">{entry.kicker}</span>}
         <h3>{entry.title}</h3>
-        {entry.description&&<><span className="media-gallery-slide-caption-label is-credits">CREDITS</span><p>{entry.description}</p></>}
+        {entry.info&&<p className="is-info">{entry.info}</p>}
+        {entry.credits&&<><span className="media-gallery-slide-caption-label is-credits">CREDITS</span><p className="is-credits-copy">{entry.credits}</p></>}
        </div>
       </div>}
       {active&&error&&<p className="media-gallery-error" role="status">미디어를 불러오지 못했습니다. <button type="button" onClick={()=>{setError(false);video.current?.load();setPlaying(true)}}>다시 시도</button></p>}
@@ -197,7 +198,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
    </div>
 
   </div>
-  {(isFullscreen||modal||(!cleanPreview&&!balanceEdges))&&<div className="media-gallery-caption">{item.kicker&&<span>{item.kicker}</span>}<h3 data-visual-text={captionVisualText} style={captionTitleStyle}>{item.title}</h3>{item.description&&<p>{item.description}</p>}</div>}
+  {(isFullscreen||modal||(!cleanPreview&&!balanceEdges))&&<div className="media-gallery-caption">{item.kicker&&<span>{item.kicker}</span>}<h3 data-visual-text={captionVisualText} style={captionTitleStyle}>{item.title}</h3>{item.info&&<p className="is-info">{item.info}</p>}{item.credits&&<><span className="media-gallery-caption-credit-label">CREDITS</span><p className="is-credits-copy">{item.credits}</p></>}{!item.info&&!item.credits&&item.description&&<p>{item.description}</p>}</div>}
   {items.length>1&&<div className="media-gallery-navigation" role="group" aria-label="슬라이드 컨트롤">
    <button type="button" className="media-gallery-arrow is-prev" aria-label="이전 미디어" onClick={()=>choose(index-1)}><ChevronLeft size={21}/></button>
    <div className="media-gallery-indicators" role="group" aria-label="미디어 선택">{items.map((entry,i)=><button type="button" key={entry.id} aria-label={`${i+1}번 미디어: ${entry.title}`} aria-current={i===index?'true':undefined} className={i===index?'is-active':''} onClick={()=>choose(i)}><span style={{'--gallery-progress':i===index?progress:0} as CSSProperties}/></button>)}</div>
