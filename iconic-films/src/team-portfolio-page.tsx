@@ -6,7 +6,7 @@ import type {Config,TeamMember} from './defaults';
 import TeamMedia,{teamMediaType} from './team-media';
 
 
-export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onSelectMember,onToggleTheme,onContact,onAdmin,onVideoViewerOpen,onVideoViewerClose,onMemberEdit}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onSelectMember:(member:TeamMember,direction?:1|-1)=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void;onVideoViewerOpen:()=>void;onVideoViewerClose:()=>void;onMemberEdit:(member:TeamMember)=>void}){
+export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onSelectMember,onToggleTheme,onContact,onAdmin,onVideoViewerOpen,onVideoViewerClose,onMemberEdit,visualEditing=false}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onSelectMember:(member:TeamMember,direction?:1|-1)=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void;onVideoViewerOpen:()=>void;onVideoViewerClose:()=>void;onMemberEdit:(member:TeamMember)=>void;visualEditing?:boolean}){
   const [index,setIndex]=useState(0);
   const [subcategory,setSubcategory]=useState('All');
   const [viewerIndex,setViewerIndex]=useState<number|null>(null);
@@ -16,7 +16,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const memberSwipeMoved=useRef(false);
   const subcategories=useMemo(()=>member.portfolioSubcategories||[],[member.portfolioSubcategories]);
   const galleryItems=useMemo(()=>(member.works||[]).map((src,i)=>({
-    id:member.id+'-'+i,src,title:member.name||'Portfolio',
+    id:member.id+'-'+i,src,sourceIndex:i,title:member.name||'Portfolio',
     description:member.portfolioCreditsVisible!==false?(member.portfolioCredits||''): '',
     category:member.portfolioWorkCategories?.[i]||subcategories[0]||'All',
     kicker:member.portfolioWorkCategories?.[i]||subcategories[0]||'All'
@@ -226,7 +226,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     '--portfolio-grid-width':(member.portfolioGridWidth||100)+'%',
   } as CSSProperties;
 
-  return <div className="team-portfolio-page" style={pageStyle}>
+  return <div className={'team-portfolio-page'+(visualEditing?' is-visual-editing':'')} style={pageStyle}>
     <header className="nav team-portfolio-site-nav">
       <a href="/" className="brand" onClick={e=>{e.preventDefault();onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:config.name}<span>®</span></a>
       <nav>
@@ -242,7 +242,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     </header>
 
     <main className="team-portfolio-main">
-      <section ref={heroRef} className={'team-portfolio-hero'+(member.photo?' has-hero-media':'')}>
+      <section ref={heroRef} data-portfolio-edit="hero" className={'team-portfolio-hero'+(member.photo?' has-hero-media':'')}>
         {member.photo&&<div className="team-portfolio-hero-media" aria-hidden="true">
           <TeamMedia src={member.photo} alt="" className="team-portfolio-hero-media-element" autoPlay/>
         </div>}
@@ -251,7 +251,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
 
       {teamMembers.length>1&&<section className="team-portfolio-member-index" aria-label="Portfolio category navigation">
         <div className="team-member-index-head">
-          <span>{member.portfolioTeamIndexLabel||'CATEGORY INDEX'} / {String(memberIndex+1).padStart(2,'0')} — {String(teamMembers.length).padStart(2,'0')}</span>
+          <span data-portfolio-edit="indexLabel">{member.portfolioTeamIndexLabel||'CATEGORY INDEX'} / {String(memberIndex+1).padStart(2,'0')} — {String(teamMembers.length).padStart(2,'0')}</span>
           <div className="team-member-index-arrows">
             <button type="button" aria-label="이전 카테고리" onClick={memberPrev}><ChevronLeft size={17}/></button>
             <button type="button" aria-label="다음 카테고리" onClick={memberNext}><ChevronRight size={17}/></button>
@@ -262,17 +262,18 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
             const active=item.id===member.id;
             const direction:1|-1=i>memberIndex?1:-1;
             return <button type="button" key={item.id} className={(active?'active ':'')+'member-reactive'} aria-current={active?'page':undefined} onPointerMove={reactPointer} onPointerLeave={resetPointer} onClick={()=>{if(memberSwipeMoved.current){memberSwipeMoved.current=false;return}if(!active)selectMember(item,direction)}}>
-              <span className="team-member-index-name">{item.name||'Portfolio'}</span>
+              <span className="team-member-index-name" data-portfolio-edit={active?'name':undefined}>{item.name||'Portfolio'}</span>
               <span className="team-member-index-number">{String(i+1).padStart(2,'0')}</span>
             </button>;
           })}
         </div>
       </section>}
 
-      <section className="team-portfolio-work">
+      <section className="team-portfolio-work" data-portfolio-edit="layout">
         <div className="team-portfolio-work-head">
           <div>
-            <h2>Selected works</h2>
+            <h2 data-portfolio-edit="title">{member.portfolioTitle||'Selected works'}</h2>
+            {member.portfolioIntro&&<p data-portfolio-edit="intro">{member.portfolioIntro}</p>}
           </div>
           <span className="team-portfolio-layout-label">{member.portfolioLayout==='slider'?<GalleryHorizontal size={15}/>:<Grid2X2 size={15}/>} {member.portfolioLayout}</span>
         </div>
@@ -282,15 +283,15 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
 
         {member.portfolioLayout==='grid'&&<div className="team-portfolio-grid">
           {Array.from({length:Math.max(9,works.length)},(_,i)=>{
-            const url=works[i];
-            return url?<button type="button" className="team-portfolio-grid-item" key={url+i} onClick={()=>openViewer(i)}>
+            const item=galleryItems[i],url=item?.src,sourceIndex=item?.sourceIndex;
+            return url?<button type="button" className="team-portfolio-grid-item" data-portfolio-work-index={sourceIndex} key={url+i} onClick={()=>{if(!visualEditing)openViewer(i)}}>
               <TeamMedia src={url} alt={(member.name||'Portfolio')+' portfolio '+(i+1)} className="team-portfolio-work-media" autoPlay/>
               <span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span>
             </button>:<div className="team-portfolio-grid-item is-empty" key={'empty-'+i} aria-hidden="true"><span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span></div>
           })}
         </div>}
 
-        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={()=>openViewer(index)}/></div>}
+        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider" data-portfolio-edit="layout"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={()=>{if(!visualEditing)openViewer(index)}}/></div>}
       </section>
     </main>
 

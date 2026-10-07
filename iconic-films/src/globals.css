@@ -13527,3 +13527,59 @@ html.visual-direct-dragging .site.visual-editing [data-visual-divider-id]{
   border-color:color-mix(in srgb,var(--accent-color) 62%,var(--line));
   box-shadow:0 0 0 2px color-mix(in srgb,var(--accent-color) 12%,transparent);
 }
+
+
+/* 2026-10-07 global EDIT SITE coverage: portfolio pages use the same visual-edit session. */
+.team-portfolio-work-head h2{
+  font-family:var(--portfolio-title-font,Arial,Helvetica,sans-serif)!important;
+  font-size:var(--portfolio-title-size,76px)!important;
+  color:var(--portfolio-title-color,var(--ink))!important;
+  text-align:var(--portfolio-title-align,left)!important;
+  translate:var(--portfolio-title-x,0px) var(--portfolio-title-y,0px);
+}
+.team-portfolio-work-head p{
+  font-family:var(--portfolio-intro-font,Arial,Helvetica,sans-serif)!important;
+  font-size:var(--portfolio-intro-size,14px)!important;
+  color:var(--portfolio-intro-color,var(--soft))!important;
+  text-align:var(--portfolio-intro-align,left)!important;
+  translate:var(--portfolio-intro-x,0px) var(--portfolio-intro-y,0px);
+}
+.team-portfolio-page.is-visual-editing [data-portfolio-edit],
+.team-portfolio-page.is-visual-editing [data-portfolio-work-index]{
+  cursor:pointer!important;
+}
+.team-portfolio-page.is-visual-editing [data-portfolio-edit]:hover,
+.team-portfolio-page.is-visual-editing [data-portfolio-work-index]:hover{
+  outline:1px dashed color-mix(in srgb,var(--accent-color) 72%,transparent);
+  outline-offset:4px;
+}
+.portfolio-visual-editor .visual-editor-panel{
+  z-index:11018;
+}
+.portfolio-visual-editor .visual-selection-frame{
+  z-index:11017;
+}
+.portfolio-visual-editor .portfolio-editor-stack{
+  display:grid;
+  gap:10px;
+}
+.portfolio-visual-editor .portfolio-editor-stack textarea{
+  min-height:88px;
+  resize:vertical;
+}
+.portfolio-visual-editor .portfolio-editor-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.portfolio-visual-editor .portfolio-editor-row>button{
+  min-height:38px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:transparent;
+  color:var(--ink);
+}
+.portfolio-visual-editor .portfolio-editor-row>button.is-active{
+  background:var(--ink);
+  color:var(--page);
+}
