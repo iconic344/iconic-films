@@ -583,11 +583,28 @@ export default async function handler(req:Req,res:ServerResponse){
       if(!config?.teamMembers?.some((item:any)=>item?.id===memberId))throw new HttpError(404,'팀원을 찾을 수 없습니다.');
       const meta=normalizeUpload(input.name,input.type,input.size);
       const filename=randomUUID()+'.'+meta.ext;
-      const storage=db().storage.from(bucket());
+      const bucketName=bucket(),storageAdmin=db().storage;
+      const currentBucket=await storageAdmin.getBucket(bucketName);
+      if(currentBucket.error)throw currentBucket.error;
+      const bucketLimit=Number((currentBucket.data as any)?.file_size_limit??(currentBucket.data as any)?.fileSizeLimit??0);
+      if(bucketLimit>0&&bucketLimit<input.size){
+        const raised=await storageAdmin.updateBucket(bucketName,{
+          public:Boolean((currentBucket.data as any)?.public),
+          fileSizeLimit:maxFile,
+          allowedMimeTypes:(currentBucket.data as any)?.allowed_mime_types??(currentBucket.data as any)?.allowedMimeTypes??undefined
+        });
+        if(raised.error){
+          throw new HttpError(413,`현재 Supabase Storage 업로드 한도가 ${Math.round(bucketLimit/1024/1024)}MB입니다. 코드 제한은 1GB로 열려 있지만 Storage의 Global/Bucket 파일 크기 제한이 더 낮습니다.`);
+        }
+      }
+      const storage=storageAdmin.from(bucketName);
       const {data,error}=await storage.createSignedUploadUrl(filename);
       if(error)throw error;
       const publicUrl=storage.getPublicUrl(filename).data.publicUrl;
-      json(res,{uploadUrl:data.signedUrl,url:publicUrl,method:'PUT',multipart:true,contentType:meta.type});return;
+      const base=(process.env.SUPABASE_URL||'').replace(/\/$/,'');
+      const directBase=base.replace(/^https:\/\/([^.]+)\.supabase\.co$/,'https://$1.storage.supabase.co');
+      json(res,{uploadUrl:data.signedUrl,url:publicUrl,method:'PUT',multipart:true,contentType:meta.type,
+        resumable:true,tusEndpoint:directBase+'/storage/v1/upload/resumable',token:(data as any).token||'',bucketName,objectName:filename});return;
     }
 
     if(route==='/api/mail'){
@@ -809,11 +826,28 @@ export default async function handler(req:Req,res:ServerResponse){
       const input=await body(req);
       const meta=normalizeUpload(input.name,input.type,input.size);
       const filename=randomUUID()+'.'+meta.ext;
-      const storage=db().storage.from(bucket());
+      const bucketName=bucket(),storageAdmin=db().storage;
+      const currentBucket=await storageAdmin.getBucket(bucketName);
+      if(currentBucket.error)throw currentBucket.error;
+      const bucketLimit=Number((currentBucket.data as any)?.file_size_limit??(currentBucket.data as any)?.fileSizeLimit??0);
+      if(bucketLimit>0&&bucketLimit<input.size){
+        const raised=await storageAdmin.updateBucket(bucketName,{
+          public:Boolean((currentBucket.data as any)?.public),
+          fileSizeLimit:maxFile,
+          allowedMimeTypes:(currentBucket.data as any)?.allowed_mime_types??(currentBucket.data as any)?.allowedMimeTypes??undefined
+        });
+        if(raised.error){
+          throw new HttpError(413,`현재 Supabase Storage 업로드 한도가 ${Math.round(bucketLimit/1024/1024)}MB입니다. 코드 제한은 1GB로 열려 있지만 Storage의 Global/Bucket 파일 크기 제한이 더 낮습니다.`);
+        }
+      }
+      const storage=storageAdmin.from(bucketName);
       const {data,error}=await storage.createSignedUploadUrl(filename);
       if(error)throw error;
       const publicUrl=storage.getPublicUrl(filename).data.publicUrl;
-      json(res,{uploadUrl:data.signedUrl,url:publicUrl,method:'PUT',multipart:true,contentType:meta.type});return;
+      const base=(process.env.SUPABASE_URL||'').replace(/\/$/,'');
+      const directBase=base.replace(/^https:\/\/([^.]+)\.supabase\.co$/,'https://$1.storage.supabase.co');
+      json(res,{uploadUrl:data.signedUrl,url:publicUrl,method:'PUT',multipart:true,contentType:meta.type,
+        resumable:true,tusEndpoint:directBase+'/storage/v1/upload/resumable',token:(data as any).token||'',bucketName,objectName:filename});return;
     }
 
     throw new HttpError(404,'요청을 찾을 수 없습니다.');
