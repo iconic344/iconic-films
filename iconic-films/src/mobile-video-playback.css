@@ -1,0 +1,68 @@
+/* PROJECT 07: seamless mobile fullscreen video playback.
+   The active preview's <video> node is reparented (never reloaded/seeked).
+   Keep GPU work low while the decoded video plays in fullscreen. */
+@media (max-width:1024px), (any-pointer:coarse){
+  .unified-media-dialog .media-gallery.is-modal.has-video,
+  .media-gallery.is-fullscreen.has-video{
+    background:#080809!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal.has-video>.media-gallery-backdrop,
+  .unified-media-dialog .media-gallery.is-modal.has-video>.media-gallery-backdrop-glass,
+  .media-gallery.is-fullscreen.has-video>.media-gallery-backdrop,
+  .media-gallery.is-fullscreen.has-video>.media-gallery-backdrop-glass{
+    display:none!important;
+    opacity:0!important;
+    filter:none!important;
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+    animation:none!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal.has-video .media-gallery-track,
+  .unified-media-dialog .media-gallery.is-modal.has-video .media-gallery-slide,
+  .unified-media-dialog .media-gallery.is-modal.has-video .media-gallery-artwork{
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+    filter:none!important;
+    animation:none!important;
+    will-change:auto!important;
+  }
+  .media-gallery.is-fullscreen .media-gallery-handoff{
+    display:flex!important;
+    position:absolute!important;
+    inset:0!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    height:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    background:transparent!important;
+  }
+  .media-gallery.is-fullscreen .media-gallery-handoff>video{
+    position:relative!important;
+    display:block!important;
+    width:100%!important;
+    height:100%!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    margin:0 auto!important;
+    padding:0!important;
+    object-fit:contain!important;
+    object-position:center!important;
+    transform:none!important;
+    filter:none!important;
+    opacity:1!important;
+    background:transparent!important;
+    border:0!important;
+    border-radius:0!important;
+  }
+  /* In touch fullscreen video no backdrop filters, no animated gradients over
+     the decoder. Controls and the optional credits drawer retain their glass. */
+  .media-gallery.is-fullscreen.has-video .media-gallery-artwork::before,
+  .media-gallery.is-fullscreen.has-video .media-gallery-artwork::after{
+    content:none!important;
+  }
+}
