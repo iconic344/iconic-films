@@ -18,6 +18,9 @@ function PortfolioGridCard({src,ratio,index,sourceIndex,name,title,kicker,info,c
       image.onload=()=>{if(live)setFrameRatio(portfolioMediaFrame(image.naturalWidth,image.naturalHeight,'auto').ratio)};
       image.src=src;return()=>{live=false;image.onload=null};
     }
+    // Touch grids already crop previews to 4:5. Avoid creating a second
+    // metadata-only video decoder/network request for every visible card.
+    if(window.matchMedia('(max-width: 1024px), (any-pointer: coarse)').matches){setFrameRatio(4/5);return}
     const video=document.createElement('video');
     const loaded=()=>setFrameRatio(portfolioMediaFrame(video.videoWidth,video.videoHeight,'auto').ratio);
     video.preload='metadata';video.addEventListener('loadedmetadata',loaded,{once:true});video.src=src;
