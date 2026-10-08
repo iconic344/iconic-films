@@ -82,6 +82,28 @@ export default function Home(){
   translate:compactViewport?'0 0':`0 ${divider.offsetY||0}px`
  });
  useEffect(()=>{api('/api/config').then(j=>{const v=normalizeConfig(j.config||{});try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(v))}catch{}setSaved(v);setDraft(v);setTheme(cachedTheme(v.theme));setVolume(v.volume);setShuffle(v.musicShuffle);setRepeat(v.musicRepeatMode==='one'?1:v.musicRepeatMode==='all'?2:0);setLoaded(true)}).catch(e=>{setLoaded(true);setNote(e.message)});},[]);
+ useEffect(()=>{
+  // A fixed liquid-glass header should not hide editorial text while reading.
+  // On touch viewports it retracts while scrolling down and returns on scroll up.
+  let last=window.scrollY;
+  const mobile=window.matchMedia('(max-width: 1024px), (max-width: 1366px) and (any-pointer: coarse)');
+  const update=()=>{
+    const y=window.scrollY;
+    if(!mobile.matches||y<85||Math.abs(y-last)>2&&y<last-3){
+      document.documentElement.classList.remove('mobile-nav-hidden');
+    }else if(y>180&&y>last+2){
+      document.documentElement.classList.add('mobile-nav-hidden');
+    }
+    last=y;
+  };
+  window.addEventListener('scroll',update,{passive:true});
+  mobile.addEventListener?.('change',update);
+  return()=>{
+    window.removeEventListener('scroll',update);
+    mobile.removeEventListener?.('change',update);
+    document.documentElement.classList.remove('mobile-nav-hidden');
+  };
+ },[]);
  useEffect(()=>{document.documentElement.dataset.theme=theme;},[theme]);
  useEffect(()=>{
   const families=[c.font,...Object.values(c.textStyles||{}).map(style=>style.font),...c.teamMembers.flatMap(member=>[
