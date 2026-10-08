@@ -1,6 +1,6 @@
 'use client';
-import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
-import {ArrowLeft,Check,ChevronRight,Eye,EyeOff,Layers3,Monitor,PanelLeftClose,PanelRightClose,Plus,Save,Settings2,Smartphone,Tablet,Undo2,X,MousePointer2} from 'lucide-react';
+import {useEffect,useMemo,useRef,useState} from 'react';
+import {ArrowLeft,ChevronRight,Eye,Layers3,Monitor,PanelLeftClose,PanelRightClose,Plus,Save,Settings2,Smartphone,Tablet,Undo2,MousePointer2} from 'lucide-react';
 import type {Config} from './defaults';
 
 export type EditorDevice='desktop'|'tablet'|'phone';
@@ -33,7 +33,7 @@ const deviceSizes:{device:EditorDevice;label:string;width:number;height:number;i
 ];
 
 function previewDestination(page:EditorPage,memberId?:string){
- const path=page==='portfolio'&&memberId?'/team/'+encodeURIComponent(memberId):window.location.pathname;
+ const path=window.location.pathname;
  return path+'?viivii-workbench-preview=1';
 }
 
@@ -52,7 +52,7 @@ export default function EditSiteWorkbench({config,page,memberId,selection,onSele
  const selections=page==='portfolio'?sectionsPortfolio:sectionsHome;
  const selectedSection=selection.startsWith('work:')?'work':selection.startsWith('text:')?'nav':selection;
  const activeMember=page==='portfolio'?(config.teamMembers||[]).find(m=>m.id===memberId):null;
- const works=page==='portfolio'?(activeMember?.works||[]):config.works.map(w=>w.media||w.video||w.image||'');
+ const works=page==='portfolio'?(activeMember?.works||[]):config.works.map(w=>w.video||w.poster||'');
  const post=(message:Record<string,unknown>)=>{
   if(!iframeRef.current?.contentWindow)return;
   iframeRef.current.contentWindow.postMessage({source:'viivii-editor',...message},window.location.origin);
