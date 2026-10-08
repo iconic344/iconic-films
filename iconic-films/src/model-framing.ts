@@ -21,6 +21,7 @@ export type ModelFrameOptions={
  offsetX?:number;
  offsetY?:number;
  resetDistance?:boolean;
+  orbit?:ModelFrameOrbit;
 };
 
 const valid=(n:number,fallback:number)=>Number.isFinite(n)&&n>0?n:fallback;
@@ -33,29 +34,45 @@ export function calculateModelFrame(
  verticalFovDegrees:number,
  options:ModelFrameOptions={}
 ){
- const radius=Math.max(.0001,Math.hypot(
-   valid(Math.abs(dimensions.x),.0001),
-   valid(Math.abs(dimensions.y),.0001),
-   valid(Math.abs(dimensions.z),.0001)
- )/2);
+
+ const sx=valid(Math.abs(dimensions.x),.0001)/2;
+ const sy=valid(Math.abs(dimensions.y),.0001)/2;
+ const sz=valid(Math.abs(dimensions.z),.0001)/2;
  const aspect=valid(viewWidth,1)/valid(viewHeight,1);
  const vfov=clamp(valid(verticalFovDegrees,30),10,100)*Math.PI/180;
- const hfov=2*Math.atan(Math.tan(vfov/2)*aspect);
- const limitingHalfFov=Math.min(vfov,hfov)/2;
- // Leave 18% space beyond even the worst possible 360-degree rotation.
- const unshifted=radius/Math.sin(limitingHalfFov)*1.18;
- // CSS scale used by MainLogo must not enlarge the rendered sphere offscreen.
+ const halfVFov=vfov/2;
+ const halfHFov=Math.atan(Math.tan(halfVFov)*aspect);
+ let fittedDistance=0;
+ if(options.orbit){
+   // Tight per-orientation fit for all eight corners. A wide, flat logo is
+   // 2–4x larger than it was with the unnecessarily huge enclosing sphere.
+   const theta=options.orbit.theta,phi=options.orbit.phi;
+   const st=Math.sin(theta),ct=Math.cos(theta),sp=Math.sin(phi),cp=Math.cos(phi);
+   for(const x of [-sx,sx])for(const y of [-sy,sy])for(const z of [-sz,sz]){
+     const projectedX= x*ct-z*st;
+     const projectedY=-x*cp*st+y*sp-z*cp*ct;
+     const nearDepth=x*sp*st+y*cp+z*sp*ct;
+     const needsX=Math.abs(projectedX)/Math.tan(halfHFov);
+     const needsY=Math.abs(projectedY)/Math.tan(halfVFov);
+     fittedDistance=Math.max(fittedDistance,nearDepth+Math.max(needsX,needsY));
+   }
+ }else{
+   // Conservative backward-compatible fallback for callers without orbit data.
+   const radius=Math.hypot(sx,sy,sz);
+   fittedDistance=radius/Math.sin(Math.min(halfVFov,halfHFov));
+ }
+ const offsetX=Math.min(.25,Math.abs(options.offsetX??0)/100);
+ const offsetY=Math.min(.25,Math.abs(options.offsetY??0)/100);
+ const offsetGuard=1/Math.max(.5,1-2*Math.max(offsetX,offsetY));
+ // Small real margin for rotation and anti-aliasing, no more camera shrink hack.
+ const minimumDistance=Math.max(.0001,fittedDistance*1.07)*offsetGuard;
  const outerScale=Math.max(1,valid(options.outerScale??1,1));
- const shiftX=Math.min(.3,Math.abs(options.offsetX??0)/100);
- const shiftY=Math.min(.3,Math.abs(options.offsetY??0)/100);
- // Account for the occupied space when a viewer is moved by the editor.
- const offsetGuard=1/Math.max(.4,1-2*Math.max(shiftX,shiftY));
- const minimumDistance=unshifted*outerScale*offsetGuard;
- // Allow intentional changes of size until the safety boundary is reached.
- const preferred=minimumDistance*1.3/valid(options.scale??1,1);
+ const zoom=clamp(valid(options.scale??1,1),.1,8);
+ const preferred=minimumDistance*Math.max(1.015,1.5/zoom);
+ const desiredDistance=preferred*outerScale;
  return {
    minimumDistance,
-   distance:Math.max(minimumDistance,preferred),
+   distance:Math.max(minimumDistance,desiredDistance),
    maximumDistance:Math.max(minimumDistance*25,minimumDistance+100)
  };
 }
@@ -67,9 +84,9 @@ export function frameModelViewer(viewer:FramingViewer,options:ModelFrameOptions=
  const rectangle=viewer.getBoundingClientRect();
  if(rectangle.width<2||rectangle.height<2)return;
  const fieldOfView=viewer.getFieldOfView?.()??30;
- const frame=calculateModelFrame(dimensions,rectangle.width,rectangle.height,fieldOfView,options);
  const orbit=viewer.getCameraOrbit();
  if(!orbit||![orbit.theta,orbit.phi,orbit.radius].every(Number.isFinite))return;
+ const frame=calculateModelFrame(dimensions,rectangle.width,rectangle.height,fieldOfView,{...options,orbit});
  // Apply limits FIRST: scrolling, touch zoom and spring-return may never
  // enter the model or pass through its silhouette near the camera plane.
  viewer.setAttribute('max-camera-orbit',`auto auto ${frame.maximumDistance.toFixed(6)}m`);
