@@ -5,7 +5,7 @@ import {useEffect} from 'react';
 export default function ScrollReveal({enabled}:{enabled:boolean}){
  useEffect(()=>{
   if(!enabled||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  const selector='.hero-top,.hero-bottom,.section-head,.filters,.work-card,.about-copy,.about-visual,.disciplines,.team-section-head,.team-stack-card,.team-portfolio-profile,.team-member-index-head,.team-member-index-list>button,.team-portfolio-empty,.team-portfolio-work-head,.team-portfolio-subfilters,.team-portfolio-grid-item,.team-portfolio-slider,.team-portfolio-member-switch,.focus-section-head,.focus-card,.focus-navigation,.footer-copy,.team-portfolio-footer';
+  const selector='.hero-top,.hero-bottom,.section-head,.filters,.work-card,.disciplines,.team-section-head,.team-stack-card,.team-portfolio-profile,.team-member-index-head,.team-member-index-list>button,.team-portfolio-empty,.team-portfolio-work-head,.team-portfolio-subfilters,.team-portfolio-grid-item,.team-portfolio-slider,.team-portfolio-member-switch,.focus-section-head,.focus-card,.focus-navigation,.footer-copy,.team-portfolio-footer';
   const seen=new Set<Element>();
   const observer=new IntersectionObserver(entries=>{for(const entry of entries){if(entry.isIntersecting){entry.target.classList.add('is-revealed');observer.unobserve(entry.target)}}},{threshold:0,rootMargin:'0px 0px -6% 0px'});
   const scan=()=>{
