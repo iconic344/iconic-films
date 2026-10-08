@@ -1,0 +1,408 @@
+/*
+ * PROJECT 07 — canonical phone/tablet layout.
+ * Scoped to touch and <=1024px only. Desktop remains untouched.
+ * This stylesheet must be imported LAST to supersede legacy viewport rules.
+ */
+@media (max-width:1024px), (max-width:1366px) and (any-pointer:coarse){
+  html,body,#root{max-width:100%;min-width:0}
+  .site,.team-portfolio-page{width:100%;max-width:100%;min-width:0;overflow-x:clip}
+  .site>.nav.nav-recomposed,
+  .team-portfolio-page>.nav.nav-recomposed{
+    position:relative!important;
+    display:grid!important;
+    grid-area:auto!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    grid-template-rows:minmax(42px,auto) minmax(40px,auto)!important;
+    grid-template-areas:none!important;
+    align-items:center!important;
+    justify-items:stretch!important;
+    align-content:center!important;
+    width:calc(100% - 24px)!important;
+    max-width:960px!important;
+    height:auto!important;
+    min-height:94px!important;
+    padding:8px 12px!important;
+    margin:max(10px,env(safe-area-inset-top)) auto 12px!important;
+    top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;
+    gap:3px 0!important;
+    translate:none!important;scale:1!important;transform:none!important;
+    border-radius:22px!important;
+    z-index:70!important;
+    overflow:hidden!important;
+  }
+  .site>.nav.nav-recomposed>.nav-left-tools,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-left-tools{
+    grid-area:auto!important;grid-column:1!important;grid-row:1!important;
+    justify-self:start!important;align-self:center!important;
+    min-width:0!important;transform:none!important
+  }
+  .site>.nav.nav-recomposed>.nav-centered-brand,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-centered-brand{
+    grid-area:auto!important;grid-column:2 / 4!important;grid-row:1!important;
+    align-self:center!important;justify-self:center!important;
+    display:inline-flex!important;align-items:center!important;justify-content:center!important;
+    width:max-content!important;min-width:0!important;max-width:100%!important;
+    margin:0!important;padding:0!important;
+    overflow:visible!important;white-space:nowrap!important;
+    text-align:center!important;line-height:1!important;
+    translate:none!important;transform:none!important;
+    gap:3px!important;
+  }
+  .site>.nav.nav-recomposed>.nav-centered-brand .brand-editable-text,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-centered-brand .brand-editable-text{
+    display:inline-block!important;min-width:0!important;max-width:100%!important;
+    white-space:nowrap!important;word-break:keep-all!important;
+    overflow:hidden!important;text-overflow:clip!important;
+    font-size:clamp(15px,3.8vw,22px)!important;
+    line-height:1.1!important;
+    translate:none!important;letter-spacing:-.045em!important;
+  }
+  .site>.nav.nav-recomposed>.nav-centered-brand>span:last-child,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-centered-brand>span:last-child{
+    font-size:9px!important;align-self:flex-start!important;
+    flex:0 0 auto!important;
+  }
+  .site>.nav.nav-recomposed>.nav-centered-brand img,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-centered-brand img{
+    width:auto!important;height:auto!important;max-width:100%!important;
+    max-height:32px!important;object-fit:contain!important
+  }
+  .site>.nav.nav-recomposed>.nav-tools,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-tools{
+    grid-area:auto!important;grid-column:4!important;grid-row:1!important;
+    justify-self:end!important;align-self:center!important;
+    display:flex!important;align-items:center!important;justify-content:flex-end!important;
+    min-width:0!important;max-width:100%!important;
+    flex-wrap:nowrap!important;gap:1px!important;margin:0!important;padding:0!important;
+  }
+  .site>.nav.nav-recomposed>.nav-menu-left,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-menu-left{
+    grid-area:auto!important;grid-column:1 / 3!important;grid-row:2!important;
+    justify-self:stretch!important;justify-content:space-around!important;
+    margin:0!important;
+  }
+  .site>.nav.nav-recomposed>.nav-menu-right,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-menu-right{
+    grid-area:auto!important;grid-column:3 / 5!important;grid-row:2!important;
+    justify-self:stretch!important;justify-content:space-around!important;
+    margin:0!important;
+  }
+  .site>.nav.nav-recomposed>.nav-menu,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-menu{
+    display:flex!important;align-items:center!important;
+    align-self:stretch!important;min-width:0!important;
+    width:100%!important;max-width:100%!important;
+    padding:3px 0 0!important;
+    gap:0!important;margin-block:0!important;
+    border:0!important;border-top:1px solid color-mix(in srgb,var(--ink) 9%,transparent)!important;
+    overflow:visible!important;flex-wrap:nowrap!important;
+    transform:none!important;translate:none!important;
+  }
+  .site>.nav.nav-recomposed>.nav-menu :is(a,button),
+  .team-portfolio-page>.nav.nav-recomposed>.nav-menu :is(a,button){
+    display:inline-flex!important;align-items:center!important;justify-content:center!important;
+    flex:0 1 auto!important;
+    width:auto!important;min-width:0!important;min-height:38px!important;
+    max-width:100%!important;padding:5px clamp(4px,1.3vw,10px)!important;
+    font-size:clamp(10px,2.6vw,12px)!important;
+    line-height:1.2!important;
+    white-space:nowrap!important;word-break:keep-all!important;
+    text-align:center!important;translate:none!important;
+  }
+  .site>.nav.nav-recomposed>.nav-tools :is(.admin-link,.nav-edit-link),
+  .team-portfolio-page>.nav.nav-recomposed>.nav-tools :is(.admin-link,.nav-edit-link){
+    flex:0 1 auto!important;
+    min-width:0!important;min-height:38px!important;
+    max-width:100%!important;padding:0 clamp(2px,.65vw,6px)!important;
+    font-size:clamp(9px,2.1vw,11px)!important;
+    white-space:nowrap!important;
+  }
+
+  /* Public site: eliminate the blank band caused by desktop hero/media height. */
+  .site .hero[data-visual-section="hero"]{
+    min-height:0!important;height:auto!important;max-width:100%!important;
+    padding-top:0!important;padding-bottom:0!important;
+    translate:none!important;scale:1!important
+  }
+  .site .hero>.hero-media-shell{
+    width:100vw!important;max-width:100vw!important;
+    min-height:0!important;translate:none!important;scale:1!important;
+  }
+  .site .hero>.main-logo{
+    min-height:0!important;max-height:160px!important;
+    margin-top:10px!important;margin-bottom:18px!important;
+    translate:none!important;
+  }
+  .site .team-stack-section{
+    min-height:0!important;height:auto!important;
+    padding-top:clamp(34px,5vw,54px)!important;
+    padding-bottom:clamp(48px,6vw,66px)!important;
+    translate:none!important;scale:1!important;
+  }
+  .site .team-stack-section>.team-section-head{margin-bottom:18px!important}
+  .site .team-stack-list{width:100%!important;min-width:0!important}
+  .site .team-stack-list>.team-stack-card{
+    display:grid!important;
+    grid-template-columns:clamp(68px,19vw,96px) minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;
+    align-items:center!important;
+    min-width:0!important;max-width:100%!important;
+    min-height:110px!important;
+    padding:16px 0!important;gap:3px 14px!important;
+    overflow:hidden!important;
+  }
+  .site .team-stack-card>.team-stack-visual{
+    grid-column:1!important;grid-row:1 / 3!important;
+    width:100%!important;max-width:100%!important;height:auto!important;
+    aspect-ratio:1 / 1!important;
+    align-self:center!important
+  }
+  .site .team-stack-card>.team-stack-copy{
+    grid-column:2!important;grid-row:1!important;
+    width:100%!important;min-width:0!important;
+    align-self:end!important;margin:0!important
+  }
+  .site .team-stack-card>.team-stack-end{
+    grid-column:2!important;grid-row:2!important;
+    min-width:0!important;align-self:start!important;
+    justify-content:flex-start!important;margin:0!important
+  }
+  .site .team-stack-card .team-stack-copy h3{
+    display:block!important;
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    font-size:clamp(25px,6.6vw,38px)!important;
+    line-height:1.08!important;letter-spacing:-.052em!important;
+    text-wrap:wrap!important;overflow-wrap:anywhere!important;
+    word-break:normal!important;translate:none!important;
+    margin:0!important
+  }
+  .site .team-stack-card .team-stack-subcategories{
+    font-size:11px!important;line-height:1.4!important;
+    margin-top:6px!important;max-width:100%!important;overflow-wrap:anywhere!important
+  }
+  .site .team-stack-card .team-stack-view{
+    font-size:11px!important;line-height:1.4!important;translate:none!important;
+  }
+
+  /* Portfolio pages: header and page are separate stacked blocks on touch. */
+  .team-portfolio-page{
+    display:block!important;min-height:100dvh!important;
+    grid-template-columns:none!important;overflow-x:clip!important
+  }
+  .team-portfolio-page>.team-portfolio-site-nav,
+  .team-portfolio-page>.team-portfolio-main{
+    grid-area:auto!important;align-self:auto!important;
+    transform:none!important;translate:none!important;scale:1!important;
+  }
+  .team-portfolio-page>.team-portfolio-main{
+    display:flex!important;flex-direction:column!important;
+    align-items:stretch!important;gap:0!important;
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    margin:0 auto!important;
+    padding:0!important;
+  }
+  .team-portfolio-page .team-portfolio-hero{
+    order:0!important;
+    position:relative!important;
+    width:100%!important;max-width:100%!important;
+    height:clamp(170px,39vw,280px)!important;
+    min-height:0!important;max-height:280px!important;
+    padding:0!important;margin:0!important;
+    overflow:hidden!important;translate:none!important;scale:1!important;
+    --hero-fade-extension:0px;
+  }
+  .team-portfolio-page .team-portfolio-hero .team-portfolio-hero-media,
+  .team-portfolio-page .team-portfolio-hero .team-portfolio-hero-light{
+    position:absolute!important;inset:0!important;
+    width:100%!important;height:100%!important;
+    min-height:0!important;max-height:100%!important;
+    transform:none!important;
+  }
+  .team-portfolio-page .team-portfolio-hero::before,
+  .team-portfolio-page .team-portfolio-hero::after{
+    inset:0!important;height:100%!important;max-height:100%!important
+  }
+  .team-portfolio-page .team-portfolio-member-index{
+    order:1!important;position:relative!important;
+    z-index:5!important;
+    width:calc(100% - 32px)!important;max-width:100%!important;
+    height:auto!important;min-height:0!important;
+    padding:18px 0 8px!important;margin:0 auto!important;
+    translate:none!important;scale:1!important
+  }
+  .team-portfolio-page .team-member-index-head{
+    width:100%!important;min-width:0!important;
+    display:flex!important;align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;margin:0 0 8px!important;
+    font-size:10px!important;
+    letter-spacing:.07em!important
+  }
+  .team-portfolio-page .team-member-index-head>span{
+    min-width:0!important;max-width:calc(100% - 100px)!important;
+    overflow-wrap:anywhere
+  }
+  .team-portfolio-page .team-member-index-arrows{
+    position:relative!important;display:flex!important;
+    flex:0 0 auto!important;gap:6px!important
+  }
+  .team-portfolio-page .team-member-index-arrows>button{
+    width:38px!important;height:38px!important;min-height:38px!important
+  }
+  .team-portfolio-page .team-member-index-list{
+    max-width:100%!important;margin:0!important;padding:6px 0!important;
+    display:flex!important;gap:8px!important;
+    overflow-x:auto!important;overflow-y:hidden!important;
+    scrollbar-width:none!important;
+    scroll-snap-type:x proximity;
+  }
+  .team-portfolio-page .team-member-index-list>button{
+    flex:0 0 auto!important;
+    min-width:110px!important;min-height:54px!important;
+    padding:10px 13px!important;
+    scroll-snap-align:start!important;
+  }
+  .team-portfolio-page .team-portfolio-work{
+    order:2!important;
+    position:relative!important;z-index:5!important;
+    width:calc(100% - 32px)!important;max-width:100%!important;
+    min-height:0!important;height:auto!important;
+    margin:0 auto!important;
+    padding:30px 0 58px!important;
+    translate:none!important;scale:1!important
+  }
+  .team-portfolio-page .team-portfolio-work-head{
+    display:flex!important;flex-wrap:wrap!important;
+    align-items:flex-end!important;justify-content:space-between!important;
+    width:100%!important;min-width:0!important;
+    gap:10px!important;margin:0 0 16px!important
+  }
+  .team-portfolio-page .team-portfolio-work-head>div{
+    min-width:0!important;max-width:100%!important;flex:1 1 230px!important
+  }
+  .team-portfolio-page .team-portfolio-work-head h2{
+    width:100%!important;max-width:100%!important;
+    font-size:clamp(31px,8.2vw,48px)!important;
+    line-height:1.07!important;letter-spacing:-.055em!important;
+    word-break:normal!important;overflow-wrap:anywhere!important;
+    translate:none!important;transform:none!important
+  }
+  .team-portfolio-page .team-portfolio-work-head p{
+    margin-top:8px!important;font-size:12px!important;
+    line-height:1.45!important;translate:none!important
+  }
+  .team-portfolio-page .team-portfolio-layout-label{
+    font-size:10px!important;max-width:100%!important;translate:none!important
+  }
+  .team-portfolio-page .team-portfolio-subfilters{
+    display:flex!important;flex-wrap:wrap!important;
+    overflow:visible!important;
+    width:100%!important;min-width:0!important;
+    gap:7px!important;margin:0 0 22px!important;
+    padding:0!important;
+  }
+  .team-portfolio-page .team-portfolio-subfilters>button{
+    flex:0 0 auto!important;min-height:38px!important;
+    max-width:100%!important;
+    padding:8px 13px!important;
+    font-size:11px!important;line-height:1.15!important;
+    border-radius:999px!important;
+    white-space:normal!important;overflow-wrap:anywhere!important;
+  }
+  .team-portfolio-page .team-portfolio-slider{
+    position:relative!important;z-index:5!important;
+    width:100%!important;max-width:100%!important;
+    min-width:0!important;margin:0!important;overflow:hidden!important
+  }
+  .team-portfolio-page .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen){
+    --gallery-card:100%!important;
+    --gallery-gap:12px!important;
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    margin:0!important;padding:6px 0 18px!important;
+  }
+  .team-portfolio-page .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-viewport{
+    width:100%!important;max-width:100%!important;overflow:hidden!important
+  }
+  .team-portfolio-page .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
+    flex:0 0 100%!important;width:100%!important;max-width:100%!important;
+    min-width:0!important;min-height:0!important;
+    aspect-ratio:var(--gallery-frame-ratio,4 / 5)!important;
+    max-height:78dvh!important;border-radius:17px!important
+  }
+  .team-portfolio-page .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>img,
+  .team-portfolio-page .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>video{
+    width:100%!important;height:100%!important;object-fit:contain!important
+  }
+  .team-portfolio-page .team-portfolio-slider .media-gallery:not(.is-modal):not(.is-fullscreen) .media-gallery-navigation{
+    position:relative!important;
+    left:auto!important;right:auto!important;bottom:auto!important;
+    display:flex!important;flex-wrap:nowrap!important;
+    justify-content:center!important;align-items:center!important;
+    gap:6px!important;margin:16px auto 0!important;
+    padding:0!important;width:max-content!important;
+    max-width:100%!important;transform:none!important;
+  }
+  .team-portfolio-page .team-portfolio-slider .media-gallery-navigation .media-gallery-indicators{
+    min-width:0!important;max-width:min(52vw,220px)!important;
+    gap:8px!important;padding:10px 12px!important;overflow:auto!important
+  }
+  .team-portfolio-page .team-portfolio-slider .media-gallery-navigation :is(button,.media-gallery-toggle){
+    min-width:32px;min-height:38px;
+  }
+  .team-portfolio-page .team-portfolio-member-switch{
+    width:calc(100% - 32px)!important;max-width:100%!important;
+    margin:0 auto!important;min-height:0!important;
+    translate:none!important;scale:1!important
+  }
+  .team-portfolio-page .team-portfolio-footer{
+    width:calc(100% - 32px)!important;max-width:100%!important;
+    margin:0 auto!important;translate:none!important;scale:1!important
+  }
+}
+@media (max-width:600px){
+  /* The brand stays legible without dropping 'sara' to a second line. */
+  .site>.nav.nav-recomposed,
+  .team-portfolio-page>.nav.nav-recomposed{
+    width:calc(100% - 20px)!important;
+    min-height:90px!important;
+    padding:7px 9px!important;
+    margin-top:max(10px,env(safe-area-inset-top))!important;
+    border-radius:20px!important
+  }
+  .site>.nav.nav-recomposed>.nav-centered-brand .brand-editable-text,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-centered-brand .brand-editable-text{
+    font-size:clamp(14px,4vw,18px)!important
+  }
+  .site>.nav.nav-recomposed>.nav-tools :is(.admin-link,.nav-edit-link),
+  .team-portfolio-page>.nav.nav-recomposed>.nav-tools :is(.admin-link,.nav-edit-link){
+    min-height:36px!important;font-size:10px!important;padding:0 3px!important
+  }
+  .site .team-stack-list>.team-stack-card{
+    min-height:98px!important;gap:2px 12px!important
+  }
+  .site .team-stack-card .team-stack-copy h3{
+    font-size:clamp(25px,7.3vw,34px)!important
+  }
+  .site .hero>.hero-media-shell>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-viewport,
+  .site .hero>.hero-media-shell>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-track,
+  .site .hero>.hero-media-shell>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
+    height:clamp(180px,56.25vw,320px)!important;
+    min-height:0!important;max-height:320px!important
+  }
+  .site .hero>.hero-media-shell[data-hero-ratio]:not([data-hero-ratio="fill"])>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) :is(.media-gallery-viewport,.media-gallery-track,.media-gallery-slide){
+    height:min(var(--hero-media-ratio-height),64dvh)!important;
+    min-height:0!important;max-height:64dvh!important
+  }
+  .team-portfolio-page .team-portfolio-hero{
+    height:clamp(160px,40vw,210px)!important;max-height:210px!important
+  }
+  .team-portfolio-page .team-portfolio-member-index,
+  .team-portfolio-page .team-portfolio-work,
+  .team-portfolio-page .team-portfolio-member-switch,
+  .team-portfolio-page .team-portfolio-footer{
+    width:calc(100% - 28px)!important
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  .team-portfolio-page .media-gallery-track{transition:none!important}
+}
