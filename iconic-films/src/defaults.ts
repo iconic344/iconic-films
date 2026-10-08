@@ -77,19 +77,7 @@ export function normalizeConfig(value:unknown={}){
     radius:Number.isFinite(Number(raw.radius))?Math.min(80,Math.max(0,Number(raw.radius))):base.radius
    }];
   })) as Record<PortfolioSectionKey,PortfolioSectionLayout>;
-  const portfolioDividers:Array<PortfolioDivider>=Array.isArray((member as any)?.portfolioDividers)?(member as any).portfolioDividers.map((divider:any,dividerIndex:number)=>({
-   id:typeof divider?.id==='string'&&divider.id?divider.id:'portfolio-divider-'+dividerIndex,
-   after:portfolioSectionKeys.includes(divider?.after as PortfolioSectionKey)?divider.after as PortfolioSectionKey:'work',
-   visible:divider?.visible!==false,
-   width:Math.min(100,Math.max(10,Number(divider?.width??100))),
-   thickness:Math.min(12,Math.max(.5,Number(divider?.thickness??1))),
-   opacity:Math.min(100,Math.max(0,Number(divider?.opacity??24))),
-   inset:Math.min(240,Math.max(0,Number(divider?.inset??0))),
-   marginTop:Math.min(240,Math.max(0,Number(divider?.marginTop??0))),
-   marginBottom:Math.min(240,Math.max(0,Number(divider?.marginBottom??0))),
-   offsetY:Number.isFinite(Number(divider?.offsetY))?Math.min(800,Math.max(-800,Number(divider.offsetY))):0,
-   color:typeof divider?.color==='string'?divider.color:''
-  })):[];
+  const portfolioDividers:Array<PortfolioDivider>=[];
   return {...member,
     name,
     codeName:typeof member?.codeName==='string'&&member.codeName.trim()?member.codeName.trim().slice(0,8).toUpperCase():((name.trim().slice(0,1)||String(index+1)).toUpperCase()),
