@@ -1,7 +1,8 @@
 'use client';
-import {useEffect,useMemo,useRef,useState} from 'react';
-import {ArrowLeft,ChevronRight,Eye,Layers3,Monitor,PanelLeftClose,PanelRightClose,Plus,Save,Settings2,Smartphone,Tablet,Undo2,MousePointer2} from 'lucide-react';
+import {useEffect,useMemo,useRef,useState,type PointerEvent as ReactPointerEvent} from 'react';
+import {ArrowLeft,ChevronRight,Eye,GripVertical,Layers3,Monitor,PanelLeftClose,PanelRightClose,Plus,Save,Settings2,Smartphone,Tablet,Undo2,MousePointer2} from 'lucide-react';
 import type {Config} from './defaults';
+import {homeSectionOrder,memberSectionOrder,LOCKED_HOME_SECTIONS,LOCKED_PORTFOLIO_SECTIONS} from './workbench-order';
 
 export type EditorDevice='desktop'|'tablet'|'phone';
 export type EditorPage='home'|'portfolio';
@@ -19,6 +20,8 @@ type Props={
  onCancel:()=>void;
  onUndo:()=>void;
  onAddWork?:()=>void;
+ onReorderSection?:(from:string,to:string)=>void;
+ onReorderWork?:(from:string,to:string)=>void;
  onOpenAdmin:()=>void;
  canUndo:boolean;
  busy:boolean;
@@ -37,7 +40,7 @@ function previewDestination(page:EditorPage,memberId?:string){
  return path+'?viivii-workbench-preview=1';
 }
 
-export default function EditSiteWorkbench({config,page,memberId,selection,onSelect,onContent,onSettings,onLayers,onSave,onCancel,onUndo,onAddWork,onOpenAdmin,canUndo,busy}:Props){
+export default function EditSiteWorkbench({config,page,memberId,selection,onSelect,onContent,onSettings,onLayers,onSave,onCancel,onUndo,onAddWork,onReorderSection,onReorderWork,onOpenAdmin,canUndo,busy}:Props){
  const [device,setDevice]=useState<EditorDevice>('desktop');
  const [direct,setDirect]=useState(false);
  const [leftOpen,setLeftOpen]=useState(()=>typeof window!=='undefined'&&window.innerWidth>1100);
@@ -50,6 +53,10 @@ export default function EditSiteWorkbench({config,page,memberId,selection,onSele
  const sizing=deviceSizes.find(s=>s.device===device)||deviceSizes[0];
  const scale=Math.max(.1,Math.min(1,(bounds.width-42)/sizing.width,(bounds.height-42)/sizing.height));
  const selections=page==='portfolio'?sectionsPortfolio:sectionsHome;
+ const [dragState,setDragState]=useState<{kind:'section'|'work';from:string;over:string}|null>(null);
+ const orderedKeys=page==='portfolio'?memberSectionOrder((config.teamMembers||[]).find(m=>m.id===memberId)||{portfolioSectionOrder:undefined}):homeSectionOrder(config);
+ const orderedSections=orderedKeys.map(key=>selections.find(s=>s[0]===key)).filter((s):s is (typeof selections)[number]=>Boolean(s));
+ const lockedSections=new Set<string>(page==='portfolio'?LOCKED_PORTFOLIO_SECTIONS:LOCKED_HOME_SECTIONS);
  const selectedSection=selection.startsWith('work:')?'work':selection.startsWith('text:')?'nav':selection;
  const activeMember=page==='portfolio'?(config.teamMembers||[]).find(m=>m.id===memberId):null;
  const works=page==='portfolio'?(activeMember?.works||[]):config.works.map(w=>w.video||w.poster||'');
@@ -110,6 +117,56 @@ export default function EditSiteWorkbench({config,page,memberId,selection,onSele
   setRightOpen(true);
   if(window.matchMedia('(max-width: 1100px)').matches)setLeftOpen(false);
  };
+
+ const beginDrag=(event:ReactPointerEvent<HTMLButtonElement>,kind:'section'|'work',from:string)=>{
+  if(event.button!==0)return;
+  event.preventDefault();event.stopPropagation();
+  const start={x:event.clientX,y:event.clientY};
+  let last=from,moved=false;
+  const target=event.currentTarget;
+  target.setPointerCapture?.(event.pointerId);
+  const move=(e:PointerEvent)=>{
+   if(Math.hypot(e.clientX-start.x,e.clientY-start.y)>5)moved=true;
+   if(!moved)return;
+   const row=document.elementFromPoint(e.clientX,e.clientY)?.closest<HTMLElement>('[data-wb-drop-kind="'+kind+'"]');
+   const over=row?.dataset.wbDropKey;
+   if(over&&over!==last){last=over;setDragState({kind,from,over})}
+   const scroller=target.closest('.vii-wb-tree-scroll');
+   if(scroller){const box=scroller.getBoundingClientRect();if(e.clientY<box.top+34)scroller.scrollTop-=16;else if(e.clientY>box.bottom-34)scroller.scrollTop+=16}
+  };
+  const cleanup=()=>{
+   window.removeEventListener('pointermove',move);
+   window.removeEventListener('pointerup',end);
+   window.removeEventListener('pointercancel',cancel);
+   try{target.releasePointerCapture(event.pointerId)}catch{}
+  };
+  const cancel=()=>{cleanup();setDragState(null)};
+  const end=(e:PointerEvent)=>{
+   if(moved){
+    const row=document.elementFromPoint(e.clientX,e.clientY)?.closest<HTMLElement>('[data-wb-drop-kind="'+kind+'"]');
+    const dest=row?.dataset.wbDropKey||last;
+    if(dest&&dest!==from){
+     if(kind==='section'&&!lockedSections.has(dest)&&!lockedSections.has(from))onReorderSection?.(from,dest);
+     if(kind==='work')onReorderWork?.(from,dest);
+    }
+   }
+   cleanup();setDragState(null);
+  };
+  window.addEventListener('pointermove',move,{passive:true});
+  window.addEventListener('pointerup',end,{once:true});
+  window.addEventListener('pointercancel',cancel,{once:true});
+  setDragState({kind,from,over:from});
+ };
+ const keyboardReorder=(event:React.KeyboardEvent<HTMLButtonElement>,kind:'section'|'work',key:string)=>{
+  if(event.key!=='ArrowUp'&&event.key!=='ArrowDown')return;
+  event.preventDefault();event.stopPropagation();
+  const ordered=kind==='section'?orderedSections.filter(([id])=>!lockedSections.has(id)).map(([id])=>id):
+   page==='portfolio'?works.map((_,i)=>String(i)):config.works.map(w=>w.id);
+  const index=ordered.indexOf(key),destination=index+(event.key==='ArrowUp'?-1:1);
+  if(index<0||destination<0||destination>=ordered.length)return;
+  if(kind==='section')onReorderSection?.(key,ordered[destination]);else onReorderWork?.(key,ordered[destination]);
+ };
+
  const closeEditing=()=>{onCancel()};
  return <div className="vii-workbench" data-page={page} data-device={device} data-direct={direct?'true':'false'}>
    <header className="vii-workbench-header">
@@ -135,19 +192,28 @@ export default function EditSiteWorkbench({config,page,memberId,selection,onSele
     <div className="vii-wb-tree-scroll">
      <div className="vii-wb-tree-label">페이지 <span>{page==='portfolio'?'PORTFOLIO':'HOME'}</span></div>
      <div className="vii-wb-tree-groups">
-     {selections.map(([id,label],i)=><div key={id} className="vii-wb-tree-group">
-       <button type="button" className={'vii-wb-tree-row'+(selectedSection===id?' is-selected':'')} onClick={()=>choose(id)}>
-        <span className="vii-wb-tree-no">{String(i+1).padStart(2,'0')}</span><span className="vii-wb-tree-text">{label}</span><ChevronRight size={13}/>
-       </button>
+
+     {orderedSections.map(([id,label])=>{
+      const locked=lockedSections.has(id);
+      return <div key={id} className="vii-wb-tree-group">
+       <div className={'vii-wb-tree-row'+(selectedSection===id?' is-selected':'')+(dragState?.kind==='section'&&dragState.over===id?' is-drop-target':'')} data-wb-drop-kind="section" data-wb-drop-key={id}>
+        <button type="button" className={'vii-wb-grip'+(locked?' is-locked':'')} aria-label={locked?label+' · 고정 영역':label+' 순서 변경 · 드래그 또는 위아래 방향키'} title={locked?'고정 영역 · 실제 표시 순서에서 이동 불가':'끌어서 순서 변경 · 키보드 ↑ / ↓'} disabled={locked} onPointerDown={event=>beginDrag(event,'section',id)} onKeyDown={event=>keyboardReorder(event,'section',id)}><GripVertical size={15}/></button>
+        <button type="button" className="vii-wb-tree-select" onClick={()=>choose(id)}><span className="vii-wb-tree-text">{label}</span><ChevronRight size={13}/></button>
+       </div>
        {id==='work'&&<div className="vii-wb-children">
         {works.slice(0,40).map((src,i)=>{
-         const k=page==='portfolio'?'work:'+i:'work:'+config.works[i]?.id;
-         const name=page==='portfolio'?(activeMember?.portfolioWorkTitles?.[i]||'작품 '+String(i+1).padStart(2,'0')):(config.works[i]?.title||'작품 '+String(i+1).padStart(2,'0'));
-         return <button type="button" className={'vii-wb-child'+(selection===k?' is-selected':'')} onClick={()=>choose(k)} key={k+'-'+i}><span className="vii-wb-child-dot"/><span>{name}</span><small>{String(i+1).padStart(2,'0')}</small></button>
+         const key=page==='portfolio'?String(i):config.works[i]?.id||String(i);
+         const selectionKey='work:'+key;
+         const name=page==='portfolio'?(activeMember?.portfolioWorkTitles?.[i]||'작품 '+String(i+1)):(config.works[i]?.title||'작품 '+String(i+1));
+         return <div className={'vii-wb-child'+(selection===selectionKey?' is-selected':'')+(dragState?.kind==='work'&&dragState.over===key?' is-drop-target':'')} data-wb-drop-kind="work" data-wb-drop-key={key} key={key}>
+           <button type="button" className="vii-wb-grip" aria-label={name+' 순서 변경 · 드래그 또는 위아래 방향키'} title="끌어서 순서 변경" onPointerDown={event=>beginDrag(event,'work',key)} onKeyDown={event=>keyboardReorder(event,'work',key)}><GripVertical size={13}/></button>
+           <button type="button" className="vii-wb-child-select" onClick={()=>choose(selectionKey)}><span>{name}</span></button>
+         </div>;
         })}
         <button type="button" className="vii-wb-add-child" onClick={()=>openInspector(()=>{onAddWork?.();onContent()})}><Plus size={13}/> 작품 추가</button>
        </div>}
-      </div>)}
+      </div>;
+     })}
      </div>
      <div className="vii-wb-tree-label">WORKSPACE</div>
      <button type="button" className="vii-wb-tool-row" onClick={()=>openInspector(onLayers)}><Layers3 size={15}/>레이어 전체 관리<ChevronRight size={13}/></button>
