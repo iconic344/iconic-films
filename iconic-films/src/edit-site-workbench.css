@@ -458,3 +458,35 @@ html[data-editor-workbench-right="false"] .vii-workbench-stage{right:0!important
  .vii-workbench-stage{top:var(--wb-head)!important}
  .vii-wb-direct-caption{top:calc(var(--wb-head) + 10px)!important}
 }
+
+/* Inspector tokens are isolated from the site's own light/dark theme. */
+.visual-editor-ui.is-workbench>.visual-editor-panel{
+ --page:#17171b!important;
+ --ink:#f1f1f3!important;
+ --line:rgb(255 255 255 / .17)!important;
+ --soft:#a4a4ae!important;
+ --background:#17171b!important;
+ --foreground:#f1f1f3!important;
+ --card:#222227!important;
+ --card-foreground:#eeeef0!important;
+ --popover:#25252a!important;
+ --popover-foreground:#f5f5f6!important;
+ --primary:#f0f0f1!important;
+ --primary-foreground:#18181b!important;
+ --secondary:#303036!important;
+ --secondary-foreground:#f1f1f2!important;
+ --muted:#34343b!important;
+ --muted-foreground:#b1b1b9!important;
+ --border:#42424b!important;
+ --input:#313139!important;
+ --ring:#9d9da6!important;
+ --accent:#303039!important;
+ --accent-foreground:#f4f4f4!important;
+ color-scheme:dark!important;
+}
+.visual-editor-ui.is-workbench>.visual-editor-panel :is(label,small,span){
+ overflow-wrap:break-word;
+}
+.visual-editor-ui.is-workbench>.visual-editor-panel input[type="color"]{
+ min-width:36px!important;
+}
