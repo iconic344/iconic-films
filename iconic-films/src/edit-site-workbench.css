@@ -490,3 +490,14 @@ html[data-editor-workbench-right="false"] .vii-workbench-stage{right:0!important
 .visual-editor-ui.is-workbench>.visual-editor-panel input[type="color"]{
  min-width:36px!important;
 }
+
+/* Visible selection feedback exists ONLY inside the isolated iframe preview. */
+html[data-viivii-preview="true"] [data-viivii-preview-selected="true"]{
+ outline:2px solid #c8d0dd!important;
+ outline-offset:-2px!important;
+ box-shadow:inset 0 0 0 1px #fff8!important;
+ transition:outline-color .2s ease!important;
+}
+html[data-viivii-preview="true"] [data-viivii-preview-selected="true"]::selection{
+ background:#ffffff55!important;
+}
