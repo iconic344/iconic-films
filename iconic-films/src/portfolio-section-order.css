@@ -1,0 +1,15 @@
+/* Preserve the actual portfolio section order after it is changed in EDIT SITE.
+   Header, previous/next and footer are intentionally pinned; the editable
+   hero/category-index/Selected Works sections follow the saved order on
+   desktops and touch devices alike, including existing mobile !important. */
+.team-portfolio-page>.team-portfolio-main{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+}
+.team-portfolio-page>.team-portfolio-main>[data-portfolio-section="hero"],
+.team-portfolio-page>.team-portfolio-main>[data-portfolio-section="index"],
+.team-portfolio-page>.team-portfolio-main>[data-portfolio-section="work"]{
+  flex:0 0 auto!important;
+  order:var(--portfolio-section-rank,0)!important;
+}
