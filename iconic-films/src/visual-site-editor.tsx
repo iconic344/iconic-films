@@ -4,6 +4,7 @@ import {ArrowDown,ArrowUp,Copy,Eye,EyeOff,Grip,Layers3,Maximize2,PanelLeft,Panel
 import type {Config,NavItemKey,SiteSectionKey,Work,SectionDivider,PageBlock,PageBlockType} from './defaults';
 import {uploadFile} from './media-upload';
 import EditSiteFullSettings from './edit-site-full-settings';
+import EditSiteWorkbench from './edit-site-workbench';
 import FontPicker from './font-picker';
 import MediaLibrary from './media-library';
 
@@ -57,7 +58,7 @@ export default function VisualSiteEditor({
  onSave:()=>void|Promise<void>;onCancel:()=>void;onOpenAdmin:()=>void;onUndo:()=>void;canUndo:boolean;busy:boolean;
  setBusy:(value:boolean)=>void;notify:(value:string)=>void;onThemeChange?:(value:string)=>void;
 }){
- const [rect,setRect]=useState<DOMRect|null>(null),[uploading,setUploading]=useState(false),[uploadState,setUploadState]=useState<UploadState|null>(null),[panelSide,setPanelSide]=useState<'left'|'right'>('right'),[panelOpen,setPanelOpen]=useState(true),[tab,setTab]=useState<PanelTab>('layers');
+ const [rect,setRect]=useState<DOMRect|null>(null),[uploading,setUploading]=useState(false),[uploadState,setUploadState]=useState<UploadState|null>(null),[panelSide,setPanelSide]=useState<'left'|'right'>('right'),[panelOpen,setPanelOpen]=useState(true),[tab,setTab]=useState<PanelTab>('content');
  const [toolbarPos,setToolbarPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-toolbar-pos'));
  const [panelPos,setPanelPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-panel-pos'));
  const [inlineEditing,setInlineEditing]=useState<VisualSelection|null>(null);
@@ -467,7 +468,8 @@ export default function VisualSiteEditor({
  const quickStyleKey=textStyleKeyFor(selection),quickTextStyle=quickStyleKey?config.textStyles[quickStyleKey]:null;
  const quickToolbarStyle=rect&&typeof window!=='undefined'?{left:Math.max(8,Math.min(window.innerWidth-360,rect.left+rect.width/2-176)),top:Math.max(8,rect.top>74?rect.top-52:rect.bottom+10)} as CSSProperties:undefined;
 
- return <div className={'visual-editor-ui is-panel-'+panelSide} data-visual-editor="true">
+ return <div className={'visual-editor-ui is-panel-'+panelSide+' is-workbench'} data-visual-editor="true">
+  <EditSiteWorkbench page="home" config={config} selection={selection} onSelect={value=>selectLayer(value as VisualSelection)} onContent={()=>setTab('content')} onLayers={()=>setTab('layers')} onSettings={()=>setTab('settings')} onAddWork={addWork} onSave={onSave} onCancel={onCancel} onUndo={onUndo} canUndo={canUndo} busy={busy} onOpenAdmin={onOpenAdmin}/>
   <div style={toolbarStyle} className={'visual-editor-topbar '+(toolbarPos?'is-free ':toolbarBottom?'is-bottom ':'is-top ')} onPointerDown={e=>beginChromeDrag(e,'toolbar')}>
    <div className="visual-editor-title visual-editor-drag-zone" onDoubleClick={()=>resetChrome('toolbar')}><Grip size={14}/><Settings2 size={16}/><strong>VISUAL EDIT</strong><span>드래그 이동 · 화면에서 선택 · 크기 · 콘텐츠 · 스타일</span></div>
    <div className="visual-editor-toolbar-tools">
