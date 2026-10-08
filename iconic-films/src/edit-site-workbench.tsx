@@ -105,6 +105,11 @@ export default function EditSiteWorkbench({config,page,memberId,selection,onSele
  const changeDevice=(next:EditorDevice)=>{
   setDevice(next);setDirect(false);
  };
+ const openInspector=(action:()=>void)=>{
+  action();
+  setRightOpen(true);
+  if(window.matchMedia('(max-width: 1100px)').matches)setLeftOpen(false);
+ };
  const closeEditing=()=>{onCancel()};
  return <div className="vii-workbench" data-page={page} data-device={device} data-direct={direct?'true':'false'}>
    <header className="vii-workbench-header">
@@ -140,13 +145,13 @@ export default function EditSiteWorkbench({config,page,memberId,selection,onSele
          const name=page==='portfolio'?(activeMember?.portfolioWorkTitles?.[i]||'작품 '+String(i+1).padStart(2,'0')):(config.works[i]?.title||'작품 '+String(i+1).padStart(2,'0'));
          return <button type="button" className={'vii-wb-child'+(selection===k?' is-selected':'')} onClick={()=>choose(k)} key={k+'-'+i}><span className="vii-wb-child-dot"/><span>{name}</span><small>{String(i+1).padStart(2,'0')}</small></button>
         })}
-        <button type="button" className="vii-wb-add-child" onClick={()=>{onAddWork?.();onContent()}}><Plus size={13}/> 작품 추가</button>
+        <button type="button" className="vii-wb-add-child" onClick={()=>openInspector(()=>{onAddWork?.();onContent()})}><Plus size={13}/> 작품 추가</button>
        </div>}
       </div>)}
      </div>
      <div className="vii-wb-tree-label">WORKSPACE</div>
-     <button type="button" className="vii-wb-tool-row" onClick={onLayers}><Layers3 size={15}/>레이어 전체 관리<ChevronRight size={13}/></button>
-     <button type="button" className="vii-wb-tool-row" onClick={onSettings}><Settings2 size={15}/>사이트 공통 설정<ChevronRight size={13}/></button>
+     <button type="button" className="vii-wb-tool-row" onClick={()=>openInspector(onLayers)}><Layers3 size={15}/>레이어 전체 관리<ChevronRight size={13}/></button>
+     <button type="button" className="vii-wb-tool-row" onClick={()=>openInspector(onSettings)}><Settings2 size={15}/>사이트 공통 설정<ChevronRight size={13}/></button>
      <button type="button" className="vii-wb-tool-row" onClick={()=>{setDirect(true);setLeftOpen(false)}}><MousePointer2 size={15}/>화면에서 직접 편집<ChevronRight size={13}/></button>
     </div>
     <div className="vii-wb-pane-foot"><span className="vii-wb-online"/><span>수정 사항은 저장 전까지 공개되지 않습니다.</span></div>
