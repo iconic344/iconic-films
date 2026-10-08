@@ -157,3 +157,55 @@
   }
 }
 /* End of caption label from the responsive cursor suppression. */
+
+
+/* PROJECT 07 — credits glyph/partial-line clipping repair, 2026-10-08. */
+/*
+ * The grid reuses media-gallery-slide-caption classes for shared typography.
+ * desktop-refinements.css sets caption labels/headings/paragraphs to
+ * translateY(8/12/14px), but ONLY resets them in the slider's hover scope.
+ * In GRID hover those transforms persist, pushing the 3rd credit line into
+ * the parent's overflow:hidden and leaving glyph fragments underneath.
+ * Reset nested transforms; the parent's fade/translate animation remains.
+ */
+@media (hover:hover) and (pointer:fine) {
+  .team-portfolio-grid-item.has-portfolio-credits>.portfolio-hover-credits>.portfolio-hover-credits-inner {
+    overflow:visible!important;
+    max-height:none!important;
+    height:auto!important;
+    transform:translate3d(0,0,0);
+    /* The existing parent fade/slide transition still creates the reveal. */
+  }
+  .team-portfolio-grid-item.has-portfolio-credits>.portfolio-hover-credits>.portfolio-hover-credits-inner :is(
+    .portfolio-hover-credits-label,
+    .portfolio-hover-credits-kicker,
+    .portfolio-hover-credits-title,
+    .portfolio-hover-credits-description
+  ){
+    transform:none!important;
+    translate:none!important;
+    max-height:none!important;
+    margin-inline:auto!important;
+    text-align:center!important;
+  }
+  .team-portfolio-grid-item.has-portfolio-credits>.portfolio-hover-credits>.portfolio-hover-credits-inner .portfolio-hover-credits-description {
+    display:block!important;
+    -webkit-line-clamp:unset!important;
+    line-clamp:unset!important;
+    -webkit-box-orient:initial!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    white-space:pre-line!important;
+    overflow-wrap:break-word!important;
+    word-break:normal!important;
+    line-height:1.5!important;
+    margin:0!important;
+    padding:0!important;
+  }
+}
+/* Don't allow any separate 'continued' pseudo-glyph to be drawn below copy. */
+.team-portfolio-grid-item.has-portfolio-credits .portfolio-hover-credits-description::before,
+.team-portfolio-grid-item.has-portfolio-credits .portfolio-hover-credits-description::after {
+  content:none!important;
+  display:none!important;
+}
