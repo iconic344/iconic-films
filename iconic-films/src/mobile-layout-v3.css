@@ -1126,3 +1126,27 @@
     gap:10px!important;
   }
 }
+
+/* Dynamic menu balancing when administrators add the fourth navigation item.
+   Three visible labels divide into thirds; four divide into quarters. */
+@media(max-width:1024px), (max-width:1366px) and (any-pointer:coarse){
+ .site>.nav.nav-recomposed:has(>.nav-menu-right>:nth-child(2))>.nav-menu-left,
+ .team-portfolio-page>.nav.nav-recomposed:has(>.nav-menu-right>:nth-child(2))>.nav-menu-left{
+   grid-column:1 / 4!important;
+ }
+ .site>.nav.nav-recomposed:has(>.nav-menu-right>:nth-child(2))>.nav-menu-right,
+ .team-portfolio-page>.nav.nav-recomposed:has(>.nav-menu-right>:nth-child(2))>.nav-menu-right{
+   grid-column:4 / 7!important;
+ }
+}
+@media(max-width:345px){
+ .site>.nav.nav-recomposed>.nav-centered-brand .brand-editable-text,
+ .team-portfolio-page>.nav.nav-recomposed>.nav-centered-brand .brand-editable-text{
+   font-size:13px!important;
+   letter-spacing:-.06em!important;
+ }
+ .site>.nav.nav-recomposed>.nav-tools :is(.admin-link,.nav-edit-link),
+ .team-portfolio-page>.nav.nav-recomposed>.nav-tools :is(.admin-link,.nav-edit-link){
+   font-size:9px!important;padding-inline:1px!important;
+ }
+}
