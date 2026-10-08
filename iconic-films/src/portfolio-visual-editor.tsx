@@ -5,6 +5,7 @@ import type {Config,PortfolioDivider,PortfolioMediaRatio,PortfolioSectionKey,Tea
 import {uploadFile} from './media-upload';
 import EditSiteFullSettings from './edit-site-full-settings';
 import EditSiteWorkbench from './edit-site-workbench';
+import {LOCKED_PORTFOLIO_SECTIONS,memberSectionOrder,moveOrderedItem,movePortfolioWork} from './workbench-order';
 import FontPicker from './font-picker';
 
 type PanelTab='layers'|'content'|'layout'|'style'|'settings';
@@ -199,6 +200,30 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  const addWork=()=>{const index=member.works.length;patchMember({works:[...member.works,''],portfolioWorkCategories:[...member.portfolioWorkCategories,''],portfolioWorkTitles:[...workTitles(),member.name||'Portfolio'],portfolioWorkInfo:[...workInfo(),''],portfolioWorkCredits:[...workCredits(),member.portfolioCredits||''],portfolioWorkRatios:[...(member.portfolioWorkRatios||member.works.map(()=>'auto' as PortfolioMediaRatio)),'auto']});setSelection(`work:${index}`);setTab('content')};
  const moveWork=(index:number,dir:number)=>{const target=index+dir;if(target<0||target>=member.works.length)return;const works=[...member.works],categories=[...member.portfolioWorkCategories],titles=workTitles(),info=workInfo(),credits=workCredits(),ratios=[...(member.portfolioWorkRatios||member.works.map(()=>'auto' as PortfolioMediaRatio))];while(ratios.length<works.length)ratios.push('auto');[works[index],works[target]]=[works[target],works[index]];[categories[index],categories[target]]=[categories[target],categories[index]];[titles[index],titles[target]]=[titles[target],titles[index]];[info[index],info[target]]=[info[target],info[index]];[credits[index],credits[target]]=[credits[target],credits[index]];[ratios[index],ratios[target]]=[ratios[target],ratios[index]];patchMember({works,portfolioWorkCategories:categories,portfolioWorkTitles:titles,portfolioWorkInfo:info,portfolioWorkCredits:credits,portfolioWorkRatios:ratios});setSelection(`work:${target}`)};
 
+ const reorderPortfolioSection=(from:string,to:string)=>{
+  if(!member)return;
+  const current=memberSectionOrder(member);
+  const next=moveOrderedItem(current,from as PortfolioSectionKey,to as PortfolioSectionKey,LOCKED_PORTFOLIO_SECTIONS);
+  if(next.join('|')!==current.join('|'))patchMember({portfolioSectionOrder:next});
+ };
+ const reorderPortfolioWork=(from:string,to:string)=>{
+  if(!member)return;
+  const a=Number(from),b=Number(to);
+  if(!Number.isInteger(a)||!Number.isInteger(b)||a===b)return;
+  const patch=movePortfolioWork(member,a,b);
+  if(!patch.works)return;
+  patchMember(patch);
+  setSelection(current=>{
+   if(!current.startsWith('work:'))return current;
+   const selected=Number(current.slice(5));
+   if(!Number.isInteger(selected))return current;
+   let updated=selected;
+   if(selected===a)updated=b;
+   else if(a<b&&selected>a&&selected<=b)updated=selected-1;
+   else if(b<a&&selected>=b&&selected<a)updated=selected+1;
+   return 'work:'+updated as Selection;
+  });
+ };
  const beginSectionMove=(e:ReactPointerEvent<HTMLButtonElement>)=>{e.preventDefault();e.stopPropagation();sectionDrag.current={y:e.clientY,base:selectedLayout.y};const move=(event:PointerEvent)=>{const start=sectionDrag.current;if(!start)return;patchSection(selectedSection,{x:0,y:Math.round(start.base+event.clientY-start.y)})};const up=()=>{sectionDrag.current=null;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true})};
  const beginSectionScale=(e:ReactPointerEvent<HTMLButtonElement>)=>{e.preventDefault();e.stopPropagation();sectionScale.current={x:e.clientX,y:e.clientY,base:selectedLayout.scale};const move=(event:PointerEvent)=>{const start=sectionScale.current;if(!start)return;patchSection(selectedSection,{x:0,scale:Math.round(clamp(start.base+((event.clientX-start.x)+(event.clientY-start.y))/720,.55,1.6)*100)/100})};const up=()=>{sectionScale.current=null;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true})};
  const beginSectionHeight=(e:ReactPointerEvent<HTMLButtonElement>)=>{e.preventDefault();e.stopPropagation();sectionHeight.current={y:e.clientY,base:selectedLayout.minHeight||rect?.height||0};const move=(event:PointerEvent)=>{const start=sectionHeight.current;if(!start)return;patchSection(selectedSection,{minHeight:clamp(Math.round(start.base+event.clientY-start.y),0,1800)})};const up=()=>{sectionHeight.current=null;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true})};
@@ -295,7 +320,7 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  const quickToolbarStyle=rect&&typeof window!=='undefined'?{left:Math.max(8,Math.min(window.innerWidth-360,rect.left+rect.width/2-176)),top:Math.max(8,rect.top>74?rect.top-52:rect.bottom+10)} as CSSProperties:undefined;
 
  return <div className={'visual-editor-ui portfolio-visual-editor is-panel-'+panelSide+' is-workbench'} data-visual-editor="true">
-  <EditSiteWorkbench page="portfolio" memberId={member.id} config={config} selection={selection} onSelect={value=>setSelection(value as Selection)} onContent={()=>setTab('content')} onLayers={()=>setTab('layers')} onSettings={()=>setTab('settings')} onAddWork={addWork} onSave={onSave} onCancel={onCancel} onUndo={onUndo} canUndo={canUndo} busy={busy||uploading} onOpenAdmin={onOpenAdmin}/>
+  <EditSiteWorkbench page="portfolio" memberId={member.id} config={config} selection={selection} onSelect={value=>setSelection(value as Selection)} onContent={()=>setTab('content')} onLayers={()=>setTab('layers')} onSettings={()=>setTab('settings')} onAddWork={addWork} onReorderSection={reorderPortfolioSection} onReorderWork={reorderPortfolioWork} onSave={onSave} onCancel={onCancel} onUndo={onUndo} canUndo={canUndo} busy={busy||uploading} onOpenAdmin={onOpenAdmin}/>
   <div style={toolbarStyle} className={'visual-editor-topbar '+(toolbarPos?'is-free ':toolbarBottom?'is-bottom ':'is-top ')} onPointerDown={e=>beginChromeDrag(e,'toolbar')}>
    <div className="visual-editor-title visual-editor-drag-zone" onDoubleClick={()=>resetChrome('toolbar')}><Grip size={14}/><Settings2 size={16}/><strong>VISUAL EDIT / PORTFOLIO</strong><span>현재 페이지 전용 레이어 · 직접 선택 · 드래그 · 크기 · 스타일</span></div>
    <div className="visual-editor-toolbar-tools">
