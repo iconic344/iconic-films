@@ -79,6 +79,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
    v.removeEventListener('loadedmetadata',metadata);
    v.removeEventListener('durationchange',metadata);
    v.removeEventListener('ended',ended);
+   v.pause();
    v.controls=previousControls;v.loop=previousLoop;v.preload=previousPreload;
    v.muted=true;v.defaultMuted=true;
    if(marker.parentNode)marker.parentNode.replaceChild(v,marker);
@@ -239,7 +240,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
       {active&&kind==='video'&&(!cleanPreview||isFullscreen||modal)&&<div className="media-gallery-tools">
        <button type="button" aria-label={playing?'일시정지':'재생'} onClick={toggle}>{playing?<Pause size={18} fill="currentColor"/>:<Play size={18} fill="currentColor"/>}</button><span>{formatTime(time)}</span><input type="range" aria-label="영상 재생 위치" min={0} max={duration||1} step={.1} value={Math.min(time,duration||0)} onChange={e=>{if(video.current)video.current.currentTime=Number(e.target.value)}}/><span>{formatTime(duration)}</span>
        <div className="media-volume-control">
-        <button type="button" aria-label="영상 볼륨 조절">{mediaVolume<=0||muted?<VolumeX size={18}/>:<Volume2 size={18}/>}</button>
+        <button type="button" aria-label={muted?'소리 켜기':'소리 끄기'} onClick={()=>{if(muted&&mediaVolume<=0)setMediaVolume(1);setMuted(v=>!v)}}>{mediaVolume<=0||muted?<VolumeX size={18}/>:<Volume2 size={18}/>}</button>
         <div className="media-volume-popover" role="group" aria-label="영상 볼륨"><input type="range" aria-label="영상 볼륨" min={0} max={1} step={.01} value={muted?0:mediaVolume} onChange={e=>{const next=Number(e.target.value);setMediaVolume(next);setMuted(next<=0)}}/><span>{Math.round((muted?0:mediaVolume)*100)}</span></div>
        </div>
        {!modal&&!balanceEdges&&<button type="button" aria-label={isFullscreen?'전체 화면 종료':'전체 화면'} onClick={fullscreen}>{isFullscreen?<Minimize size={17}/>:<Maximize size={17}/>}</button>}
