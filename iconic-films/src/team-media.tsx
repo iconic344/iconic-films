@@ -10,7 +10,7 @@ export const teamMediaType=(url:string)=>{
   return 'image';
 };
 
-export default function TeamMedia({src,alt='',className='',interactive=false,autoPlay=false}:{src:string;alt?:string;className?:string;interactive?:boolean;autoPlay?:boolean}){
+export default function TeamMedia({src,alt='',className='',interactive=false,autoPlay=false,suspended=false}:{src:string;alt?:string;className?:string;interactive?:boolean;autoPlay?:boolean;suspended?:boolean}){
   const [modelReady,setModelReady]=useState(false);
   const videoRef=useRef<HTMLVideoElement>(null);
   const modelRef=useRef<FramingViewer|null>(null);
@@ -27,17 +27,19 @@ export default function TeamMedia({src,alt='',className='',interactive=false,aut
     const mobile=window.matchMedia('(max-width: 820px), (max-width: 1180px) and (any-pointer: coarse)').matches;
     if(!autoPlay&&!mobile)return;
     const video=videoRef.current;
-    video.muted=true;video.defaultMuted=true;video.loop=true;video.playsInline=true;
+    if(video.dataset.fullscreenHandoff!=='true'){video.muted=true;video.defaultMuted=true}
+    video.loop=true;video.playsInline=true;
+    if(suspended&&video.dataset.fullscreenHandoff!=='true'){video.pause();return;}
     const observer=new IntersectionObserver(entries=>{
       for(const entry of entries){
         visible.current=entry.isIntersecting;
-        if(entry.isIntersecting)video.play().catch(()=>{});
-        else video.pause();
+        if(entry.isIntersecting&&!suspended)video.play().catch(()=>{});
+        else if(video.dataset.fullscreenHandoff!=='true')video.pause();
       }
     },{rootMargin:autoPlay?'0px':'120px 0px',threshold:.01});
     observer.observe(video);
-    return()=>{observer.disconnect();visible.current=false;video.pause()};
-  },[type,interactive,autoPlay,src]);
+    return()=>{observer.disconnect();visible.current=false;if(video.dataset.fullscreenHandoff!=='true')video.pause()};
+  },[type,interactive,autoPlay,src,suspended]);
   useEffect(()=>{
     const viewer=modelRef.current;
     if(type!=='model'||!modelReady||!viewer)return;
@@ -52,7 +54,7 @@ export default function TeamMedia({src,alt='',className='',interactive=false,aut
     if(viewer.loaded)update();
     return()=>{cancelAnimationFrame(frame);resize?.disconnect();viewer.removeEventListener('load',update)};
   },[type,modelReady,src]);
-  if(type==='video')return <video ref={videoRef} className={className} src={src} draggable={false} muted loop playsInline preload={autoPlay?'metadata':'none'} controls={interactive} autoPlay={autoPlay} onCanPlay={e=>{if(autoPlay&&visible.current)e.currentTarget.play().catch(()=>{})}} onPointerEnter={e=>{if(!interactive&&!autoPlay&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.play().catch(()=>{})}} onPointerLeave={e=>{if(!interactive&&!autoPlay&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.pause()}}/>;
+  if(type==='video')return <video ref={videoRef} className={className} src={src} draggable={false} muted loop playsInline preload={autoPlay?'metadata':'none'} controls={interactive} autoPlay={autoPlay} onCanPlay={e=>{if(autoPlay&&!suspended&&visible.current)e.currentTarget.play().catch(()=>{})}} onPointerEnter={e=>{if(!suspended&&!interactive&&!autoPlay&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.play().catch(()=>{})}} onPointerLeave={e=>{if(!suspended&&!interactive&&!autoPlay&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.pause()}}/>;
   if(type==='model')return modelReady?createElement('model-viewer',{
     class:className,
     ref:modelRef,
