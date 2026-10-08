@@ -48,6 +48,7 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  const sectionDrag=useRef<{y:number;base:number}|null>(null),sectionScale=useRef<{x:number;y:number;base:number}|null>(null),sectionHeight=useRef<{y:number;base:number}|null>(null);
  const textDrag=useRef<{x:number;y:number;baseX:number;baseY:number}|null>(null),textResize=useRef<{x:number;y:number;base:number}|null>(null),dividerDrag=useRef<{y:number;base:number}|null>(null);
  const member=useMemo(()=>config.teamMembers.find(item=>item.id===memberId)||null,[config.teamMembers,memberId]);
+ const layoutMaster=useMemo(()=>config.teamMembers.find(item=>item.visible)||member,[config.teamMembers,member]);
 
  const patchConfig=<K extends keyof Config>(key:K,value:Config[K])=>setConfig(current=>({...current,[key]:value}));
  const sharedPortfolioLayoutKeys=new Set<keyof TeamMember>([
@@ -73,7 +74,14 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  if(!member)return null;
 
  const portfolioDividers=Array.isArray(member.portfolioDividers)?member.portfolioDividers:[];
- const sectionLayout=(key:PortfolioSectionKey)=>member.portfolioSections?.[key]||fallbackSectionLayout;
+ const sectionLayout=(key:PortfolioSectionKey)=>{
+  const own=member.portfolioSections?.[key]||fallbackSectionLayout;
+  if((key==='index'||key==='work')&&layoutMaster){
+   const shared=layoutMaster.portfolioSections?.[key]||own;
+   return {...own,x:shared.x,y:shared.y,scale:shared.scale,minHeight:shared.minHeight};
+  }
+  return own;
+ };
  const rawTextKey=selection.startsWith('text:')?selection.slice(5):'';
  const selectedText=isTextKey(rawTextKey)?rawTextKey:null;
  const selectedWorkIndex=selection.startsWith('work:')&&Number.isFinite(Number(selection.slice(5)))?Number(selection.slice(5)):-1;
@@ -138,7 +146,10 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  };
  const currentTextStyle=(key:TextKey)=>{
   const fields=textFields[key];
-  if(fields)return {font:String(member[fields.font]||''),size:numberValue(member[fields.size]),color:String(member[fields.color]||''),align:(member[fields.align]||'left') as TextAlign,x:numberValue(member[fields.x]),y:numberValue(member[fields.y])};
+  if(fields){
+   const sharedPosition=layoutMaster&&(key==='name'||key==='title'||key==='intro'||key==='indexLabel'||key==='footerReturn')?layoutMaster:member;
+   return {font:String(member[fields.font]||''),size:numberValue(sharedPosition[fields.size]),color:String(member[fields.color]||''),align:(member[fields.align]||'left') as TextAlign,x:numberValue(sharedPosition[fields.x]),y:numberValue(sharedPosition[fields.y])};
+  }
   if(key==='siteName'){const s=config.textStyles.navBrand;return {font:s.font,size:s.size,color:s.color,align:s.align,x:s.x,y:s.y}}
   if(key==='navWorkLabel'||key==='navAboutLabel'||key==='navTeamLabel'||key==='navContactLabel'){const s=config.textStyles.navMenu;return {font:s.font,size:s.size,color:s.color,align:s.align,x:s.x,y:s.y}}
   return null;
@@ -226,7 +237,7 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
     const key=rawKey;setSelection(`text:${key}`);if(inlineEditing===key)return;event.preventDefault();event.stopPropagation();const current=currentTextStyle(key),sx=event.clientX,sy=event.clientY,startScroll=window.scrollY;let active=false;const move=(ev:PointerEvent)=>{const dx=ev.clientX-sx,dy=ev.clientY-sy+(window.scrollY-startScroll);if(!active&&Math.hypot(dx,dy)<5)return;if(!current)return;active=true;document.documentElement.classList.add('visual-direct-dragging');patchPortfolioTextStyle(key,{x:Math.round(current.x+dx),y:Math.round(current.y+dy)});if(ev.clientY<54)window.scrollBy(0,-18);else if(ev.clientY>window.innerHeight-54)window.scrollBy(0,18)};const up=(ev:PointerEvent)=>{document.documentElement.classList.remove('visual-direct-dragging');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);if(active)refresh();else startInlineEdit(key,ev.clientX,ev.clientY)};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});return}
    const section=target.closest<HTMLElement>('[data-portfolio-section]');const key=section?.dataset.portfolioSection as PortfolioSectionKey|undefined;
    if(!section||!key)return;setSelection(key);
-   if(target.closest('button,a,input,textarea,select,video,model-viewer')){event.preventDefault();event.stopPropagation();return}
+   if(target.closest('button,a,input,textarea,select,video,model-viewer'))return
    event.preventDefault();event.stopPropagation();const sy=event.clientY,startScroll=window.scrollY,base=sectionLayout(key).y;let active=false;
    const move=(ev:PointerEvent)=>{const dy=ev.clientY-sy+(window.scrollY-startScroll);if(!active&&Math.abs(dy)<3)return;active=true;document.documentElement.classList.add('visual-direct-dragging');patchSection(key,{x:0,y:Math.round(base+dy)});if(ev.clientY<54)window.scrollBy(0,-18);else if(ev.clientY>window.innerHeight-54)window.scrollBy(0,18)};
    const up=()=>{document.documentElement.classList.remove('visual-direct-dragging');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);refresh()};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
