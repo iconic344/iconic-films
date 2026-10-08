@@ -745,3 +745,16 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
     min-height:360px!important;
   }
 }
+
+
+/* PROJECT 07 — hero media ratio is independent from the moving VIIVII sara logo. */
+.hero-media-shell[data-hero-ratio]:not([data-hero-ratio="fill"])>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-viewport,
+.hero-media-shell[data-hero-ratio]:not([data-hero-ratio="fill"])>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-track,
+.hero-media-shell[data-hero-ratio]:not([data-hero-ratio="fill"])>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
+  height:var(--hero-media-ratio-height)!important;
+  min-height:0!important;
+  max-height:none!important;
+}
+.hero-media-shell[data-hero-ratio]:not([data-hero-ratio="fill"])>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
+  aspect-ratio:auto!important;
+}
