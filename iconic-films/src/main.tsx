@@ -9,5 +9,6 @@ import './mobile-layout-v3.css';
 import './mobile-audit.css';
 import './portfolio-grid-polish.css';
 import './portfolio-credits-drawer.css';
+import './mobile-video-playback.css';
 
 createRoot(document.getElementById('root')!).render(<App/>);
