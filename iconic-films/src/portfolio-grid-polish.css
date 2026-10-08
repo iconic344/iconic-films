@@ -1,0 +1,143 @@
+/*
+ * PROJECT 07: portfolio grid sizing and exact-center credits.
+ * Desktop cards are previews, not fullscreen media players.
+ * Touch layouts continue using the dedicated 2-/3-column responsive rules.
+ */
+
+/* A card's original asset ratio is preserved by the fullscreen viewer.
+   The editorial grid uses a predictable 4:5 preview so no single portrait
+   video can force a 600-900px tall row. */
+@media (min-width:1025px) and (hover:hover) and (pointer:fine) {
+  .team-portfolio-page .team-portfolio-work .team-portfolio-grid {
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    grid-auto-rows:auto!important;
+    align-items:start!important;
+    justify-items:stretch!important;
+    align-content:start!important;
+    width:100%!important;
+    max-width:min(1080px,118dvh)!important;
+    gap:clamp(12px,1.15vw,18px)!important;
+    margin:0 auto!important;
+    padding:0!important;
+    height:auto!important;
+    min-height:0!important;
+  }
+  .team-portfolio-page .team-portfolio-work .team-portfolio-grid>.team-portfolio-grid-item {
+    position:relative!important;
+    display:block!important;
+    box-sizing:border-box!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    height:auto!important;
+    max-height:min(54dvh,440px)!important;
+    min-height:0!important;
+    aspect-ratio:4 / 5!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+  .team-portfolio-page .team-portfolio-work .team-portfolio-grid>.team-portfolio-grid-item>.team-portfolio-work-media,
+  .team-portfolio-page .team-portfolio-work .team-portfolio-grid>.team-portfolio-grid-item>img,
+  .team-portfolio-page .team-portfolio-work .team-portfolio-grid>.team-portfolio-grid-item>video,
+  .team-portfolio-page .team-portfolio-work .team-portfolio-grid>.team-portfolio-grid-item>model-viewer {
+    display:block!important;
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    aspect-ratio:auto!important;
+    object-fit:cover!important;
+    object-position:center center!important;
+  }
+}
+
+/* The overlay component is deliberately shared with the image/video slider.
+   Keep the same softened entrance on both; center the ENTIRE info block,
+   rather than bottom-aligning it in the preview. */
+@media (hover:hover) and (pointer:fine) {
+  .team-portfolio-grid-item.has-portfolio-credits>.portfolio-hover-credits,
+  .media-gallery-slide>.portfolio-hover-credits {
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:clamp(14px,2vw,30px)!important;
+    text-align:center!important;
+    background:linear-gradient(
+      180deg,
+      rgb(0 0 0 / .32) 0%,
+      rgb(0 0 0 / .61) 50%,
+      rgb(0 0 0 / .38) 100%
+    )!important;
+  }
+  .team-portfolio-grid-item.has-portfolio-credits>.portfolio-hover-credits>.portfolio-hover-credits-inner,
+  .media-gallery-slide>.portfolio-hover-credits>.portfolio-hover-credits-inner {
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    align-self:center!important;
+    width:100%!important;
+    max-width:min(100%,360px)!important;
+    max-height:calc(100% - 12px)!important;
+    margin:0 auto!important;
+    padding:0!important;
+    gap:clamp(5px,.65vw,10px)!important;
+    text-align:center!important;
+    overflow:hidden!important;
+  }
+  .team-portfolio-grid-item .portfolio-hover-credits-inner :is(h3,p,span),
+  .media-gallery-slide .portfolio-hover-credits-inner :is(h3,p,span) {
+    display:block;
+    width:auto!important;
+    max-width:100%!important;
+    text-align:center!important;
+    margin-inline:auto!important;
+    overflow-wrap:anywhere!important;
+  }
+  .team-portfolio-grid-item .portfolio-hover-credits-title,
+  .media-gallery-slide .portfolio-hover-credits-title {
+    font-size:clamp(18px,1.6vw,27px)!important;
+    line-height:1.13!important;
+    font-weight:500!important;
+  }
+  .team-portfolio-grid-item .portfolio-hover-credits-description,
+  .media-gallery-slide .portfolio-hover-credits-description {
+    font-size:clamp(11px,.76vw,13px)!important;
+    line-height:1.55!important;
+    white-space:pre-line!important;
+  }
+}
+
+/* Remove editorial slot indices that appear as stray white marks beneath
+   credits. They are only meaningful inside the administrator editor. */
+.team-portfolio-page:not(.is-visual-editing) .team-portfolio-grid-item>.team-portfolio-grid-index {
+  display:none!important;
+}
+.team-portfolio-grid-item.has-portfolio-credits>.portfolio-hover-credits::before,
+.team-portfolio-grid-item.has-portfolio-credits>.portfolio-hover-credits::after,
+.media-gallery-slide>.portfolio-hover-credits::before,
+.media-gallery-slide>.portfolio-hover-credits::after {
+  content:none!important;
+}
+
+/* Touch does not support a persistent hover. Keep the compact card caption
+   from the existing responsive UI instead of covering the whole thumbnail. */
+@media (hover:none),(pointer:coarse) {
+  .team-portfolio-page .team-portfolio-work .team-portfolio-grid>.team-portfolio-grid-item {
+    max-height:none!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .portfolio-hover-credits,
+  .portfolio-hover-credits>.portfolio-hover-credits-inner{
+    transition:none!important;
+  }
+}
