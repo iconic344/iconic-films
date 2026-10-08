@@ -435,3 +435,26 @@ html[data-editor-workbench-right="false"] .vii-workbench-stage{right:0!important
  .vii-wb-mobile-panels{min-height:61px!important}
  .vii-wb-direct-caption{top:116px!important;max-width:90vw;white-space:normal!important}
 }
+
+/* The workbench owns pane collapsing; hide the legacy inspector X, otherwise
+   the old editor unmounts its inspector and cannot be reopened from the dock. */
+.visual-editor-ui.is-workbench>.visual-editor-panel>.visual-panel-head>button{
+  display:none!important;
+}
+/* Account for iPhone Dynamic Island / status bar safe area above both rows. */
+@media(max-width:760px){
+ .vii-workbench{--wb-head:calc(106px + env(safe-area-inset-top,0px))}
+ .vii-workbench-header{
+   height:var(--wb-head)!important;
+   grid-template-rows:48px 46px!important;
+ }
+ .vii-workbench-tree{top:var(--wb-head)!important}
+ .visual-editor-ui.is-workbench>.visual-editor-panel,
+ .visual-editor-ui.is-workbench>.visual-editor-panel.is-full-settings{
+   top:var(--wb-head)!important;
+   height:calc(100dvh - var(--wb-head) - 60px)!important;
+   inset-block:var(--wb-head) 60px!important;
+ }
+ .vii-workbench-stage{top:var(--wb-head)!important}
+ .vii-wb-direct-caption{top:calc(var(--wb-head) + 10px)!important}
+}
