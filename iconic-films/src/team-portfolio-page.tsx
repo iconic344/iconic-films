@@ -7,7 +7,7 @@ import TeamMedia,{teamMediaType} from './team-media';
 import PortfolioHoverCredits from './portfolio-hover-credits';
 import useCompactLayout from './use-compact-layout';
 
-function PortfolioGridCard({src,ratio,index,sourceIndex,name,title,kicker,info,credits,onOpen,visualEditing}:{src:string;ratio:PortfolioMediaRatio;index:number;sourceIndex:number;name:string;title:string;kicker?:string;info?:string;credits?:string;onOpen:()=>void;visualEditing:boolean}){
+function PortfolioGridCard({src,ratio,index,sourceIndex,name,title,kicker,info,credits,onOpen,visualEditing,viewerOpen}:{src:string;ratio:PortfolioMediaRatio;index:number;sourceIndex:number;name:string;title:string;kicker?:string;info?:string;credits?:string;onOpen:(preview?:HTMLVideoElement|null)=>void;visualEditing:boolean;viewerOpen:boolean}){
   const [frameRatio,setFrameRatio]=useState(()=>ratio==='auto'?4/5:portfolioMediaFrame(1,1,ratio).ratio);
   useEffect(()=>{
     if(ratio!=='auto'){setFrameRatio(portfolioMediaFrame(1,1,ratio).ratio);return}
@@ -23,8 +23,8 @@ function PortfolioGridCard({src,ratio,index,sourceIndex,name,title,kicker,info,c
     video.preload='metadata';video.addEventListener('loadedmetadata',loaded,{once:true});video.src=src;
     return()=>{video.removeEventListener('loadedmetadata',loaded);video.removeAttribute('src');video.load()};
   },[src,ratio]);
-  return <button type="button" className="team-portfolio-grid-item has-portfolio-credits" data-portfolio-work-index={sourceIndex} aria-label={[title||name,kicker,info,credits,'작품 열기'].filter(Boolean).join(' · ')} style={{'--portfolio-item-ratio':String(frameRatio)} as CSSProperties} onClick={()=>{if(!visualEditing)onOpen()}}>
-    <TeamMedia src={src} alt={name+' portfolio '+(index+1)} className="team-portfolio-work-media" autoPlay/>
+  return <button type="button" className="team-portfolio-grid-item has-portfolio-credits" data-portfolio-work-index={sourceIndex} aria-label={[title||name,kicker,info,credits,'작품 열기'].filter(Boolean).join(' · ')} style={{'--portfolio-item-ratio':String(frameRatio)} as CSSProperties} onClick={event=>{if(!visualEditing)onOpen(event.currentTarget.querySelector('video'))}}>
+    <TeamMedia src={src} alt={name+' portfolio '+(index+1)} className="team-portfolio-work-media" autoPlay suspended={viewerOpen}/>
     <PortfolioHoverCredits title={title} kicker={kicker} info={info} credits={credits}/>
     
   </button>;
@@ -35,6 +35,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const [index,setIndex]=useState(0);
   const [subcategory,setSubcategory]=useState('All');
   const [viewerIndex,setViewerIndex]=useState<number|null>(null);
+  const [handoffVideo,setHandoffVideo]=useState<HTMLVideoElement|null>(null);
   const heroRef=useRef<HTMLElement>(null);
   const viewerMusicHeld=useRef(false);
   const memberSwipeStart=useRef<{x:number;y:number}|null>(null);
@@ -59,12 +60,21 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const memberNext=()=>teamMembers.length&&selectMember(teamMembers[(memberIndex+1)%teamMembers.length],1);
   const prev=()=>setIndex(i=>(i-1+works.length)%works.length);
   const next=()=>setIndex(i=>(i+1)%works.length);
-  const openViewer=(i:number)=>setViewerIndex(i);
-  const closeViewer=()=>setViewerIndex(null);
+  const openViewer=(i:number,preview?:HTMLVideoElement|null)=>{
+    // Keep the original decoded iPhone video and its buffered timeline.
+    const mobile=window.matchMedia('(max-width: 1024px), (any-pointer: coarse)').matches;
+    const canReuse=mobile&&!!preview&&preview.readyState>=2&&
+      teamMediaType(works[i]||'')==='video'&&preview.getAttribute('src')===works[i];
+    if(canReuse&&preview){preview.dataset.fullscreenHandoff='true';setHandoffVideo(preview)}
+    else setHandoffVideo(null);
+    setViewerIndex(i);
+  };
+  const closeViewer=()=>{setViewerIndex(null);setHandoffVideo(null)};
   useEffect(()=>{
     setIndex(0);
     setSubcategory('All');
     setViewerIndex(null);
+    setHandoffVideo(null);
   },[member.id]);
   useEffect(()=>{
     const warmed:HTMLImageElement[]=[];
@@ -359,11 +369,11 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
         {member.portfolioLayout==='grid'&&<div className="team-portfolio-grid">
           {Array.from({length:visualEditing?Math.max(9,works.length):works.length},(_,i)=>{
             const item=galleryItems[i],url=item?.src,sourceIndex=item?.sourceIndex;
-            return url?<PortfolioGridCard key={url+i} src={url} ratio={item.ratio||'auto'} index={i} sourceIndex={sourceIndex??i} name={member.name||'Portfolio'} title={item.title} kicker={item.kicker} info={item.info} credits={item.credits} onOpen={()=>openViewer(i)} visualEditing={visualEditing}/>:<div className="team-portfolio-grid-item is-empty" key={'empty-'+i} aria-hidden="true"></div>
+            return url?<PortfolioGridCard key={url+i} src={url} ratio={item.ratio||'auto'} index={i} sourceIndex={sourceIndex??i} name={member.name||'Portfolio'} title={item.title} kicker={item.kicker} info={item.info} credits={item.credits} onOpen={preview=>openViewer(i,preview)} visualEditing={visualEditing} viewerOpen={viewerIndex!==null}/>:<div className="team-portfolio-grid-item is-empty" key={'empty-'+i} aria-hidden="true"></div>
           })}
         </div>}
 
-        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={()=>{if(!visualEditing)openViewer(index)}} balanceEdges autoPlay={member.portfolioSliderAutoplay!==false} autoplayMs={member.portfolioSliderAutoplayMs||6500} transitionMs={member.portfolioSliderTransitionMs||820} easing={member.portfolioSliderEasing||'smooth'} maxCardHeight={compact?Math.min(member.portfolioSliderHeight||760,560):member.portfolioSliderHeight||760}/></div>}
+        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={(_,preview)=>{if(!visualEditing)openViewer(index,preview)}} balanceEdges autoPlay={member.portfolioSliderAutoplay!==false} autoplayMs={member.portfolioSliderAutoplayMs||6500} transitionMs={member.portfolioSliderTransitionMs||820} easing={member.portfolioSliderEasing||'smooth'} maxCardHeight={compact?Math.min(member.portfolioSliderHeight||760,560):member.portfolioSliderHeight||760}/></div>}
       </section>
       {renderDividers('work')}
     </main>
@@ -377,6 +387,6 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     <footer className="team-portfolio-footer" data-portfolio-section="footer" data-portfolio-hidden={member.portfolioSections.footer.visible?'false':'true'} style={sectionStyle('footer')}><span>© 2026 {config.name}</span><button type="button" data-portfolio-edit="footerReturn" onClick={()=>{if(!visualEditing)onBack()}}>{compact?'Back to team':member.portfolioReturnLabel||'Back to team'}</button></footer>
     {renderDividers('footer')}
 
-    <MediaGalleryDialog items={galleryItems} index={viewerIndex} onClose={closeViewer} onIndexChange={setViewerIndex} autoPlay={member.portfolioSliderAutoplay!==false} autoplayMs={member.portfolioSliderAutoplayMs||6500} transitionMs={member.portfolioSliderTransitionMs||820} easing={member.portfolioSliderEasing||'smooth'}/>
+    <MediaGalleryDialog items={galleryItems} index={viewerIndex} borrowedVideo={handoffVideo} onClose={closeViewer} onIndexChange={setViewerIndex} autoPlay={!!handoffVideo||member.portfolioSliderAutoplay!==false} autoplayMs={member.portfolioSliderAutoplayMs||6500} transitionMs={member.portfolioSliderTransitionMs||820} easing={member.portfolioSliderEasing||'smooth'}/>
   </div>
 }
