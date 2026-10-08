@@ -12049,6 +12049,10 @@ body{
 /* Live visual-builder layout values. These are the same values used by admin. */
 .hero{
   translate:var(--hero-offset-x,0px) var(--hero-offset-y,0px);
+  scale:1;
+  transform-origin:50% 0;
+}
+.hero>.hero-media-shell{
   scale:var(--hero-scale,1);
   transform-origin:50% 0;
 }
