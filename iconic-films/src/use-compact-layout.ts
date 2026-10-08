@@ -14,3 +14,15 @@ export default function useCompactLayout(){
  },[]);
  return compact;
 }
+
+export function usePhoneLayout(){
+ const [phone,setPhone]=useState(()=>typeof window!=='undefined'&&window.matchMedia('(max-width: 600px)').matches);
+ useEffect(()=>{
+  const media=window.matchMedia('(max-width: 600px)');
+  const sync=()=>setPhone(media.matches);
+  sync();
+  media.addEventListener?.('change',sync);
+  return()=>media.removeEventListener?.('change',sync);
+ },[]);
+ return phone;
+}
