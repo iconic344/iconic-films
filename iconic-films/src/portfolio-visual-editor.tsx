@@ -4,6 +4,7 @@ import {ArrowLeft,ArrowRight,Copy,Eye,EyeOff,Grip,Layers3,Maximize2,PanelLeft,Pa
 import type {Config,PortfolioDivider,PortfolioMediaRatio,PortfolioSectionKey,TeamMember,TextAlign} from './defaults';
 import {uploadFile} from './media-upload';
 import EditSiteFullSettings from './edit-site-full-settings';
+import EditSiteWorkbench from './edit-site-workbench';
 import FontPicker from './font-picker';
 
 type PanelTab='layers'|'content'|'layout'|'style'|'settings';
@@ -39,7 +40,7 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  setBusy:(value:boolean)=>void;notify:(value:string)=>void;onThemeChange?:(value:string)=>void;
 }){
  const [selection,setSelection]=useState<Selection>('work');
- const [rect,setRect]=useState<DOMRect|null>(null),[uploading,setUploading]=useState(false),[tab,setTab]=useState<PanelTab>('layers');
+ const [rect,setRect]=useState<DOMRect|null>(null),[uploading,setUploading]=useState(false),[tab,setTab]=useState<PanelTab>('content');
  const [panelSide,setPanelSide]=useState<'left'|'right'>('right'),[panelOpen,setPanelOpen]=useState(true);
  const [toolbarPos,setToolbarPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-toolbar-pos'));
  const [panelPos,setPanelPos]=useState<Point|null>(()=>pointFromStorage('viivii-visual-panel-pos'));
@@ -293,7 +294,8 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  const style=currentTextStyle(selectedText||'siteName');
  const quickToolbarStyle=rect&&typeof window!=='undefined'?{left:Math.max(8,Math.min(window.innerWidth-360,rect.left+rect.width/2-176)),top:Math.max(8,rect.top>74?rect.top-52:rect.bottom+10)} as CSSProperties:undefined;
 
- return <div className={'visual-editor-ui portfolio-visual-editor is-panel-'+panelSide} data-visual-editor="true">
+ return <div className={'visual-editor-ui portfolio-visual-editor is-panel-'+panelSide+' is-workbench'} data-visual-editor="true">
+  <EditSiteWorkbench page="portfolio" memberId={member.id} config={config} selection={selection} onSelect={value=>setSelection(value as Selection)} onContent={()=>setTab('content')} onLayers={()=>setTab('layers')} onSettings={()=>setTab('settings')} onAddWork={addWork} onSave={onSave} onCancel={onCancel} onUndo={onUndo} canUndo={canUndo} busy={busy||uploading} onOpenAdmin={onOpenAdmin}/>
   <div style={toolbarStyle} className={'visual-editor-topbar '+(toolbarPos?'is-free ':toolbarBottom?'is-bottom ':'is-top ')} onPointerDown={e=>beginChromeDrag(e,'toolbar')}>
    <div className="visual-editor-title visual-editor-drag-zone" onDoubleClick={()=>resetChrome('toolbar')}><Grip size={14}/><Settings2 size={16}/><strong>VISUAL EDIT / PORTFOLIO</strong><span>현재 페이지 전용 레이어 · 직접 선택 · 드래그 · 크기 · 스타일</span></div>
    <div className="visual-editor-toolbar-tools">
