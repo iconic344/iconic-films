@@ -1306,3 +1306,15 @@
    flex-wrap:wrap!important;
  }
 }
+
+
+/* The hero fade must sit ABOVE the Safari still-poster fallback too. */
+@media (max-width:1024px), (max-width:1366px) and (any-pointer:coarse){
+ .site .hero>.hero-media-shell[data-hero-has-media="true"]::after{
+   z-index:20!important;
+   pointer-events:none!important;
+ }
+ .site .hero>.hero-media-shell[data-hero-has-media="true"]>.hero-local-pattern{
+   pointer-events:none!important;
+ }
+}
