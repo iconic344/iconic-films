@@ -62,11 +62,12 @@ export default function Home(){
  const [navDraggingItem,setNavDraggingItem]=useState<NavItemKey|null>(null),[navDropItem,setNavDropItem]=useState<NavItemKey|null>(null);
  const musicButton=useRef<HTMLButtonElement>(null),musicPanel=useRef<HTMLElement>(null);
  const startup=useRef(false),audio=useRef<HTMLAudioElement>(null),filmWasPlaying=useRef(false),teamVideoWasPlaying=useRef(false),drag=useRef<{x:number;y:number}|null>(null),frame=useRef<HTMLDivElement>(null),lastScrollY=useRef(0),videoWarm=useRef(new Map<string,HTMLVideoElement>());
- const [compactViewport,setCompactViewport]=useState(()=>typeof window!=='undefined'&&window.matchMedia('(max-width: 820px), (max-width: 1180px) and (any-pointer: coarse)').matches);
+ const [compactViewport,setCompactViewport]=useState(()=>typeof window!=='undefined'&&window.matchMedia('(max-width: 1024px), (max-width: 1366px) and (any-pointer: coarse)').matches);
  const c=visualEdit?draft:(preview?draft:saved), t=c.tracks[track];
  const sectionRank=(key:SiteSectionKey)=>{const i=(c.sectionOrder||[]).indexOf(key);return (i<0?99:i)*100};
  const sectionStyle=(key:SiteSectionKey):CSSProperties=>{
   const height=Math.max(0,Number(c.sectionHeights?.[key]||0));
+  if(compactViewport)return {order:sectionRank(key),height:'auto',minHeight:0};
   if(key==='footer')return {order:sectionRank(key)};
   if(key==='about'&&height>0)return {order:sectionRank(key),height:height+'px',minHeight:0};
   return {order:sectionRank(key),minHeight:height>0?height+'px':undefined};
@@ -102,7 +103,7 @@ export default function Home(){
  useEffect(()=>{draftRef.current=draft},[draft]);
  useEffect(()=>{if(!visualEdit)return;const onKey=(e:KeyboardEvent)=>{const target=e.target as HTMLElement|null;if(target?.closest('input,textarea,select,[contenteditable="true"]'))return;if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'){e.preventDefault();undoVisualEdit();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();void saveVisualEdit()}};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey)},[visualEdit]);
  useEffect(()=>{
-  const query=window.matchMedia('(max-width: 820px), (max-width: 1180px) and (any-pointer: coarse)');
+  const query=window.matchMedia('(max-width: 1024px), (max-width: 1366px) and (any-pointer: coarse)');
   const sync=()=>setCompactViewport(query.matches);
   sync();
   query.addEventListener?.('change',sync);
@@ -458,25 +459,36 @@ export default function Home(){
  const filmItems=filmGallery().map(toGallery);
  const textCss=(key:keyof typeof c.textStyles):CSSProperties=>{
   const s=c.textStyles[key];
+  // Desktop edits remain authoritative. Smaller viewports adapt presentation
+  // while using the same saved content and settings.
+  const editorialLarge=['workHeadline','aboutHeadline','teamHeadline'].includes(key);
+  const medium=['heroCaption','heroSubtitle','teamMemberName','workCardTitle'].includes(key);
+  const mobileCap=editorialLarge?52:medium?34:key==='navBrand'?24:key==='navMenu'?16:24;
+  const size=compactViewport?Math.min(s.size,mobileCap):s.size;
+  const responsiveSize=compactViewport
+    ?'clamp('+Math.min(11,size)+'px, '+(size/390*100).toFixed(3)+'vw, '+size+'px)'
+    :size+'px';
+  const x=compactViewport?0:(key==='footerCopyright'?0:s.x);
+  const y=compactViewport?0:s.y;
   return {
    fontFamily:s.font||undefined,
-   fontSize:s.size+'px',
+   fontSize:responsiveSize,
    color:s.color||undefined,
    textAlign:s.align,
-   translate:(key==='footerCopyright'?0:s.x)+'px '+s.y+'px',
+   translate:x+'px '+y+'px',
    letterSpacing:(s.letterSpacing??0)+'px',
    fontWeight:s.weight??undefined,
    opacity:(s.opacity??100)/100,
    textTransform:s.textTransform&&s.textTransform!=='none'?s.textTransform:undefined,
-   '--edit-font-size':s.size+'px',
-   '--edit-x':(key==='footerCopyright'?0:s.x)+'px',
-   '--edit-y':s.y+'px',
+   '--edit-font-size':responsiveSize,
+   '--edit-x':x+'px',
+   '--edit-y':y+'px',
    '--edit-letter-spacing':(s.letterSpacing??0)+'px'
   } as CSSProperties;
  };
  const activeAccent=admin?draft.accent:c.accent;
  const sliderEase=({smooth:'cubic-bezier(.22,1,.36,1)',soft:'cubic-bezier(.16,1,.3,1)',snappy:'cubic-bezier(.2,.82,.2,1)',linear:'linear'} as Record<string,string>)[c.sliderEasing]||'cubic-bezier(.22,1,.36,1)';
- const style={'--accent-color':activeAccent,'--gallery-transition-ms':Math.max(0,c.sliderTransitionMs||850)+'ms','--gallery-autoplay-ms':String(Math.max(1200,c.sliderAutoplayMs||6500)),'--gallery-ease':sliderEase,'--ui-transition-ms':Math.max(0,c.uiTransitionMs||350)+'ms','--hover-transition-ms':Math.max(0,c.hoverTransitionMs||300)+'ms','--reveal-transition-ms':Math.max(0,c.revealTransitionMs||650)+'ms','--accent-contrast':accentContrast(activeAccent),'--nav-alpha':c.navOpacity/100,'--section-space':c.spacing+'px','--round':c.radius+'px','--glass-blur':c.blur+'px','--glass-alpha':c.glass/100,'--motion':c.motion+'s','--hero-fade-top-size':c.heroFadeTopSize+'%','--hero-fade-bottom-size':c.heroFadeBottomSize+'%','--hero-fade-density':c.heroFadeDensity+'%','--hero-fade-opacity':String(c.heroFadeEnabled?c.heroFadeOpacity/100:0),'--hero-fade-blur':c.heroFadeBlur+'px','--hero-caption-font':c.textStyles.heroCaption.font||c.font,'--hero-caption-size':c.textStyles.heroCaption.size+'px','--hero-caption-color':c.textStyles.heroCaption.color||'inherit','--hero-caption-align':c.textStyles.heroCaption.align,'--hero-caption-x':c.textStyles.heroCaption.x+'px','--hero-caption-y':c.textStyles.heroCaption.y+'px','--hero-caption-letter':(c.textStyles.heroCaption.letterSpacing??0)+'px','--hero-caption-weight':String(c.textStyles.heroCaption.weight??600),'--hero-caption-opacity':String((c.textStyles.heroCaption.opacity??100)/100),'--hero-caption-transform':c.textStyles.heroCaption.textTransform||'none','--nav-offset-x':c.navOffsetX+'px','--nav-offset-y':c.navOffsetY+'px','--nav-scale':String(c.navScale),'--hero-offset-x':c.heroOffsetX+'px','--hero-offset-y':c.heroOffsetY+'px','--hero-scale':String(c.heroScale),'--logo-offset-y':c.logoOffsetY+'px','--work-offset-x':c.workOffsetX+'px','--work-offset-y':c.workOffsetY+'px','--work-scale':String(c.workScale),'--about-offset-x':c.aboutOffsetX+'px','--about-offset-y':c.aboutOffsetY+'px','--about-scale':String(c.aboutScale),'--team-offset-x':c.teamOffsetX+'px','--team-offset-y':c.teamOffsetY+'px','--team-scale':String(c.teamScale),'--footer-offset-x':'0px','--footer-offset-y':'0px','--footer-scale':'1','--film-overlay-opacity':String((c.filmBackdropOpacity??62)/100),'--film-overlay-blur':(c.filmBackdropBlur??20)+'px',
+ const style={'--accent-color':activeAccent,'--gallery-transition-ms':Math.max(0,c.sliderTransitionMs||850)+'ms','--gallery-autoplay-ms':String(Math.max(1200,c.sliderAutoplayMs||6500)),'--gallery-ease':sliderEase,'--ui-transition-ms':Math.max(0,c.uiTransitionMs||350)+'ms','--hover-transition-ms':Math.max(0,c.hoverTransitionMs||300)+'ms','--reveal-transition-ms':Math.max(0,c.revealTransitionMs||650)+'ms','--accent-contrast':accentContrast(activeAccent),'--nav-alpha':c.navOpacity/100,'--section-space':(compactViewport?Math.min(c.spacing,76):c.spacing)+'px','--round':c.radius+'px','--glass-blur':c.blur+'px','--glass-alpha':c.glass/100,'--motion':c.motion+'s','--hero-fade-top-size':c.heroFadeTopSize+'%','--hero-fade-bottom-size':c.heroFadeBottomSize+'%','--hero-fade-density':c.heroFadeDensity+'%','--hero-fade-opacity':String(c.heroFadeEnabled?c.heroFadeOpacity/100:0),'--hero-fade-blur':c.heroFadeBlur+'px','--hero-caption-font':c.textStyles.heroCaption.font||c.font,'--hero-caption-size':(compactViewport?'clamp(12px,5vw,'+Math.min(c.textStyles.heroCaption.size,30)+'px)':c.textStyles.heroCaption.size+'px'),'--hero-caption-color':c.textStyles.heroCaption.color||'inherit','--hero-caption-align':c.textStyles.heroCaption.align,'--hero-caption-x':(compactViewport?0:c.textStyles.heroCaption.x)+'px','--hero-caption-y':(compactViewport?0:c.textStyles.heroCaption.y)+'px','--hero-caption-letter':(c.textStyles.heroCaption.letterSpacing??0)+'px','--hero-caption-weight':String(c.textStyles.heroCaption.weight??600),'--hero-caption-opacity':String((c.textStyles.heroCaption.opacity??100)/100),'--hero-caption-transform':c.textStyles.heroCaption.textTransform||'none','--nav-offset-x':(compactViewport?0:c.navOffsetX)+'px','--nav-offset-y':(compactViewport?0:c.navOffsetY)+'px','--nav-scale':String(compactViewport?1:c.navScale),'--hero-offset-x':(compactViewport?0:c.heroOffsetX)+'px','--hero-offset-y':(compactViewport?0:c.heroOffsetY)+'px','--hero-scale':String(compactViewport?1:c.heroScale),'--logo-offset-y':(compactViewport?0:c.logoOffsetY)+'px','--work-offset-x':(compactViewport?0:c.workOffsetX)+'px','--work-offset-y':(compactViewport?0:c.workOffsetY)+'px','--work-scale':String(compactViewport?1:c.workScale),'--about-offset-x':(compactViewport?0:c.aboutOffsetX)+'px','--about-offset-y':(compactViewport?0:c.aboutOffsetY)+'px','--about-scale':String(compactViewport?1:c.aboutScale),'--team-offset-x':(compactViewport?0:c.teamOffsetX)+'px','--team-offset-y':(compactViewport?0:c.teamOffsetY)+'px','--team-scale':String(compactViewport?1:c.teamScale),'--footer-offset-x':'0px','--footer-offset-y':'0px','--footer-scale':'1','--film-overlay-opacity':String((c.filmBackdropOpacity??62)/100),'--film-overlay-blur':(c.filmBackdropBlur??20)+'px',
  '--nav-brand-font':c.textStyles.navBrand.font||c.font,'--nav-brand-size':c.textStyles.navBrand.size+'px','--nav-brand-color':c.textStyles.navBrand.color||'var(--ink)','--nav-brand-letter':(c.textStyles.navBrand.letterSpacing??0)+'px','--nav-brand-weight':String(c.textStyles.navBrand.weight??800),'--nav-brand-opacity':String((c.textStyles.navBrand.opacity??100)/100),'--nav-brand-transform':c.textStyles.navBrand.textTransform||'none',
  '--nav-menu-font':c.textStyles.navMenu.font||c.font,'--nav-menu-size':c.textStyles.navMenu.size+'px','--nav-menu-color':c.textStyles.navMenu.color||'var(--ink)','--nav-menu-letter':(c.textStyles.navMenu.letterSpacing??0)+'px','--nav-menu-weight':String(c.textStyles.navMenu.weight??500),'--nav-menu-opacity':String((c.textStyles.navMenu.opacity??100)/100),'--nav-menu-transform':c.textStyles.navMenu.textTransform||'none',
  '--footer-copy-font':c.textStyles.footerCopyright.font||c.font,'--footer-copy-size':c.textStyles.footerCopyright.size+'px','--footer-copy-color':c.textStyles.footerCopyright.color||'var(--soft)','--footer-copy-letter':(c.textStyles.footerCopyright.letterSpacing??0)+'px','--footer-copy-weight':String(c.textStyles.footerCopyright.weight??400),'--footer-copy-opacity':String((c.textStyles.footerCopyright.opacity??100)/100),
