@@ -26,7 +26,7 @@ function PortfolioGridCard({src,ratio,index,sourceIndex,name,title,kicker,info,c
   return <button type="button" className="team-portfolio-grid-item has-portfolio-credits" data-portfolio-work-index={sourceIndex} aria-label={[title||name,kicker,info,credits,'작품 열기'].filter(Boolean).join(' · ')} style={{'--portfolio-item-ratio':String(frameRatio)} as CSSProperties} onClick={()=>{if(!visualEditing)onOpen()}}>
     <TeamMedia src={src} alt={name+' portfolio '+(index+1)} className="team-portfolio-work-media" autoPlay/>
     <PortfolioHoverCredits title={title} kicker={kicker} info={info} credits={credits}/>
-    {visualEditing&&<span className="team-portfolio-grid-index">{String(index+1).padStart(2,'0')}</span>}
+    
   </button>;
 }
 
@@ -359,7 +359,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
         {member.portfolioLayout==='grid'&&<div className="team-portfolio-grid">
           {Array.from({length:visualEditing?Math.max(9,works.length):works.length},(_,i)=>{
             const item=galleryItems[i],url=item?.src,sourceIndex=item?.sourceIndex;
-            return url?<PortfolioGridCard key={url+i} src={url} ratio={item.ratio||'auto'} index={i} sourceIndex={sourceIndex??i} name={member.name||'Portfolio'} title={item.title} kicker={item.kicker} info={item.info} credits={item.credits} onOpen={()=>openViewer(i)} visualEditing={visualEditing}/>:<div className="team-portfolio-grid-item is-empty" key={'empty-'+i} aria-hidden="true"><span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span></div>
+            return url?<PortfolioGridCard key={url+i} src={url} ratio={item.ratio||'auto'} index={i} sourceIndex={sourceIndex??i} name={member.name||'Portfolio'} title={item.title} kicker={item.kicker} info={item.info} credits={item.credits} onOpen={()=>openViewer(i)} visualEditing={visualEditing}/>:<div className="team-portfolio-grid-item is-empty" key={'empty-'+i} aria-hidden="true"></div>
           })}
         </div>}
 
