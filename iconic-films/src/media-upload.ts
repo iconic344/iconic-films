@@ -27,7 +27,9 @@ export function userFacingUploadError(message:string,fileSize:number,status=0){
  return message||'업로드 중 서버 오류가 발생했습니다.';
 }
 function quotaAwareError(message:string,file:File,status=0){
- return Error(userFacingUploadError(message,file.size,status));
+ const error=Error(userFacingUploadError(message,file.size,status));
+ if(isStorageLimitError(message,status))error.name='StorageQuotaError';
+ return error;
 }
 function signedUpload(ticket:UploadTicket,file:File,progress?:(percent:number)=>void,signal?:AbortSignal):Promise<string>{
  return new Promise((resolve,reject)=>{
@@ -103,7 +105,7 @@ async function tusUpload(ticket:UploadTicket,file:File,progress?:(percent:number
    progress?.(Math.min(99,Math.round(offset/file.size*100)));
   }catch(err){
    if(signal?.aborted)throw err;
-   if(isStorageLimitError((err as Error).message))throw err;
+   if((err as Error).name==='StorageQuotaError'||isStorageLimitError((err as Error).message))throw err;
    if(++failures>4)throw err;
    await new Promise(resolve=>setTimeout(resolve,600*Math.pow(2,failures-1)));
    // After a dropped PATCH, resume from the server-confirmed offset.
@@ -146,7 +148,7 @@ export async function uploadFile(file:File,progress?:(percent:number)=>void,sign
   try{return await tusUpload(ticket,file,progress,signal)}
   catch(error){
    if(signal?.aborted||(error as Error).name==='AbortError')throw error;
-   if(isStorageLimitError((error as Error).message))throw error;
+   if((error as Error).name==='StorageQuotaError'||isStorageLimitError((error as Error).message))throw error;
    // Signed resumable uploads can fail JWS validation on some projects;
    // fall back to the existing tested standard signed upload when compatible.
   }
