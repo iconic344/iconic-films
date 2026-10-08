@@ -832,7 +832,10 @@
   .site .main-logo[data-logo-type="3d"]:not(.is-marquee) .logo-group{
     width:100%!important;height:100%!important;
     justify-content:center!important;margin:0!important;
-    padding:0!important;transform:none!important
+    padding:0!important
+  }
+  .site .main-logo[data-logo-type="3d"]:not(.is-marquee) .logo-track{
+    transform:none!important;
   }
   .site .main-logo[data-logo-type="3d"]:not(.is-marquee) .logo-tile{
     width:100%!important;max-width:100%!important;
