@@ -85,7 +85,12 @@ export default function Home(){
  useEffect(()=>{if(workbenchPreview){setLoaded(true);return;}api('/api/config').then(j=>{const v=normalizeConfig(j.config||{});try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(v))}catch{}setSaved(v);setDraft(v);setTheme(cachedTheme(v.theme));setVolume(v.volume);setShuffle(v.musicShuffle);setRepeat(v.musicRepeatMode==='one'?1:v.musicRepeatMode==='all'?2:0);setLoaded(true)}).catch(e=>{setLoaded(true);setNote(e.message)});},[]);
  useEffect(()=>{
   if(!workbenchPreview||window.parent===window)return;
+  document.documentElement.dataset.viiviiPreview='true';
   const send=(payload:Record<string,unknown>)=>window.parent.postMessage({source:'viivii-preview',...payload},window.location.origin);
+  const markSelected=(el:HTMLElement)=>{
+   document.querySelectorAll<HTMLElement>('[data-viivii-preview-selected]').forEach(node=>delete node.dataset.viiviiPreviewSelected);
+   el.dataset.viiviiPreviewSelected='true';
+  };
   const message=(event:MessageEvent)=>{
    if(event.origin!==window.location.origin||event.source!==window.parent)return;
    const data=event.data;
@@ -102,7 +107,8 @@ export default function Home(){
       :selection.startsWith('text:')
       ?'[data-visual-text="'+CSS.escape(selection.slice(5))+'"],[data-portfolio-edit="'+CSS.escape(selection.slice(5))+'"]'
       :'[data-visual-section="'+CSS.escape(selection)+'"],[data-portfolio-section="'+CSS.escape(selection)+'"]';
-    document.querySelector<HTMLElement>(query)?.scrollIntoView({behavior:'smooth',block:'center'});
+    const el=document.querySelector<HTMLElement>(query);
+    if(el){markSelected(el);el.scrollIntoView({behavior:'smooth',block:'center'})}
    }
   };
   const select=(e:MouseEvent)=>{
@@ -121,12 +127,13 @@ export default function Home(){
     data.dataset.portfolioWorkIndex!==undefined?'work:'+data.dataset.portfolioWorkIndex:
     data.dataset.portfolioEdit?'text:'+data.dataset.portfolioEdit:
     data.dataset.visualSection||data.dataset.portfolioSection||'hero';
+   markSelected(data);
    send({type:'select',selection:choice});
   };
   window.addEventListener('message',message);
   document.addEventListener('click',select,true);
   send({type:'ready'});
-  return()=>{window.removeEventListener('message',message);document.removeEventListener('click',select,true)};
+  return()=>{window.removeEventListener('message',message);document.removeEventListener('click',select,true);delete document.documentElement.dataset.viiviiPreview};
  },[workbenchPreview]);
  useEffect(()=>{
   // A fixed liquid-glass header should not hide editorial text while reading.
