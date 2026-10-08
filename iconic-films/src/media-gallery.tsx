@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState,type CSSProperties} from 'react';
+import {useEffect,useId,useRef,useState,type CSSProperties} from 'react';
 import {createPortal} from 'react-dom';
 import {ChevronLeft,ChevronRight,Play,Pause,Volume2,VolumeX,Maximize,Minimize,X} from 'lucide-react';
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
@@ -32,10 +32,14 @@ export function MediaGallery({items,initialIndex=0,onIndexChange,preserveItems=f
 }
 function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false,captionTitleStyle,captionVisualText,balanceEdges=false,cleanPreview=false,nativeCursor=true,mediaFit='contain',mediaPositionX=50,mediaPositionY=50,autoPlay=true,autoplayMs=6500,transitionMs=820,easing='smooth',maxCardHeight}:GalleryProps){
  const [index,setIndex]=useState(Math.min(initialIndex,Math.max(0,items.length-1)));
+ const [creditsOpen,setCreditsOpen]=useState(false);
+ const creditsPanelId=useId();
  const [playing,setPlaying]=useState(()=>autoPlay&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
  const [muted,setMuted]=useState(()=>!modal),[mediaVolume,setMediaVolume]=useState(1),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(modal),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState(''),[landscape,setLandscape]=useState(false),[frame,setFrame]=useState<{mode:MediaFrameMode;ratio:number}>({mode:'landscape',ratio:16/9});
  const root=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),drag=useRef<{x:number;y:number;slideIndex:number|null}|null>(null),dragged=useRef(false),elapsed=useRef(0),ambient=useRef<HTMLCanvasElement>(null),idleTimer=useRef(0),restoreTime=useRef<number|null>(null);
  const item=items[index],type=item?teamMediaType(item.src):'image',isFullscreen=expanded,showBackdrop=modal||isFullscreen;
+ // A new work always starts with unobstructed fullscreen media.
+ useEffect(()=>setCreditsOpen(false),[item?.id]);
  useEffect(()=>{
   if(!item?.src)return;
   const cacheKey=item.src+'|'+(item.ratio||'auto');
@@ -164,6 +168,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
    {(type==='image'||item.poster)&&<img src={type==='image'?item.src:item.poster} alt=""/>}
    {type==='video'&&<canvas ref={ambient} style={{opacity:1}}/>}
   </div><div className="media-gallery-backdrop-glass" aria-hidden="true"/></>}
+  {isFullscreen&&<button type="button" className={'media-gallery-close media-gallery-credits-toggle'+(creditsOpen?' is-active':'')} data-cursor-label="CREDITS" aria-label={creditsOpen?'크레딧 닫기':'크레딧 보기'} aria-expanded={creditsOpen} aria-controls={creditsPanelId} title="Credits" onClick={()=>setCreditsOpen(open=>!open)}>C</button>}
   {isFullscreen&&<button type="button" className="media-gallery-close" aria-label={modal?'미디어 닫기':'전체 화면 종료'} onClick={()=>{if(modal)onExpand?.();else exitFullscreen()}}><X size={23}/></button>}
   <div className="media-gallery-viewport" onPointerDown={e=>{if(e.button!==0||(e.target as HTMLElement).closest('button,input,model-viewer'))return;const slide=(e.target as HTMLElement).closest<HTMLElement>('[data-gallery-index]');const slideIndex=slide?Number(slide.dataset.galleryIndex):null;drag.current={x:e.clientX,y:e.clientY,slideIndex:Number.isInteger(slideIndex)?slideIndex:null};dragged.current=false;e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={e=>{if(!drag.current)return;const start=drag.current,dx=e.clientX-start.x,dy=e.clientY-start.y;drag.current=null;const swiped=Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy);if(swiped){dragged.current=true;choose(index+(dx<0?1:-1))}else if(balanceEdges&&!modal&&!isFullscreen&&start.slideIndex!==null){dragged.current=true;if(start.slideIndex!==index){choose(start.slideIndex)}else if(onExpand){if(type==='video'&&video.current){video.current.muted=false;setMuted(false);void video.current.play().catch(()=>{})}onExpand(start.slideIndex)}}else if(type==='video'&&(modal||isFullscreen)){dragged.current=true;toggle()}e.currentTarget.releasePointerCapture?.(e.pointerId)}} onPointerCancel={()=>{drag.current=null}}>
    <div className="media-gallery-track" style={{'--gallery-index':displayIndex} as CSSProperties}>
@@ -191,7 +196,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
    </div>
 
   </div>
-  {(isFullscreen||modal||(!cleanPreview&&!balanceEdges))&&<div className="media-gallery-caption">{item.kicker&&<span>{item.kicker}</span>}<h3 data-visual-text={captionVisualText} style={captionTitleStyle}>{item.title}</h3>{item.info&&<p className="is-info">{item.info}</p>}{item.credits&&<><span className="media-gallery-caption-credit-label">CREDITS</span><p className="is-credits-copy">{item.credits}</p></>}{!item.info&&!item.credits&&item.description&&<p>{item.description}</p>}</div>}
+  {(isFullscreen||modal||(!cleanPreview&&!balanceEdges))&&<div id={isFullscreen?creditsPanelId:undefined} className={'media-gallery-caption'+(isFullscreen?' is-credits-panel'+(creditsOpen?' is-open':''):'')} aria-hidden={isFullscreen&&!creditsOpen}>{item.kicker&&<span>{item.kicker}</span>}<h3 data-visual-text={captionVisualText} style={captionTitleStyle}>{item.title}</h3>{item.info&&<p className="is-info">{item.info}</p>}{item.credits&&<><span className="media-gallery-caption-credit-label">CREDITS</span><p className="is-credits-copy">{item.credits}</p></>}{!item.info&&!item.credits&&item.description&&<p>{item.description}</p>}</div>}
   {items.length>1&&<div className="media-gallery-navigation" role="group" aria-label="슬라이드 컨트롤">
    <button type="button" className="media-gallery-arrow is-prev" aria-label="이전 미디어" onClick={()=>choose(index-1)}><ChevronLeft size={21}/></button>
    <div className="media-gallery-indicators" role="group" aria-label="미디어 선택">{items.map((entry,i)=><button type="button" key={entry.id} aria-label={`${i+1}번 미디어: ${entry.title}`} aria-current={i===index?'true':undefined} className={i===index?'is-active':''} onClick={()=>choose(i)}><span style={{'--gallery-progress':i===index?progress:0} as CSSProperties}/></button>)}</div>
