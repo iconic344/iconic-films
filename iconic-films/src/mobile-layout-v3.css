@@ -406,3 +406,267 @@
 @media (prefers-reduced-motion:reduce){
   .team-portfolio-page .media-gallery-track{transition:none!important}
 }
+
+
+/* PROJECT 07: mobile cinematic parity and measured spacing | 2026-10-08 */
+/*
+ * Preserve the desktop visual direction: cinema-wide hero with feathered
+ * lower edge, generous 3D object, tight and intentional section rhythm.
+ * All rules are scoped to touch/tablet. Editor colors/media/assets stay shared.
+ */
+@media (max-width:1024px), (max-width:1366px) and (any-pointer:coarse){
+  /* Gallery and portfolio hero must remain the visual starting point. */
+  .team-portfolio-page>.team-portfolio-site-nav{
+    margin-bottom:0!important;
+  }
+  .team-portfolio-page .team-portfolio-hero{
+    width:100vw!important;
+    max-width:100vw!important;
+    height:clamp(236px,47vw,470px)!important;
+    max-height:470px!important;
+    min-height:0!important;
+    margin-inline:0!important;
+    overflow:hidden!important;
+    border-radius:0!important;
+    isolation:isolate!important;
+    transform:none!important;
+  }
+  .team-portfolio-page .team-portfolio-hero-media{
+    inset:0!important;height:100%!important;max-height:none!important;
+    overflow:hidden!important;
+    opacity:1!important;
+    -webkit-mask-image:none!important;mask-image:none!important;
+    transform:none!important;
+  }
+  .team-portfolio-page .team-portfolio-hero-media>.team-portfolio-hero-media-element,
+  .team-portfolio-page .team-portfolio-hero-media>img,
+  .team-portfolio-page .team-portfolio-hero-media>video{
+    width:100%!important;height:100%!important;inset:0!important;
+    object-fit:cover!important;
+    object-position:center 42%!important;
+    transform:none!important;
+    border-radius:0!important;
+  }
+  .team-portfolio-page .team-portfolio-hero::before{
+    background:linear-gradient(
+      90deg,
+      color-mix(in srgb,var(--page) 20%,transparent) 0%,
+      transparent 44%)!important;
+    opacity:.52!important;
+  }
+  .team-portfolio-page .team-portfolio-hero::after{
+    content:""!important;
+    position:absolute!important;left:0!important;right:0!important;
+    top:auto!important;bottom:0!important;
+    height:76%!important;max-height:none!important;
+    z-index:3!important;
+    background:linear-gradient(to bottom,
+      transparent 0%,
+      color-mix(in srgb,var(--page) 4%,transparent) 22%,
+      color-mix(in srgb,var(--page) 19%,transparent) 48%,
+      color-mix(in srgb,var(--page) 65%,transparent) 79%,
+      var(--page) 100%)!important;
+    filter:none!important;
+    pointer-events:none!important;
+  }
+  /* Never keep a desktop-sized spacer between index and work heading. */
+  .team-portfolio-page .team-portfolio-member-index{
+    flex:0 0 auto!important;
+    margin:0 auto!important;
+    padding-block:12px 8px!important;
+    min-height:0!important;height:auto!important;
+    transform:none!important;
+  }
+  .team-portfolio-page .team-member-index-head{margin-bottom:9px!important}
+  .team-portfolio-page .team-member-index-list>button{
+    min-height:60px!important;
+    box-sizing:border-box!important;
+  }
+  .team-portfolio-page .team-portfolio-work{
+    flex:0 0 auto!important;
+    min-height:0!important;height:auto!important;
+    margin:0 auto!important;
+    padding:16px 0 54px!important;
+    align-self:stretch!important;
+    transform:none!important;translate:none!important;scale:1!important;
+  }
+  .team-portfolio-page .team-portfolio-work-head{
+    min-height:0!important;height:auto!important;
+    margin:0 0 18px!important;
+    padding:0!important;
+    align-items:start!important;
+    gap:8px!important;
+  }
+  .team-portfolio-page .team-portfolio-work-head>div{
+    display:block!important;
+    min-height:0!important;height:auto!important;
+    flex:1 1 100%!important;
+    margin:0!important;padding:0!important;
+  }
+  .team-portfolio-page .team-portfolio-work-head h2{
+    max-width:100%!important;
+    text-align:left!important;
+    margin:0!important;
+    translate:none!important;transform:none!important;
+  }
+  .team-portfolio-page .team-portfolio-work-head p{
+    max-width:100%!important;
+    text-align:left!important;
+    translate:none!important;margin-top:6px!important;
+  }
+  .team-portfolio-page .team-portfolio-layout-label{
+    text-align:left!important;
+    translate:none!important;
+  }
+  .team-portfolio-page .team-portfolio-subfilters{
+    margin:8px 0 22px!important;
+    gap:8px!important;
+  }
+
+  /* The home/showreel media retains the same edge-to-edge cinematic framing. */
+  .site .hero>.hero-media-shell{
+    overflow:hidden!important;
+  }
+  .site .hero>.hero-media-shell::after{
+    content:""!important;
+    opacity:1!important;
+    height:53%!important;
+    top:auto!important;
+    bottom:0!important;
+    z-index:3!important;
+    background:linear-gradient(to bottom,
+      transparent 0%,
+      color-mix(in srgb,var(--page) 12%,transparent) 38%,
+      color-mix(in srgb,var(--page) 64%,transparent) 76%,
+      var(--page) 100%)!important;
+    filter:none!important;
+    pointer-events:none!important;
+  }
+  /* Restore a genuine visible 3D stage. Enlarging the viewport lets the
+     rotation-safe bounding sphere fit without miniaturising the mesh. */
+  .site .hero>.main-logo[data-logo-type="3d"]{
+    height:clamp(235px,44vw,355px)!important;
+    min-height:235px!important;
+    max-height:none!important;
+    margin-block:0 12px!important;
+    transform:none!important;
+  }
+  .site .main-logo[data-logo-type="3d"] .logo-tile{
+    min-width:0!important;
+    width:var(--logo-tile-width,85vw);
+    height:100%!important;
+  }
+  .site .main-logo[data-logo-type="3d"]:not(.is-marquee) .logo-tile{
+    width:min(94vw,980px)!important;
+    max-width:100%!important;
+  }
+  .site .main-logo[data-logo-type="3d"] .logo-effect,
+  .site .main-logo[data-logo-type="3d"] .model-stage,
+  .site .main-logo[data-logo-type="3d"] model-viewer{
+    display:block!important;
+    width:100%!important;height:100%!important;
+    min-height:0!important;max-height:none!important;
+  }
+  .site .hero>.main-logo[data-logo-type="text"],
+  .site .hero>.main-logo[data-logo-type="image"]{
+    height:clamp(108px,17vw,166px)!important;
+    min-height:0!important;max-height:none!important;
+    margin-block:4px 12px!important;
+  }
+  .site .hero>.main-logo .logo-word{
+    line-height:1.05!important;
+    font-size:clamp(42px,10vw,128px)!important;
+  }
+
+  /* ABOUT's interactive model needs a real-sized canvas, not a short image slot. */
+  .site .about-visual.is-model{
+    min-height:clamp(300px,45vw,480px)!important;
+    height:clamp(300px,45vw,480px)!important;
+    max-height:none!important;
+    aspect-ratio:auto!important;
+  }
+  .site .about-visual.is-model .model-stage,
+  .site .about-visual.is-model model-viewer{
+    min-height:0!important;height:100%!important;
+  }
+
+  /* The divider is a graphic accent, never a large invisible spacer. */
+  .site .site-divider{
+    margin-top:min(16px,var(--unused-divider-margin,16px))!important;
+    margin-bottom:16px!important;
+    translate:0 0!important;
+  }
+  .site .team-stack-section{
+    padding-top:24px!important;
+    padding-bottom:clamp(38px,5vw,58px)!important;
+    min-height:0!important;
+  }
+  .site .team-stack-section>.team-section-head{
+    min-height:0!important;height:auto!important;
+    margin:0 0 16px!important;
+    padding:0!important;
+  }
+  .site .team-section-head h2{
+    max-width:100%!important;
+    width:auto!important;
+    font-size:clamp(32px,4.6vw,56px)!important;
+    line-height:1!important;
+    margin:0!important;
+    translate:none!important;
+  }
+  .site .team-section-head .kicker{
+    margin:0!important;line-height:1.5!important;
+  }
+}
+@media (max-width:600px){
+  .team-portfolio-page .team-portfolio-hero{
+    height:clamp(218px,56.25vw,310px)!important;
+    max-height:310px!important;
+    aspect-ratio:16/9!important;
+  }
+  .team-portfolio-page .team-portfolio-member-index{
+    padding:10px 0 6px!important;
+  }
+  .team-portfolio-page .team-portfolio-work{
+    padding:12px 0 40px!important;
+  }
+  .team-portfolio-page .team-portfolio-work-head{
+    margin-bottom:14px!important;
+  }
+  .team-portfolio-page .team-portfolio-work-head h2{
+    font-size:clamp(30px,8.5vw,42px)!important;
+  }
+  .team-portfolio-page .team-portfolio-subfilters{
+    margin-top:4px!important;margin-bottom:18px!important;
+  }
+  .site .hero>.main-logo[data-logo-type="3d"]{
+    height:clamp(232px,67vw,310px)!important;
+    min-height:232px!important;
+    max-height:none!important;
+    margin:0 0 8px!important;
+  }
+  .site .main-logo[data-logo-type="3d"]{
+    --logo-tile-width:86vw!important;
+    --logo-gap:15px!important;
+  }
+  .site .hero>.main-logo[data-logo-type="text"],
+  .site .hero>.main-logo[data-logo-type="image"]{
+    height:clamp(100px,25vw,142px)!important;
+    margin:0 0 8px!important;
+  }
+  .site .hero>.main-logo .logo-word{
+    font-size:clamp(40px,9.4vw,67px)!important;
+  }
+  .site .team-stack-section{
+    padding-top:14px!important;
+    padding-bottom:34px!important;
+  }
+  .site .team-stack-section>.team-section-head{
+    margin-bottom:14px!important;
+  }
+  .site .team-section-head h2{
+    font-size:clamp(27px,8vw,40px)!important;
+  }
+  .site .site-divider{margin-top:10px!important;margin-bottom:10px!important}
+  .site .hero-bottom{padding-bottom:12px!important}
+}
