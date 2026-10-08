@@ -688,3 +688,60 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
   .hero-media-shell{width:100vw}
   .page-block-media-frame>.media-gallery .media-gallery-slide{border-radius:min(var(--page-block-radius,24px),20px)!important}
 }
+
+
+/* PROJECT 07 — responsive hero parity: image and video always occupy the same frame. */
+@media(max-width:1024px){
+  .hero-media-shell>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen){
+    --gallery-card:100vw!important;
+    --gallery-gap:0px!important;
+    width:100vw!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  .hero-media-shell>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-viewport,
+  .hero-media-shell>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-track{
+    width:100vw!important;
+    height:min(72dvh,760px)!important;
+    min-height:420px!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+  .hero-media-shell>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
+    flex:0 0 100vw!important;
+    width:100vw!important;
+    min-width:100vw!important;
+    max-width:100vw!important;
+    height:100%!important;
+    min-height:100%!important;
+    margin:0!important;
+    padding:0!important;
+    aspect-ratio:auto!important;
+    border-radius:0!important;
+    overflow:hidden!important;
+    background:#000!important;
+  }
+  .hero-media-shell>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+  }
+  .hero-media-shell>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>img,
+  .hero-media-shell>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>video{
+    width:100%!important;
+    height:100%!important;
+    object-fit:var(--gallery-media-fit,cover)!important;
+    object-position:var(--gallery-media-position,50% 50%)!important;
+    border-radius:0!important;
+  }
+}
+@media(max-width:640px){
+  .hero-media-shell>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-viewport,
+  .hero-media-shell>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-track{
+    height:min(68dvh,680px)!important;
+    min-height:360px!important;
+  }
+}
