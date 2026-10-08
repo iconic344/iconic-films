@@ -364,6 +364,53 @@ function normalizeUpload(name:string,type:string,size:number){
   return {type,ext:ext&&/^[a-z0-9]{1,8}$/.test(ext)?ext:'bin'};
 }
 
+
+/* The service-role key can manage a bucket but cannot read the Supabase
+   project-wide Global file size limit. Only a separate optional management
+   token allows exact global preflight; otherwise never promise 1 GB. */
+async function storageGlobalLimit():Promise<number|null>{
+ const token=process.env.SUPABASE_MANAGEMENT_TOKEN?.trim();
+ const projectRef=process.env.SUPABASE_URL?.match(/^https:\/\/([a-z0-9-]+)\.supabase\.co(?:\/|$)/i)?.[1];
+ if(!token||!projectRef)return null;
+ try{
+  const response=await fetch('https://api.supabase.com/v1/projects/'+encodeURIComponent(projectRef)+'/config/storage',{
+   headers:{Authorization:'Bearer '+token,Accept:'application/json'},signal:AbortSignal.timeout(5500)
+  });
+  if(!response.ok)return null;
+  const data=await response.json() as {fileSizeLimit?:number};
+  return Number.isFinite(data.fileSizeLimit)&&Number(data.fileSizeLimit)>0?Number(data.fileSizeLimit):null;
+ }catch{return null}
+}
+const fileLimitText=(bytes:number)=>(bytes/(1024*1024)).toFixed(bytes%(1024*1024)?1:0)+'MB';
+async function issueUploadTicket(res:ServerResponse,input:{size:number},meta:{ext:string;type:string}){
+ const filename=randomUUID()+'.'+meta.ext;
+ const bucketName=bucket(),storageAdmin=db().storage;
+ const [currentBucket,globalLimit]=await Promise.all([storageAdmin.getBucket(bucketName),storageGlobalLimit()]);
+ if(currentBucket.error)throw currentBucket.error;
+ let bucketLimit=Number((currentBucket.data as any)?.file_size_limit??(currentBucket.data as any)?.fileSizeLimit??0);
+ if(globalLimit!==null&&input.size>globalLimit)
+  throw new HttpError(413,`파일 ${fileLimitText(input.size)} · Supabase Storage 프로젝트 제한 ${fileLimitText(globalLimit)}입니다. Storage → Settings → Global file size limit에서 올려 주세요. 무료 프로젝트는 최대 50MB입니다.`);
+ if(bucketLimit>0&&bucketLimit<input.size){
+  const desired=Math.min(maxFile,globalLimit||maxFile);
+  const raised=await storageAdmin.updateBucket(bucketName,{
+    public:Boolean((currentBucket.data as any)?.public),fileSizeLimit:desired,
+    allowedMimeTypes:(currentBucket.data as any)?.allowed_mime_types??(currentBucket.data as any)?.allowedMimeTypes??undefined
+  });
+  if(raised.error)throw new HttpError(413,`파일 ${fileLimitText(input.size)} · 버킷 제한 ${fileLimitText(bucketLimit)}입니다. Supabase Storage → Settings 및 해당 버킷의 파일 크기 제한을 확인해 주세요. 무료 프로젝트는 최대 50MB입니다.`);
+  bucketLimit=desired;
+ }
+ const storage=storageAdmin.from(bucketName);
+ const {data,error}=await storage.createSignedUploadUrl(filename);
+ if(error)throw error;
+ const publicUrl=storage.getPublicUrl(filename).data.publicUrl;
+ const base=(process.env.SUPABASE_URL||'').replace(/\/$/,'');
+ const directBase=base.replace(/^https:\/\/([^.]+)\.supabase\.co$/,'https://$1.storage.supabase.co');
+ json(res,{uploadUrl:data.signedUrl,url:publicUrl,method:'PUT',multipart:true,contentType:meta.type,
+  resumable:true,tusEndpoint:directBase+'/storage/v1/upload/resumable',
+  token:(data as any).token||'',bucketName,objectName:filename,maxAppBytes:maxFile,
+  effectiveLimitBytes:globalLimit!==null?Math.min(maxFile,globalLimit,bucketLimit||maxFile):(bucketLimit>0?Math.min(maxFile,bucketLimit):null),
+  globalLimitVerified:globalLimit!==null});
+}
 const memberStringFields=[
   'name','role','bio','instagram','photo','portfolioTitle','portfolioIntro','portfolioCredits','portfolioTeamIndexLabel','portfolioReturnLabel',
   'portfolioNameFont','portfolioNameColor','portfolioRoleFont','portfolioRoleColor','portfolioBioFont','portfolioBioColor',
@@ -582,29 +629,7 @@ export default async function handler(req:Req,res:ServerResponse){
       const {config}=await currentConfigPair();
       if(!config?.teamMembers?.some((item:any)=>item?.id===memberId))throw new HttpError(404,'팀원을 찾을 수 없습니다.');
       const meta=normalizeUpload(input.name,input.type,input.size);
-      const filename=randomUUID()+'.'+meta.ext;
-      const bucketName=bucket(),storageAdmin=db().storage;
-      const currentBucket=await storageAdmin.getBucket(bucketName);
-      if(currentBucket.error)throw currentBucket.error;
-      const bucketLimit=Number((currentBucket.data as any)?.file_size_limit??(currentBucket.data as any)?.fileSizeLimit??0);
-      if(bucketLimit>0&&bucketLimit<input.size){
-        const raised=await storageAdmin.updateBucket(bucketName,{
-          public:Boolean((currentBucket.data as any)?.public),
-          fileSizeLimit:maxFile,
-          allowedMimeTypes:(currentBucket.data as any)?.allowed_mime_types??(currentBucket.data as any)?.allowedMimeTypes??undefined
-        });
-        if(raised.error){
-          throw new HttpError(413,`현재 Supabase Storage 업로드 한도가 ${Math.round(bucketLimit/1024/1024)}MB입니다. 코드 제한은 1GB로 열려 있지만 Storage의 Global/Bucket 파일 크기 제한이 더 낮습니다.`);
-        }
-      }
-      const storage=storageAdmin.from(bucketName);
-      const {data,error}=await storage.createSignedUploadUrl(filename);
-      if(error)throw error;
-      const publicUrl=storage.getPublicUrl(filename).data.publicUrl;
-      const base=(process.env.SUPABASE_URL||'').replace(/\/$/,'');
-      const directBase=base.replace(/^https:\/\/([^.]+)\.supabase\.co$/,'https://$1.storage.supabase.co');
-      json(res,{uploadUrl:data.signedUrl,url:publicUrl,method:'PUT',multipart:true,contentType:meta.type,
-        resumable:true,tusEndpoint:directBase+'/storage/v1/upload/resumable',token:(data as any).token||'',bucketName,objectName:filename});return;
+      await issueUploadTicket(res,input,meta);return;
     }
 
     if(route==='/api/mail'){
@@ -825,29 +850,7 @@ export default async function handler(req:Req,res:ServerResponse){
       await requireAdmin(req);
       const input=await body(req);
       const meta=normalizeUpload(input.name,input.type,input.size);
-      const filename=randomUUID()+'.'+meta.ext;
-      const bucketName=bucket(),storageAdmin=db().storage;
-      const currentBucket=await storageAdmin.getBucket(bucketName);
-      if(currentBucket.error)throw currentBucket.error;
-      const bucketLimit=Number((currentBucket.data as any)?.file_size_limit??(currentBucket.data as any)?.fileSizeLimit??0);
-      if(bucketLimit>0&&bucketLimit<input.size){
-        const raised=await storageAdmin.updateBucket(bucketName,{
-          public:Boolean((currentBucket.data as any)?.public),
-          fileSizeLimit:maxFile,
-          allowedMimeTypes:(currentBucket.data as any)?.allowed_mime_types??(currentBucket.data as any)?.allowedMimeTypes??undefined
-        });
-        if(raised.error){
-          throw new HttpError(413,`현재 Supabase Storage 업로드 한도가 ${Math.round(bucketLimit/1024/1024)}MB입니다. 코드 제한은 1GB로 열려 있지만 Storage의 Global/Bucket 파일 크기 제한이 더 낮습니다.`);
-        }
-      }
-      const storage=storageAdmin.from(bucketName);
-      const {data,error}=await storage.createSignedUploadUrl(filename);
-      if(error)throw error;
-      const publicUrl=storage.getPublicUrl(filename).data.publicUrl;
-      const base=(process.env.SUPABASE_URL||'').replace(/\/$/,'');
-      const directBase=base.replace(/^https:\/\/([^.]+)\.supabase\.co$/,'https://$1.storage.supabase.co');
-      json(res,{uploadUrl:data.signedUrl,url:publicUrl,method:'PUT',multipart:true,contentType:meta.type,
-        resumable:true,tusEndpoint:directBase+'/storage/v1/upload/resumable',token:(data as any).token||'',bucketName,objectName:filename});return;
+      await issueUploadTicket(res,input,meta);return;
     }
 
     throw new HttpError(404,'요청을 찾을 수 없습니다.');
