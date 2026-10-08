@@ -319,7 +319,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
       '--portfolio-section-rank':effectivePortfolioOrder.indexOf(key)<0?0:effectivePortfolioOrder.indexOf(key)*10,
       background:own.background||undefined,
       borderRadius:own.radius?own.radius+'px':undefined
-    };
+    } as CSSProperties;
   };
   const dividerStyle=(divider:PortfolioDivider):CSSProperties=>({
     width:divider.width+'%',
