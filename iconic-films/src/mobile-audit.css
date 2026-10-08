@@ -1,0 +1,395 @@
+/* PROJECT 07: iPhone/iPad audit fixes, 2026-10-08.
+   Visual regression references: full-screen portrait gallery, About + 3D,
+   phone footer/admin, member prev/next buttons. No desktop overrides. */
+@media (max-width:1024px), (max-width:1366px) and (any-pointer:coarse) {
+
+  /* The public footer is separate from the header: remove its Admin button.
+     The React renderer also omits the button for compact viewports. */
+  .site>footer[data-visual-section="footer"]>button,
+  .site>footer[data-visual-section="footer"]>[data-visual-text="footerAdminLabel"]{
+    display:none!important;
+  }
+
+  /* About: stop inheriting the desktop two-column/grid-row geometry. The
+     three editorial units live consecutively, with intrinsic text heights. */
+  .site main>.about[data-visual-section="about"]{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:flex-start!important;
+    align-content:normal!important;
+    height:auto!important;min-height:0!important;max-height:none!important;
+    gap:clamp(14px,2.4vw,24px)!important;
+    padding:clamp(20px,4vw,40px) clamp(18px,4vw,44px) clamp(12px,3vw,34px)!important;
+    margin:0!important;
+    overflow:visible!important;
+    box-sizing:border-box!important;
+    translate:none!important;transform:none!important;scale:1!important;
+  }
+  .site main>.about[data-visual-section="about"]>.kicker{
+    display:block!important;
+    flex:0 0 auto!important;align-self:stretch!important;
+    width:100%!important;height:auto!important;max-height:none!important;
+    min-height:0!important;
+    order:0!important;
+    margin:0!important;padding:0!important;
+    translate:none!important;transform:none!important;
+  }
+  .site main>.about[data-visual-section="about"]>.about-copy{
+    display:flex!important;
+    flex:0 0 auto!important;
+    flex-direction:column!important;
+    align-items:flex-start!important;
+    align-self:stretch!important;
+    justify-content:flex-start!important;
+    gap:clamp(12px,2vw,20px)!important;
+    order:1!important;
+    width:100%!important;max-width:100%!important;
+    height:auto!important;min-height:0!important;max-height:none!important;
+    margin:0!important;padding:0!important;
+    overflow:visible!important;
+    translate:none!important;transform:none!important;
+  }
+  .site main>.about>.about-copy>:is(h2,p,.disciplines){
+    display:block!important;
+    position:relative!important;
+    flex:0 0 auto!important;
+    order:initial!important;
+    margin:0!important;padding:0!important;
+    width:100%!important;max-width:100%!important;
+    min-height:0!important;height:auto!important;max-height:none!important;
+    translate:none!important;transform:none!important;
+    inset:auto!important;
+  }
+  .site main>.about>.about-copy h2{
+    font-size:clamp(36px,6vw,56px)!important;
+    line-height:1.03!important;
+    letter-spacing:-.05em!important;
+  }
+  .site main>.about>.about-copy p{
+    font-size:clamp(13px,1.7vw,16px)!important;
+    line-height:1.6!important;
+    max-width:670px!important;
+  }
+  .site main>.about>.about-copy .disciplines{
+    display:flex!important;
+    flex-wrap:wrap!important;
+    column-gap:clamp(12px,2.5vw,22px)!important;
+    row-gap:8px!important;
+    font-size:clamp(12px,1.55vw,15px)!important;
+  }
+  .site main>.about[data-visual-section="about"]>.about-visual{
+    display:block!important;
+    position:relative!important;
+    flex:0 0 auto!important;
+    order:2!important;
+    align-self:stretch!important;
+    width:100%!important;max-width:100%!important;
+    height:clamp(260px,44vw,440px)!important;
+    min-height:0!important;max-height:440px!important;
+    margin:0!important;padding:0!important;
+    transform:none!important;translate:none!important;
+    overflow:hidden!important;
+    aspect-ratio:auto!important;
+    border-radius:20px!important;
+  }
+  .site main>.about[data-visual-section="about"]>.about-visual.is-model{
+    overflow:visible!important;
+    height:clamp(290px,50vw,470px)!important;
+    max-height:470px!important;
+  }
+  .site main>.about>.about-visual.is-model .model-stage,
+  .site main>.about>.about-visual.is-model model-viewer{
+    width:100%!important;height:100%!important;
+    min-height:0!important;max-height:100%!important;
+    display:block!important;
+  }
+  .site main>.about+.site-divider{margin-block:0!important}
+  .site>footer[data-visual-section="footer"]{
+    display:flex!important;
+    align-items:center!important;justify-content:center!important;
+    height:auto!important;min-height:0!important;max-height:none!important;
+    margin:0 auto!important;
+    padding:14px 18px calc(28px + env(safe-area-inset-bottom,0px))!important;
+    text-align:center!important;
+  }
+  .site>footer[data-visual-section="footer"] .footer-copy{
+    display:block!important;
+    width:auto!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+    padding:0!important;
+    translate:none!important;
+  }
+
+  /* Portfolio paging cards are navigation, not two full-width banners. */
+  .team-portfolio-page>.team-portfolio-member-switch{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    align-items:stretch!important;
+    width:calc(100% - clamp(28px,5vw,64px))!important;
+    max-width:1100px!important;
+    min-width:0!important;min-height:0!important;
+    gap:clamp(8px,1.5vw,15px)!important;
+    padding:0!important;
+    margin:clamp(14px,2.5vw,28px) auto clamp(12px,2.5vw,28px)!important;
+    translate:none!important;transform:none!important;scale:1!important;
+  }
+  .team-portfolio-page>.team-portfolio-member-switch>button{
+    display:flex!important;
+    flex:1 1 auto!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    box-sizing:border-box!important;
+    min-width:0!important;
+    width:100%!important;
+    min-height:74px!important;height:auto!important;
+    max-height:110px!important;
+    gap:8px!important;
+    padding:12px 14px!important;
+    margin:0!important;
+    border-radius:15px!important;
+    text-align:left!important;
+    overflow:hidden!important;
+    background:transparent!important;
+  }
+  .team-portfolio-page>.team-portfolio-member-switch>button:last-child{
+    justify-content:flex-end!important;
+    text-align:right!important;
+  }
+  .team-portfolio-page>.team-portfolio-member-switch>button>svg{
+    width:18px!important;height:18px!important;
+    flex:0 0 auto!important;
+  }
+  .team-portfolio-page>.team-portfolio-member-switch>button>span{
+    min-width:0!important;max-width:100%!important;
+    display:flex!important;
+    flex-direction:column!important;
+    gap:5px!important;
+    font-size:clamp(13px,1.8vw,17px)!important;
+    font-weight:500!important;
+    line-height:1.2!important;
+    overflow-wrap:anywhere!important;
+  }
+  .team-portfolio-page>.team-portfolio-member-switch>button>span small{
+    font-size:9px!important;
+    font-weight:400!important;
+    letter-spacing:.12em!important;
+    opacity:.6!important;
+  }
+  .team-portfolio-page>.team-portfolio-footer{
+    display:flex!important;
+    flex-wrap:wrap!important;
+    justify-content:space-between!important;
+    align-items:center!important;
+    gap:10px!important;
+    min-height:0!important;
+    width:calc(100% - clamp(28px,5vw,64px))!important;
+    max-width:1100px!important;
+    margin:0 auto!important;
+    padding:22px 0 calc(78px + env(safe-area-inset-bottom,0px))!important;
+    font-size:11px!important;
+    overflow:hidden!important;
+  }
+  .team-portfolio-page>.team-portfolio-footer>span,
+  .team-portfolio-page>.team-portfolio-footer>button{
+    max-width:100%!important;
+    min-width:0!important;
+    font-size:11px!important;
+    line-height:1.5!important;
+    margin:0!important;
+    padding:0!important;
+    translate:none!important;
+    transform:none!important;
+    text-align:left!important;
+    overflow-wrap:break-word!important;
+  }
+  .team-portfolio-page>.team-portfolio-footer>button{
+    text-align:right!important;
+    white-space:nowrap!important;
+  }
+
+  /* Modal portrait images remain uncropped. Blur is only a quiet background.
+     A dark information panel makes captions legible even against white images. */
+  .unified-media-dialog[data-slot="dialog-content"]{
+    width:100vw!important;
+    height:100dvh!important;
+    max-width:none!important;max-height:none!important;
+    position:fixed!important;inset:0!important;
+    left:0!important;top:0!important;
+    transform:none!important;
+    padding:0!important;margin:0!important;
+    border:0!important;border-radius:0!important;
+    background:#050505!important;
+    overflow:hidden!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal{
+    position:fixed!important;inset:0!important;
+    display:block!important;
+    width:100vw!important;
+    height:100dvh!important;
+    min-height:0!important;
+    background:#090909!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal .media-gallery-backdrop{
+    filter:blur(35px) brightness(.28) saturate(.55)!important;
+    opacity:.75!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal .media-gallery-backdrop-glass{
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+    background:rgb(0 0 0 / .24)!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal>.media-gallery-viewport,
+  .unified-media-dialog .media-gallery.is-modal .media-gallery-track{
+    position:absolute!important;
+    inset:0!important;
+    width:100vw!important;height:100dvh!important;
+    max-width:100vw!important;max-height:100dvh!important;
+    min-height:0!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal .media-gallery-slide{
+    width:100vw!important;
+    min-width:100vw!important;
+    max-width:100vw!important;
+    height:100dvh!important;
+    min-height:0!important;max-height:100dvh!important;
+    aspect-ratio:auto!important;
+    margin:0!important;
+    border:0!important;border-radius:0!important;
+    overflow:hidden!important;
+    background:transparent!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal .media-gallery-artwork{
+    position:absolute!important;inset:0!important;
+    width:100%!important;height:100%!important;
+    display:flex!important;
+    align-items:center!important;justify-content:center!important;
+    background:transparent!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal .media-gallery-artwork>img,
+  .unified-media-dialog .media-gallery.is-modal .media-gallery-artwork>video{
+    width:100%!important;height:100%!important;
+    min-width:0!important;min-height:0!important;
+    max-width:100%!important;max-height:100%!important;
+    object-fit:contain!important;
+    object-position:center center!important;
+    transform:none!important;
+    margin:0 auto!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal>.media-gallery-caption{
+    position:fixed!important;
+    z-index:10050!important;
+    top:auto!important;
+    left:clamp(12px,3vw,24px)!important;
+    right:clamp(12px,3vw,24px)!important;
+    bottom:calc(91px + env(safe-area-inset-bottom,0px))!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-start!important;
+    width:auto!important;
+    max-width:440px!important;
+    max-height:min(32dvh,240px)!important;
+    overflow:auto!important;
+    padding:13px 15px!important;
+    margin:0!important;
+    border:1px solid rgb(255 255 255 / .16)!important;
+    border-radius:16px!important;
+    color:#fff!important;
+    background:rgb(8 8 10 / .76)!important;
+    backdrop-filter:blur(22px) saturate(115%)!important;
+    -webkit-backdrop-filter:blur(22px) saturate(115%)!important;
+    box-shadow:0 8px 34px rgb(0 0 0 / .22)!important;
+    filter:none!important;
+    text-align:left!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal>.media-gallery-caption :is(h3,p,span){
+    color:rgb(255 255 255 / .96)!important;
+    text-shadow:none!important;
+    opacity:1!important;
+    max-width:100%!important;
+    overflow-wrap:anywhere!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal>.media-gallery-caption>span{
+    font-size:10px!important;
+    line-height:1.4!important;
+    letter-spacing:.08em!important;
+    margin:0 0 5px!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal>.media-gallery-caption h3{
+    font-size:clamp(17px,3vw,23px)!important;
+    line-height:1.15!important;
+    margin:0 0 7px!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal>.media-gallery-caption p{
+    font-size:clamp(12px,1.8vw,14px)!important;
+    line-height:1.4!important;
+    max-height:none!important;
+    margin:0 0 6px!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal>.media-gallery-navigation{
+    position:fixed!important;
+    z-index:10060!important;
+    left:50%!important;
+    right:auto!important;
+    bottom:calc(19px + env(safe-area-inset-bottom,0px))!important;
+    transform:translateX(-50%)!important;
+    width:max-content!important;
+    max-width:calc(100vw - 20px)!important;
+    margin:0!important;
+    gap:4px!important;
+    padding:0!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal>.media-gallery-navigation>.media-gallery-arrow,
+  .unified-media-dialog .media-gallery.is-modal>.media-gallery-navigation>.media-gallery-toggle{
+    width:40px!important;height:40px!important;
+    min-width:40px!important;min-height:40px!important;
+  }
+}
+@media(max-width:600px){
+  .site main>.about[data-visual-section="about"]{
+    gap:12px!important;
+    padding:18px 16px 6px!important;
+  }
+  .site main>.about>.about-copy{gap:15px!important;}
+  .site main>.about>.about-copy h2{font-size:clamp(36px,10vw,46px)!important}
+  .site main>.about>.about-visual.is-model{
+    height:clamp(270px,78vw,345px)!important;
+    max-height:345px!important;
+    margin-top:0!important;
+  }
+  .team-portfolio-page>.team-portfolio-member-switch{
+    width:calc(100% - 28px)!important;
+    gap:8px!important;
+    margin:10px auto 12px!important;
+  }
+  .team-portfolio-page>.team-portfolio-member-switch>button{
+    min-height:70px!important;
+    max-height:90px!important;
+    gap:6px!important;
+    padding:10px 12px!important;
+  }
+  .team-portfolio-page>.team-portfolio-member-switch>button>span{
+    font-size:13px!important;
+  }
+  .team-portfolio-page>.team-portfolio-footer{
+    width:calc(100% - 28px)!important;
+    padding-top:16px!important;
+    padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal>.media-gallery-caption{
+    bottom:calc(83px + env(safe-area-inset-bottom,0px))!important;
+    max-height:min(25dvh,220px)!important;
+    padding:11px 13px!important;
+    border-radius:14px!important;
+  }
+  .unified-media-dialog .media-gallery.is-modal>.media-gallery-navigation{
+    bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .unified-media-dialog .media-gallery.is-modal>.media-gallery-caption,
+  .team-portfolio-page>.team-portfolio-member-switch>button{
+    transition:none!important;animation:none!important;
+  }
+}
