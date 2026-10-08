@@ -1,4 +1,4 @@
-import {useEffect,useId,useRef,useState,type CSSProperties} from 'react';
+import {useEffect,useId,useLayoutEffect,useRef,useState,type CSSProperties} from 'react';
 import {createPortal} from 'react-dom';
 import {ChevronLeft,ChevronRight,Play,Pause,Volume2,VolumeX,Maximize,Minimize,X} from 'lucide-react';
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
@@ -24,20 +24,70 @@ export const portfolioMediaFrame=(width:number,height:number,override:PortfolioM
 };
 const formatTime=(n:number)=>`${Math.floor(n/60)}:${String(Math.floor(n%60)).padStart(2,'0')}`;
 
-type GalleryProps={items:GalleryItem[];initialIndex?:number;onIndexChange?:(index:number)=>void;onExpand?:(index?:number)=>void;onReady?:()=>void;modal?:boolean;preserveItems?:boolean;captionTitleStyle?:CSSProperties;captionVisualText?:string;balanceEdges?:boolean;cleanPreview?:boolean;nativeCursor?:boolean;mediaFit?:'contain'|'cover';mediaPositionX?:number;mediaPositionY?:number;autoPlay?:boolean;autoplayMs?:number;transitionMs?:number;easing?:'smooth'|'soft'|'snappy'|'linear';maxCardHeight?:number};
+type GalleryProps={items:GalleryItem[];initialIndex?:number;onIndexChange?:(index:number)=>void;onExpand?:(index?:number,previewVideo?:HTMLVideoElement|null)=>void;onReady?:()=>void;modal?:boolean;preserveItems?:boolean;captionTitleStyle?:CSSProperties;captionVisualText?:string;balanceEdges?:boolean;cleanPreview?:boolean;nativeCursor?:boolean;mediaFit?:'contain'|'cover';mediaPositionX?:number;mediaPositionY?:number;autoPlay?:boolean;autoplayMs?:number;transitionMs?:number;easing?:'smooth'|'soft'|'snappy'|'linear';maxCardHeight?:number;borrowedVideo?:HTMLVideoElement|null};
 export function MediaGallery({items,initialIndex=0,onIndexChange,preserveItems=false,...props}:GalleryProps){
  if(preserveItems)return <ScopedMediaGallery {...props} items={items} initialIndex={initialIndex} onIndexChange={onIndexChange}/>;
  const scoped=scopeGallery(items,initialIndex);
  return <ScopedMediaGallery {...props} items={scoped.items} initialIndex={scoped.index} onIndexChange={index=>onIndexChange?.(scoped.sourceIndices[index])}/>;
 }
-function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false,captionTitleStyle,captionVisualText,balanceEdges=false,cleanPreview=false,nativeCursor=true,mediaFit='contain',mediaPositionX=50,mediaPositionY=50,autoPlay=true,autoplayMs=6500,transitionMs=820,easing='smooth',maxCardHeight}:GalleryProps){
+function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false,captionTitleStyle,captionVisualText,balanceEdges=false,cleanPreview=false,nativeCursor=true,mediaFit='contain',mediaPositionX=50,mediaPositionY=50,autoPlay=true,autoplayMs=6500,transitionMs=820,easing='smooth',maxCardHeight,borrowedVideo}:GalleryProps){
  const [index,setIndex]=useState(Math.min(initialIndex,Math.max(0,items.length-1)));
  const [creditsOpen,setCreditsOpen]=useState(false);
  const creditsPanelId=useId();
  const [playing,setPlaying]=useState(()=>autoPlay&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
  const [muted,setMuted]=useState(()=>!modal),[mediaVolume,setMediaVolume]=useState(1),[progress,setProgress]=useState(0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[visible,setVisible]=useState(true),[error,setError]=useState(false),[expanded,setExpanded]=useState(modal),[idle,setIdle]=useState(false),[ready,setReady]=useState(0),[readySrc,setReadySrc]=useState(''),[landscape,setLandscape]=useState(false),[frame,setFrame]=useState<{mode:MediaFrameMode;ratio:number}>({mode:'landscape',ratio:16/9});
- const root=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),drag=useRef<{x:number;y:number;slideIndex:number|null}|null>(null),dragged=useRef(false),elapsed=useRef(0),ambient=useRef<HTMLCanvasElement>(null),idleTimer=useRef(0),restoreTime=useRef<number|null>(null);
+ const root=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),handoffHost=useRef<HTMLDivElement>(null),drag=useRef<{x:number;y:number;slideIndex:number|null}|null>(null),dragged=useRef(false),elapsed=useRef(0),ambient=useRef<HTMLCanvasElement>(null),idleTimer=useRef(0),restoreTime=useRef<number|null>(null);
  const item=items[index],type=item?teamMediaType(item.src):'image',isFullscreen=expanded,showBackdrop=modal||isFullscreen;
+
+ const handedOff=Boolean(modal&&borrowedVideo&&type==='video'&&
+   (borrowedVideo.getAttribute('src')===item?.src||borrowedVideo.currentSrc===item?.src));
+ // DOM handoff: reuse the SAME already decoded video in the full-screen view.
+ // Safari therefore keeps buffered data, decode pipeline and currentTime.
+ // The preview's original React-owned node is restored on modal teardown.
+ useLayoutEffect(()=>{
+  if(!handedOff||!borrowedVideo||!handoffHost.current)return;
+  const v=borrowedVideo,originalParent=v.parentNode;
+  if(!originalParent)return;
+  const marker=document.createComment('video-handoff-origin');
+  originalParent.insertBefore(marker,v);
+  handoffHost.current.appendChild(v);
+  video.current=v;
+  const previousLoop=v.loop,previousControls=v.controls,previousPreload=v.preload;
+  v.loop=false;v.controls=false;v.preload='auto';v.playsInline=true;
+  const progress=()=>{
+   if(!Number.isFinite(v.currentTime))return;
+   setTime(v.currentTime);
+   setProgress(v.duration>0?v.currentTime/v.duration:0);
+  };
+  const metadata=()=>{
+   setDuration(Number.isFinite(v.duration)?v.duration:0);
+   setLandscape(v.videoWidth/Math.max(v.videoHeight,1)>=1.45);
+   const value=portfolioMediaFrame(v.videoWidth,v.videoHeight,item?.ratio||'auto');
+   if(item?.src)mediaFrameCache.set(item.src+'|'+(item.ratio||'auto'),value);
+   setFrame(value);
+  };
+  const ended=()=>{if(v.ended)setPlaying(false)};
+  v.addEventListener('timeupdate',progress);
+  v.addEventListener('loadedmetadata',metadata);
+  v.addEventListener('durationchange',metadata);
+  v.addEventListener('ended',ended);
+  metadata();progress();
+  // Keep playback running. Do not seek or call load() on this node.
+  if(v.paused)void v.play().catch(()=>{});
+  return()=>{
+   v.removeEventListener('timeupdate',progress);
+   v.removeEventListener('loadedmetadata',metadata);
+   v.removeEventListener('durationchange',metadata);
+   v.removeEventListener('ended',ended);
+   v.controls=previousControls;v.loop=previousLoop;v.preload=previousPreload;
+   v.muted=true;v.defaultMuted=true;
+   if(marker.parentNode)marker.parentNode.replaceChild(v,marker);
+   else originalParent.appendChild(v);
+   delete v.dataset.fullscreenHandoff;
+   if(video.current===v)video.current=null;
+  };
+ },[handedOff,borrowedVideo,item?.src,item?.ratio]);
+
  // A new work always starts with unobstructed fullscreen media.
  useEffect(()=>setCreditsOpen(false),[item?.id]);
  useEffect(()=>{
@@ -79,7 +129,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
  useEffect(()=>{setIndex(Math.min(initialIndex,Math.max(0,items.length-1)))},[initialIndex,items.length]);
  useEffect(()=>{
   elapsed.current=0;setProgress(0);setTime(0);setError(false);setLandscape(false);
-  root.current?.querySelectorAll('video').forEach(v=>{v.pause();if(v===video.current)v.currentTime=0});
+  root.current?.querySelectorAll('video').forEach(v=>{if(v.dataset.fullscreenHandoff==='true')return;v.pause();if(v===video.current)v.currentTime=0});
   const v=video.current;setDuration(v&&Number.isFinite(v.duration)?v.duration:0);
   // Adjacent slides may finish loading before becoming active. Reuse that
   // decoded frame immediately so their fullscreen backdrop is ready too.
@@ -101,7 +151,8 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
  },[expanded]);
  useEffect(()=>{
   const v=video.current;if(!v)return;
-  if(playing&&visible)v.play().catch(()=>{if(modal){setPlaying(false);return}if(!v.muted){v.muted=true;setMuted(true);v.play().catch(()=>setPlaying(false))}else setPlaying(false)});
+  if(!modal&&v.dataset.fullscreenHandoff==='true')return;
+  if(playing&&visible)v.play().catch(()=>{if(modal){if(!v.muted){v.muted=true;setMuted(true);void v.play().catch(()=>setPlaying(false))}else setPlaying(false);return}if(!v.muted){v.muted=true;setMuted(true);v.play().catch(()=>setPlaying(false))}else setPlaying(false)});
   else v.pause();
  },[playing,visible,item?.id,item?.src,expanded]);
  useEffect(()=>{
@@ -131,12 +182,15 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
  // Sample the playing frame into a small canvas. It is purely visual, muted by
  // glass and blur, and never creates a second stream or audio/video decoder.
  useEffect(()=>{
+  // Canvas readbacks of 4K video on iOS cause GPU stalls; keep a static
+  // poster/blur background there and devote decoding resources to playback.
+  if(window.matchMedia('(max-width: 1024px), (any-pointer: coarse)').matches)return;
   const canvas=ambient.current,v=video.current;if(!canvas||!v||type!=='video')return;
   const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)return;
   let frame=0,last=0;
   const draw=(now:number)=>{
-   if(v.readyState>=2&&now-last>=100){
-    const width=360,height=Math.round(width*(v.videoHeight||9)/(v.videoWidth||16));
+   if(v.readyState>=2&&now-last>=250){
+    const width=240,height=Math.round(width*(v.videoHeight||9)/(v.videoWidth||16));
     if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height}
     ctx.drawImage(v,0,0,width,height);last=now;
    }
@@ -170,14 +224,14 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   </div><div className="media-gallery-backdrop-glass" aria-hidden="true"/></>}
   {isFullscreen&&<button type="button" className={'media-gallery-close media-gallery-credits-toggle'+(creditsOpen?' is-active':'')} data-cursor-label="CREDITS" aria-label={creditsOpen?'크레딧 닫기':'크레딧 보기'} aria-expanded={creditsOpen} aria-controls={creditsPanelId} title="Credits" onClick={()=>setCreditsOpen(open=>!open)}>C</button>}
   {isFullscreen&&<button type="button" className="media-gallery-close" aria-label={modal?'미디어 닫기':'전체 화면 종료'} onClick={()=>{if(modal)onExpand?.();else exitFullscreen()}}><X size={23}/></button>}
-  <div className="media-gallery-viewport" onPointerDown={e=>{if(e.button!==0||(e.target as HTMLElement).closest('button,input,model-viewer'))return;const slide=(e.target as HTMLElement).closest<HTMLElement>('[data-gallery-index]');const slideIndex=slide?Number(slide.dataset.galleryIndex):null;drag.current={x:e.clientX,y:e.clientY,slideIndex:Number.isInteger(slideIndex)?slideIndex:null};dragged.current=false;e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={e=>{if(!drag.current)return;const start=drag.current,dx=e.clientX-start.x,dy=e.clientY-start.y;drag.current=null;const swiped=Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy);if(swiped){dragged.current=true;choose(index+(dx<0?1:-1))}else if(balanceEdges&&!modal&&!isFullscreen&&start.slideIndex!==null){dragged.current=true;if(start.slideIndex!==index){choose(start.slideIndex)}else if(onExpand){if(type==='video'&&video.current){video.current.muted=false;setMuted(false);void video.current.play().catch(()=>{})}onExpand(start.slideIndex)}}else if(type==='video'&&(modal||isFullscreen)){dragged.current=true;toggle()}e.currentTarget.releasePointerCapture?.(e.pointerId)}} onPointerCancel={()=>{drag.current=null}}>
+  <div className="media-gallery-viewport" onPointerDown={e=>{if(e.button!==0||(e.target as HTMLElement).closest('button,input,model-viewer'))return;const slide=(e.target as HTMLElement).closest<HTMLElement>('[data-gallery-index]');const slideIndex=slide?Number(slide.dataset.galleryIndex):null;drag.current={x:e.clientX,y:e.clientY,slideIndex:Number.isInteger(slideIndex)?slideIndex:null};dragged.current=false;e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={e=>{if(!drag.current)return;const start=drag.current,dx=e.clientX-start.x,dy=e.clientY-start.y;drag.current=null;const swiped=Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy);if(swiped){dragged.current=true;choose(index+(dx<0?1:-1))}else if(balanceEdges&&!modal&&!isFullscreen&&start.slideIndex!==null){dragged.current=true;if(start.slideIndex!==index){choose(start.slideIndex)}else if(onExpand){if(type==='video'&&video.current){video.current.muted=false;setMuted(false);void video.current.play().catch(()=>{})}onExpand(start.slideIndex,video.current)}}else if(type==='video'&&(modal||isFullscreen)){dragged.current=true;toggle()}e.currentTarget.releasePointerCapture?.(e.pointerId)}} onPointerCancel={()=>{drag.current=null}}>
    <div className="media-gallery-track" style={{'--gallery-index':displayIndex} as CSSProperties}>
     {previewItems.map(({entry,sourceIndex,ghost,key:slideKey},i)=>{
      if(ghost||!entry)return <article className="media-gallery-slide is-placeholder" key={slideKey} aria-hidden="true"><div className="media-gallery-placeholder-stack" aria-hidden="true"/></article>;
      const active=sourceIndex===index,kind=teamMediaType(entry.src);
      return <article className={'media-gallery-slide '+(active?'is-active ':'')} key={slideKey} aria-hidden={!active} inert={!active&&!balancedPreview} data-gallery-index={sourceIndex} data-portfolio-work-index={balanceEdges&&Number.isInteger(entry.sourceIndex)?entry.sourceIndex:undefined}>
-      <div className="media-gallery-artwork" data-cursor-label={cleanPreview&&!isFullscreen&&!modal?undefined:(kind==='video'?'VIDEO':kind==='model'?'3D':'IMAGE')} data-native-cursor={cleanPreview&&!isFullscreen&&!modal&&nativeCursor?'true':undefined} onClick={()=>{if(dragged.current){dragged.current=false;return}if(!active){if(balanceEdges)choose(sourceIndex);return}if(modal&&kind==='video'){toggle();return}if(onExpand&&kind!=='model'){if(kind==='video'&&video.current){video.current.muted=false;setMuted(false);void video.current.play().catch(()=>{})}onExpand(index);return}if(kind==='video')toggle()}}>
-       {kind==='video'?<>{entry.poster&&<img className="media-gallery-video-poster" src={entry.poster} alt="" aria-hidden="true"/>}<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-displayIndex)<=1?entry.src:undefined} poster={entry.poster} data-has-poster={entry.poster?'true':'false'} data-media-ready={readySrc===entry.src&&!error?'true':'false'} muted={active?muted:true} data-site-autoplay={!modal&&active?'true':undefined} autoPlay={active} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReady(n=>n+1);onReady?.();if(playing&&visible){const v=video.current;if(v&&!modal){v.muted=true;setMuted(true)}v?.play().catch(()=>setPlaying(false))}}}} onPlaying={()=>{if(active)setReadySrc(entry.src)}} onCanPlay={e=>{if(active&&playing&&visible){if(!modal)e.currentTarget.muted=true;void e.currentTarget.play().catch(()=>{})}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setLandscape((e.currentTarget.videoWidth||0)/(e.currentTarget.videoHeight||1)>=1.45);const nextFrame=portfolioMediaFrame(e.currentTarget.videoWidth,e.currentTarget.videoHeight,entry.ratio||'auto');mediaFrameCache.set(entry.src+'|'+(entry.ratio||'auto'),nextFrame);setFrame(nextFrame);if(modal){e.currentTarget.volume=mediaVolume;e.currentTarget.muted=mediaVolume<=0;setMuted(mediaVolume<=0)}setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){if(e.currentTarget.currentTime>0)setReadySrc(entry.src);setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setReadySrc('');setPlaying(false);onReady?.()}}}/></>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
+      <div className="media-gallery-artwork" data-cursor-label={cleanPreview&&!isFullscreen&&!modal?undefined:(kind==='video'?'VIDEO':kind==='model'?'3D':'IMAGE')} data-native-cursor={cleanPreview&&!isFullscreen&&!modal&&nativeCursor?'true':undefined} onClick={()=>{if(dragged.current){dragged.current=false;return}if(!active){if(balanceEdges)choose(sourceIndex);return}if(modal&&kind==='video'){toggle();return}if(onExpand&&kind!=='model'){if(kind==='video'&&video.current){video.current.muted=false;setMuted(false);void video.current.play().catch(()=>{})}onExpand(index,video.current);return}if(kind==='video')toggle()}}>
+       {kind==='video'&&active&&handedOff?<div ref={handoffHost} className="media-gallery-handoff" aria-label="이어 재생 중인 영상"/>:kind==='video'?<>{entry.poster&&<img className="media-gallery-video-poster" src={entry.poster} alt="" aria-hidden="true"/>}<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-displayIndex)<=1?entry.src:undefined} poster={entry.poster} data-has-poster={entry.poster?'true':'false'} data-media-ready={readySrc===entry.src&&!error?'true':'false'} muted={active?muted:true} data-site-autoplay={!modal&&active?'true':undefined} autoPlay={active} playsInline preload={active?'auto':'metadata'} onLoadedData={()=>{if(active){setReady(n=>n+1);onReady?.();if(playing&&visible){const v=video.current;if(v&&!modal){v.muted=true;setMuted(true)}v?.play().catch(()=>setPlaying(false))}}}} onPlaying={()=>{if(active)setReadySrc(entry.src)}} onCanPlay={e=>{if(active&&playing&&visible){if(!modal)e.currentTarget.muted=true;void e.currentTarget.play().catch(()=>{})}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setLandscape((e.currentTarget.videoWidth||0)/(e.currentTarget.videoHeight||1)>=1.45);const nextFrame=portfolioMediaFrame(e.currentTarget.videoWidth,e.currentTarget.videoHeight,entry.ratio||'auto');mediaFrameCache.set(entry.src+'|'+(entry.ratio||'auto'),nextFrame);setFrame(nextFrame);if(modal){e.currentTarget.volume=mediaVolume;e.currentTarget.muted=mediaVolume<=0;setMuted(mediaVolume<=0)}setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){if(e.currentTarget.currentTime>0)setReadySrc(entry.src);setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setReadySrc('');setPlaying(false);onReady?.()}}}/></>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
       </div>
 
       {balanceEdges&&!modal&&!isFullscreen&&<PortfolioHoverCredits title={entry.title} kicker={entry.kicker} info={entry.info} credits={entry.credits}/>}
