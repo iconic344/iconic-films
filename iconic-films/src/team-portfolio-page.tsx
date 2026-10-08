@@ -46,6 +46,9 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   })).filter(item=>subcategory==='All'||item.category===subcategory),[member.id,member.name,member.works,member.portfolioWorkCategories,member.portfolioWorkTitles,member.portfolioWorkInfo,member.portfolioWorkCredits,member.portfolioWorkRatios,member.portfolioCredits,member.portfolioCreditsVisible,subcategories,subcategory]);
   const works=useMemo(()=>galleryItems.map(item=>item.src),[galleryItems]);
   const teamMembers=useMemo(()=>(config.teamMembers||[]).filter(item=>item.visible),[config.teamMembers]);
+  // Fashion (first visible portfolio) is the shared layout master. Content stays per-category,
+  // but geometry must be identical on Fashion / Commercial / Events.
+  const layoutMaster=teamMembers[0]||member;
   const memberIndex=Math.max(0,teamMembers.findIndex(item=>item.id===member.id));
   const selectMember=(target:TeamMember,direction:1|-1)=>{if(target&&target.id!==member.id)onSelectMember(target,direction)};
   const memberPrev=()=>teamMembers.length&&selectMember(teamMembers[(memberIndex-1+teamMembers.length)%teamMembers.length],-1);
@@ -212,15 +215,15 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     :<button key={item} type="button" className="nav-contact" data-portfolio-edit="navContactLabel" style={globalTextStyle('navMenu')} onClick={()=>{if(!visualEditing)onContact()}}>{config.navContactLabel}</button>;
 
   const pageStyle={
-    '--portfolio-columns':String(member.portfolioColumns||3),
-    '--portfolio-gap':(member.portfolioGap||14)+'px',
-    '--portfolio-radius':(member.portfolioRadius??18)+'px',
+    '--portfolio-columns':String(layoutMaster.portfolioColumns||3),
+    '--portfolio-gap':(layoutMaster.portfolioGap||14)+'px',
+    '--portfolio-radius':(layoutMaster.portfolioRadius??18)+'px',
     '--portfolio-name-font':member.portfolioNameFont||'Arial, Helvetica, sans-serif',
-    '--portfolio-name-size':(member.portfolioNameSize||112)+'px',
+    '--portfolio-name-size':(layoutMaster.portfolioNameSize||112)+'px',
     '--portfolio-name-color':member.portfolioNameColor||'var(--ink)',
     '--portfolio-name-align':member.portfolioNameAlign||'left',
-    '--portfolio-name-x':(member.portfolioNameX||0)+'px',
-    '--portfolio-name-y':(member.portfolioNameY||0)+'px',
+    '--portfolio-name-x':(layoutMaster.portfolioNameX||0)+'px',
+    '--portfolio-name-y':(layoutMaster.portfolioNameY||0)+'px',
     '--portfolio-role-font':member.portfolioRoleFont||'Arial, Helvetica, sans-serif',
     '--portfolio-role-size':(member.portfolioRoleSize||10)+'px',
     '--portfolio-role-color':member.portfolioRoleColor||'var(--soft)',
@@ -234,42 +237,43 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     '--portfolio-bio-x':(member.portfolioBioX||0)+'px',
     '--portfolio-bio-y':(member.portfolioBioY||0)+'px',
     '--portfolio-title-font':member.portfolioTitleFont||'Arial, Helvetica, sans-serif',
-    '--portfolio-title-size':(member.portfolioTitleSize||76)+'px',
+    '--portfolio-title-size':(layoutMaster.portfolioTitleSize||76)+'px',
     '--portfolio-title-color':member.portfolioTitleColor||'var(--ink)',
     '--portfolio-title-align':member.portfolioTitleAlign||'left',
-    '--portfolio-title-x':(member.portfolioTitleX||0)+'px',
-    '--portfolio-title-y':(member.portfolioTitleY||0)+'px',
+    '--portfolio-title-x':(layoutMaster.portfolioTitleX||0)+'px',
+    '--portfolio-title-y':(layoutMaster.portfolioTitleY||0)+'px',
     '--portfolio-intro-font':member.portfolioIntroFont||'Arial, Helvetica, sans-serif',
-    '--portfolio-intro-size':(member.portfolioIntroSize||14)+'px',
+    '--portfolio-intro-size':(layoutMaster.portfolioIntroSize||14)+'px',
     '--portfolio-intro-color':member.portfolioIntroColor||'var(--soft)',
     '--portfolio-intro-align':member.portfolioIntroAlign||'left',
-    '--portfolio-intro-x':(member.portfolioIntroX||0)+'px',
-    '--portfolio-intro-y':(member.portfolioIntroY||0)+'px',
+    '--portfolio-intro-x':(layoutMaster.portfolioIntroX||0)+'px',
+    '--portfolio-intro-y':(layoutMaster.portfolioIntroY||0)+'px',
     '--portfolio-utility-font':member.portfolioUtilityFont||'Arial, Helvetica, sans-serif',
-    '--portfolio-utility-size':(member.portfolioUtilitySize||11)+'px',
+    '--portfolio-utility-size':(layoutMaster.portfolioUtilitySize||11)+'px',
     '--portfolio-utility-color':member.portfolioUtilityColor||'var(--soft)',
     '--portfolio-utility-align':member.portfolioUtilityAlign||'left',
-    '--portfolio-utility-x':(member.portfolioUtilityX||0)+'px',
-    '--portfolio-utility-y':(member.portfolioUtilityY||0)+'px',
-    '--portfolio-return-x':(member.portfolioReturnX||0)+'px',
-    '--portfolio-return-y':(member.portfolioReturnY||0)+'px',
-    '--portfolio-slider-width':(member.portfolioSliderWidth||100)+'%',
-    '--portfolio-slider-height':(member.portfolioSliderHeight||760)+'px',
-    '--portfolio-slider-landscape-vw':Math.max(30,(member.portfolioSliderWidth||100)*.665)+'vw',
-    '--portfolio-slider-portrait-vw':Math.max(24,(member.portfolioSliderWidth||100)*.42)+'vw',
-    '--portfolio-slider-square-vw':Math.max(28,(member.portfolioSliderWidth||100)*.54)+'vw',
-    '--portfolio-grid-width':(member.portfolioGridWidth||100)+'%',
-    '--portfolio-work-x':(member.portfolioSections.work.x||0)+'px',
+    '--portfolio-utility-x':(layoutMaster.portfolioUtilityX||0)+'px',
+    '--portfolio-utility-y':(layoutMaster.portfolioUtilityY||0)+'px',
+    '--portfolio-return-x':(layoutMaster.portfolioReturnX||0)+'px',
+    '--portfolio-return-y':(layoutMaster.portfolioReturnY||0)+'px',
+    '--portfolio-slider-width':(layoutMaster.portfolioSliderWidth||100)+'%',
+    '--portfolio-slider-height':(layoutMaster.portfolioSliderHeight||760)+'px',
+    '--portfolio-slider-landscape-vw':Math.max(30,(layoutMaster.portfolioSliderWidth||100)*.665)+'vw',
+    '--portfolio-slider-portrait-vw':Math.max(24,(layoutMaster.portfolioSliderWidth||100)*.42)+'vw',
+    '--portfolio-slider-square-vw':Math.max(28,(layoutMaster.portfolioSliderWidth||100)*.54)+'vw',
+    '--portfolio-grid-width':(layoutMaster.portfolioGridWidth||100)+'%',
+    '--portfolio-work-x':(layoutMaster.portfolioSections.work.x||0)+'px',
   } as CSSProperties;
   const sectionStyle=(key:PortfolioSectionKey):CSSProperties=>{
-    const section=member.portfolioSections[key];
+    const own=member.portfolioSections[key];
+    const shared=(key==='index'||key==='work')?(layoutMaster.portfolioSections[key]||own):own;
     return {
-      translate:`${section.x||0}px ${section.y||0}px`,
-      scale:String(section.scale||1),
-      minHeight:section.minHeight>0?section.minHeight+'px':undefined,
-      opacity:(section.opacity??100)/100,
-      background:section.background||undefined,
-      borderRadius:section.radius?section.radius+'px':undefined
+      translate:`${shared.x||0}px ${shared.y||0}px`,
+      scale:String(shared.scale||1),
+      minHeight:shared.minHeight>0?shared.minHeight+'px':undefined,
+      opacity:(own.opacity??100)/100,
+      background:own.background||undefined,
+      borderRadius:own.radius?own.radius+'px':undefined
     };
   };
   const dividerStyle=(divider:PortfolioDivider):CSSProperties=>({
