@@ -469,7 +469,7 @@ export default function VisualSiteEditor({
  const quickToolbarStyle=rect&&typeof window!=='undefined'?{left:Math.max(8,Math.min(window.innerWidth-360,rect.left+rect.width/2-176)),top:Math.max(8,rect.top>74?rect.top-52:rect.bottom+10)} as CSSProperties:undefined;
 
  return <div className={'visual-editor-ui is-panel-'+panelSide+' is-workbench'} data-visual-editor="true">
-  <EditSiteWorkbench page="home" config={config} selection={selection} onSelect={value=>selectLayer(value as VisualSelection)} onContent={()=>setTab('content')} onLayers={()=>setTab('layers')} onSettings={()=>setTab('settings')} onAddWork={addWork} onSave={onSave} onCancel={onCancel} onUndo={onUndo} canUndo={canUndo} busy={busy} onOpenAdmin={onOpenAdmin}/>
+  <EditSiteWorkbench page="home" config={config} selection={selection} onSelect={value=>selectLayer(value as VisualSelection)} onContent={()=>setTab('content')} onLayers={()=>setTab('layers')} onSettings={()=>setTab('settings')} onAddWork={addWork} onReorderSection={(from,to)=>reorderSection(from as SectionKey,to as SectionKey)} onReorderWork={reorderWork} onSave={onSave} onCancel={onCancel} onUndo={onUndo} canUndo={canUndo} busy={busy} onOpenAdmin={onOpenAdmin}/>
   <div style={toolbarStyle} className={'visual-editor-topbar '+(toolbarPos?'is-free ':toolbarBottom?'is-bottom ':'is-top ')} onPointerDown={e=>beginChromeDrag(e,'toolbar')}>
    <div className="visual-editor-title visual-editor-drag-zone" onDoubleClick={()=>resetChrome('toolbar')}><Grip size={14}/><Settings2 size={16}/><strong>VISUAL EDIT</strong><span>드래그 이동 · 화면에서 선택 · 크기 · 콘텐츠 · 스타일</span></div>
    <div className="visual-editor-toolbar-tools">
