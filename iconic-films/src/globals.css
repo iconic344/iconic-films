@@ -15969,3 +15969,28 @@ html.visual-media-dragging *{
 .portfolio-section-divider{
   display:none!important;
 }
+
+
+/* PROJECT 07 — portfolio overlap/click repair. Shared headings never block cards or controls. */
+.team-portfolio-page:not(.is-visual-editing) .team-portfolio-work-head,
+.team-portfolio-page:not(.is-visual-editing) .team-portfolio-work-head h2,
+.team-portfolio-page:not(.is-visual-editing) .team-portfolio-work-head p,
+.team-portfolio-page:not(.is-visual-editing) .team-portfolio-layout-label{
+  pointer-events:none!important;
+}
+.team-portfolio-page.is-visual-editing .team-portfolio-work-head [data-portfolio-edit]{
+  pointer-events:auto!important;
+}
+.team-portfolio-member-index,
+.team-portfolio-member-index button,
+.team-portfolio-subfilters,
+.team-portfolio-subfilters button,
+.team-member-index-arrows,
+.team-member-index-arrows button{
+  position:relative;
+}
+.team-portfolio-member-index button,
+.team-portfolio-subfilters button,
+.team-member-index-arrows button{
+  z-index:8;
+}
