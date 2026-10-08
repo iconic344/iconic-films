@@ -6,5 +6,6 @@ import './portfolio-refinements.css';
 import './desktop-refinements.css';
 import './mobile-refinements.css';
 import './mobile-layout-v3.css';
+import './mobile-audit.css';
 
 createRoot(document.getElementById('root')!).render(<App/>);
