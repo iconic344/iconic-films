@@ -280,7 +280,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     margin:`${divider.marginTop}px auto ${divider.marginBottom}px`,
     translate:`0 ${divider.offsetY||0}px`
   });
-  const renderDividers=(after:PortfolioSectionKey)=>(member.portfolioDividers||[]).filter(divider=>divider.after===after&&divider.visible).map(divider=><div key={divider.id} className="portfolio-section-divider" data-portfolio-divider-id={divider.id} style={dividerStyle(divider)} aria-hidden="true"/>);
+  const renderDividers=(_after:PortfolioSectionKey)=>null;
 
   return <div className={'team-portfolio-page'+(visualEditing?' is-visual-editing':'')} style={pageStyle}>
     <header className="nav nav-recomposed team-portfolio-site-nav" data-portfolio-section="nav" data-portfolio-hidden={member.portfolioSections.nav.visible?'false':'true'} style={sectionStyle('nav')}>
