@@ -15949,3 +15949,19 @@ html.visual-media-dragging *{
 .visual-upload-progress.is-error b{
   color:#ff453a;
 }
+
+
+/* PROJECT 07 — no section separator rules on portfolio category pages. */
+.team-portfolio-member-index{
+  border-top:0!important;
+  border-bottom:0!important;
+}
+.team-portfolio-work{
+  border-top:0!important;
+}
+.team-portfolio-member-switch{
+  border-top:0!important;
+}
+.portfolio-section-divider{
+  display:none!important;
+}
