@@ -355,7 +355,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
         </div>}
 
         {member.portfolioLayout==='grid'&&<div className="team-portfolio-grid">
-          {Array.from({length:Math.max(9,works.length)},(_,i)=>{
+          {Array.from({length:visualEditing?Math.max(9,works.length):works.length},(_,i)=>{
             const item=galleryItems[i],url=item?.src,sourceIndex=item?.sourceIndex;
             return url?<PortfolioGridCard key={url+i} src={url} ratio={item.ratio||'auto'} index={i} sourceIndex={sourceIndex??i} name={member.name||'Portfolio'} onOpen={()=>openViewer(i)} visualEditing={visualEditing}/>:<div className="team-portfolio-grid-item is-empty" key={'empty-'+i} aria-hidden="true"><span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span></div>
           })}
