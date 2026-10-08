@@ -50,7 +50,26 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  const member=useMemo(()=>config.teamMembers.find(item=>item.id===memberId)||null,[config.teamMembers,memberId]);
 
  const patchConfig=<K extends keyof Config>(key:K,value:Config[K])=>setConfig(current=>({...current,[key]:value}));
- const patchMember=(value:Partial<TeamMember>)=>setConfig(current=>({...current,teamMembers:(current.teamMembers||[]).map(item=>item.id===memberId?{...item,...value}:item)}));
+ const sharedPortfolioLayoutKeys=new Set<keyof TeamMember>([
+  'portfolioNameX','portfolioNameY','portfolioNameSize',
+  'portfolioTitleX','portfolioTitleY','portfolioTitleSize',
+  'portfolioIntroX','portfolioIntroY','portfolioIntroSize',
+  'portfolioUtilityX','portfolioUtilityY','portfolioUtilitySize',
+  'portfolioReturnX','portfolioReturnY',
+  'portfolioSliderWidth','portfolioSliderHeight',
+  'portfolioGridWidth','portfolioColumns','portfolioGap','portfolioRadius'
+ ]);
+ const patchMember=(value:Partial<TeamMember>)=>setConfig(current=>{
+  const sharedPatch:Partial<TeamMember>={};
+  for(const [key,next] of Object.entries(value) as [keyof TeamMember,TeamMember[keyof TeamMember]][]){
+   if(sharedPortfolioLayoutKeys.has(key))(sharedPatch as any)[key]=next;
+  }
+  const hasShared=Object.keys(sharedPatch).length>0;
+  return {...current,teamMembers:(current.teamMembers||[]).map(item=>{
+   if(item.id===memberId)return {...item,...value};
+   return hasShared?{...item,...sharedPatch}:item;
+  })};
+ });
  if(!member)return null;
 
  const portfolioDividers=Array.isArray(member.portfolioDividers)?member.portfolioDividers:[];
@@ -74,7 +93,21 @@ export default function PortfolioVisualEditor({config,memberId,setConfig,onSave,
  useEffect(()=>{if(selection.startsWith('text:')&&!isTextKey(selection.slice(5)))setSelection('work')},[selection]);
  useEffect(()=>{if(selectedWorkIndex>=0&&selectedWorkIndex>=(member.works||[]).length)setSelection('work')},[selectedWorkIndex,member.works]);
 
- const patchSection=(key:PortfolioSectionKey,value:Partial<TeamMember['portfolioSections'][PortfolioSectionKey]>)=>patchMember({portfolioSections:{...(member.portfolioSections||{}),[key]:{...fallbackSectionLayout,...sectionLayout(key),...value}} as TeamMember['portfolioSections']});
+ const patchSection=(key:PortfolioSectionKey,value:Partial<TeamMember['portfolioSections'][PortfolioSectionKey]>)=>setConfig(current=>{
+  const syncGeometry=key==='index'||key==='work';
+  const geometry:Partial<TeamMember['portfolioSections'][PortfolioSectionKey]>={};
+  if(syncGeometry){
+   for(const field of ['x','y','scale','minHeight'] as const)if(value[field]!==undefined)geometry[field]=value[field] as never;
+  }
+  const hasGeometry=Object.keys(geometry).length>0;
+  return {...current,teamMembers:(current.teamMembers||[]).map(item=>{
+   const sections=item.portfolioSections||member.portfolioSections;
+   const base={...fallbackSectionLayout,...(sections?.[key]||{})};
+   if(item.id===memberId)return {...item,portfolioSections:{...sections,[key]:{...base,...value}} as TeamMember['portfolioSections']};
+   if(syncGeometry&&hasGeometry)return {...item,portfolioSections:{...sections,[key]:{...base,...geometry}} as TeamMember['portfolioSections']};
+   return item;
+  })};
+ });
  const patchDivider=(id:string,value:Partial<PortfolioDivider>)=>patchMember({portfolioDividers:portfolioDividers.map(item=>item.id===id?{...item,...value}:item)});
  const deleteDivider=(id:string)=>{patchMember({portfolioDividers:portfolioDividers.filter(item=>item.id!==id)});setSelection(selectedSection);setTab('layers')};
  const addDivider=()=>{const id='portfolio-divider-'+Date.now();patchMember({portfolioDividers:[...portfolioDividers,{id,after:selectedSection,visible:true,width:100,thickness:1,opacity:24,inset:0,marginTop:0,marginBottom:0,offsetY:0,color:''}]});setSelection(`divider:${id}`);setTab('content')};
