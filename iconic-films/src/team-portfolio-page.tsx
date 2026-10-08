@@ -4,9 +4,10 @@ import {ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,Moon,Sun} from 'lucid
 import MediaGalleryDialog,{MediaGallery,portfolioMediaFrame} from './media-gallery';
 import type {Config,NavItemKey,PortfolioDivider,PortfolioMediaRatio,PortfolioSectionKey,TeamMember} from './defaults';
 import TeamMedia,{teamMediaType} from './team-media';
+import PortfolioHoverCredits from './portfolio-hover-credits';
 import useCompactLayout from './use-compact-layout';
 
-function PortfolioGridCard({src,ratio,index,sourceIndex,name,onOpen,visualEditing}:{src:string;ratio:PortfolioMediaRatio;index:number;sourceIndex:number;name:string;onOpen:()=>void;visualEditing:boolean}){
+function PortfolioGridCard({src,ratio,index,sourceIndex,name,title,kicker,info,credits,onOpen,visualEditing}:{src:string;ratio:PortfolioMediaRatio;index:number;sourceIndex:number;name:string;title:string;kicker?:string;info?:string;credits?:string;onOpen:()=>void;visualEditing:boolean}){
   const [frameRatio,setFrameRatio]=useState(()=>ratio==='auto'?4/5:portfolioMediaFrame(1,1,ratio).ratio);
   useEffect(()=>{
     if(ratio!=='auto'){setFrameRatio(portfolioMediaFrame(1,1,ratio).ratio);return}
@@ -22,8 +23,9 @@ function PortfolioGridCard({src,ratio,index,sourceIndex,name,onOpen,visualEditin
     video.preload='metadata';video.addEventListener('loadedmetadata',loaded,{once:true});video.src=src;
     return()=>{video.removeEventListener('loadedmetadata',loaded);video.removeAttribute('src');video.load()};
   },[src,ratio]);
-  return <button type="button" className="team-portfolio-grid-item" data-portfolio-work-index={sourceIndex} style={{'--portfolio-item-ratio':String(frameRatio)} as CSSProperties} onClick={()=>{if(!visualEditing)onOpen()}}>
+  return <button type="button" className="team-portfolio-grid-item has-portfolio-credits" data-portfolio-work-index={sourceIndex} aria-label={[title||name,kicker,info,credits,'작품 열기'].filter(Boolean).join(' · ')} style={{'--portfolio-item-ratio':String(frameRatio)} as CSSProperties} onClick={()=>{if(!visualEditing)onOpen()}}>
     <TeamMedia src={src} alt={name+' portfolio '+(index+1)} className="team-portfolio-work-media" autoPlay/>
+    <PortfolioHoverCredits title={title} kicker={kicker} info={info} credits={credits}/>
     <span className="team-portfolio-grid-index">{String(index+1).padStart(2,'0')}</span>
   </button>;
 }
@@ -357,7 +359,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
         {member.portfolioLayout==='grid'&&<div className="team-portfolio-grid">
           {Array.from({length:visualEditing?Math.max(9,works.length):works.length},(_,i)=>{
             const item=galleryItems[i],url=item?.src,sourceIndex=item?.sourceIndex;
-            return url?<PortfolioGridCard key={url+i} src={url} ratio={item.ratio||'auto'} index={i} sourceIndex={sourceIndex??i} name={member.name||'Portfolio'} onOpen={()=>openViewer(i)} visualEditing={visualEditing}/>:<div className="team-portfolio-grid-item is-empty" key={'empty-'+i} aria-hidden="true"><span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span></div>
+            return url?<PortfolioGridCard key={url+i} src={url} ratio={item.ratio||'auto'} index={i} sourceIndex={sourceIndex??i} name={member.name||'Portfolio'} title={item.title} kicker={item.kicker} info={item.info} credits={item.credits} onOpen={()=>openViewer(i)} visualEditing={visualEditing}/>:<div className="team-portfolio-grid-item is-empty" key={'empty-'+i} aria-hidden="true"><span className="team-portfolio-grid-index">{String(i+1).padStart(2,'0')}</span></div>
           })}
         </div>}
 
