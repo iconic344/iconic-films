@@ -226,7 +226,7 @@ export default function EditSiteWorkbench({config,page,memberId,selection,onSele
     {!direct&&<>
       <div className="vii-wb-stage-meta"><span>LIVE PREVIEW</span><span>{sizing.width} × {sizing.height} · {sizing.label}</span></div>
       <div className={'vii-wb-device-frame vii-wb-'+device} style={{width:sizing.width*scale,height:sizing.height*scale}}>
-       <iframe ref={iframeRef} title={sizing.label+' VIIVII sara 실시간 미리보기'} src={src} onLoad={()=>{setReady(true);post({type:'sync',config})}} style={{width:sizing.width,height:sizing.height,transform:'scale('+scale+')',transformOrigin:'top left'}}/>
+       <iframe ref={iframeRef} title={sizing.label+' VIIVII sara 실시간 미리보기'} src={src} allow="autoplay; fullscreen; picture-in-picture" onLoad={()=>{setReady(true);post({type:'sync',config})}} style={{width:sizing.width,height:sizing.height,transform:'scale('+scale+')',transformOrigin:'top left'}}/>
       </div>
       <p className="vii-wb-preview-hint">미리보기에서 항목을 선택하면 오른쪽에서 바로 편집할 수 있습니다.</p>
     </>}
