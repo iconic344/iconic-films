@@ -1,0 +1,61 @@
+/* PROJECT 07 — one hero frame, one active media.
+   The previously inserted sibling .hero-media-fallback had NO desktop positioning,
+   so its natural portrait height pushed the uploaded video below it. The React
+   tree now renders only the gallery; its internal poster is the sole fallback.
+   Keep its placement stable when an older saved configuration has heroPoster. */
+.site .hero-media-shell > .hero-gallery {
+  position:relative!important;
+  min-width:0!important;
+  isolation:isolate!important;
+}
+.site .hero-media-shell .media-gallery-artwork {
+  position:relative!important;
+  overflow:hidden!important;
+}
+.site .hero-media-shell .media-gallery-artwork > .media-gallery-video-poster {
+  display:block!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  padding:0!important;
+  margin:0!important;
+  object-fit:var(--gallery-media-fit,cover)!important;
+  object-position:var(--gallery-media-position,50% 50%)!important;
+  border-radius:0!important;
+  pointer-events:none!important;
+}
+.site .hero-media-shell .media-gallery-artwork > video {
+  position:absolute!important;
+  inset:0!important;
+  z-index:2!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  margin:0!important;
+  border-radius:0!important;
+  object-fit:var(--gallery-media-fit,cover)!important;
+  object-position:var(--gallery-media-position,50% 50%)!important;
+}
+/* Show the user's chosen still only UNTIL the new video has decoded a frame.
+   Once decoded, expose the video on all PC/tablet/mobile breakpoints. */
+.site .hero-media-shell .media-gallery-artwork > video[data-has-poster="true"][data-media-ready="false"] {
+  opacity:0!important;
+}
+.site .hero-media-shell .media-gallery-artwork > video[data-media-ready="true"] {
+  opacity:1!important;
+}
+/* An old editor state can still contain heroPoster. Never allow an external
+   legacy poster to participate in page layout even if it is reintroduced. */
+.site .hero-media-shell > .hero-gallery > .hero-media-fallback {
+  display:none!important;
+}
