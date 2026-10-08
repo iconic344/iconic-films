@@ -501,3 +501,93 @@ html[data-viivii-preview="true"] [data-viivii-preview-selected="true"]{
 html[data-viivii-preview="true"] [data-viivii-preview-selected="true"]::selection{
  background:#ffffff55!important;
 }
+
+
+/* Section list is driven by the SAVED sectionOrder, not fake 01..06 labels.
+   A grip is the only drag handle; the remaining row is a normal select target. */
+.vii-wb-tree-row{
+ grid-template-columns:24px minmax(0,1fr)!important;
+ gap:6px!important;
+ padding:0 6px!important;
+}
+.vii-wb-grip{
+ display:flex!important;
+ align-items:center!important;
+ justify-content:center!important;
+ width:25px!important;
+ min-width:25px!important;
+ height:33px!important;
+ padding:0!important;
+ margin:0!important;
+ border:0!important;
+ border-radius:7px!important;
+ background:transparent!important;
+ color:#8e8e96!important;
+ cursor:grab!important;
+ touch-action:none!important;
+ -webkit-user-select:none!important;
+ user-select:none!important;
+ flex:0 0 25px!important;
+}
+.vii-wb-grip:hover:not(:disabled){background:#ffffff12!important;color:#f0f0f2!important}
+.vii-wb-grip:active:not(:disabled){cursor:grabbing!important;color:#fff!important}
+.vii-wb-grip:disabled,.vii-wb-grip.is-locked{
+ opacity:.35!important;
+ cursor:default!important;
+ touch-action:auto!important;
+}
+.vii-wb-tree-select{
+ display:flex!important;align-items:center!important;
+ justify-content:space-between!important;
+ gap:8px!important;
+ min-width:0!important;
+ width:100%!important;height:40px!important;
+ padding:0!important;margin:0!important;
+ border:0!important;
+ background:transparent!important;
+ color:inherit!important;
+ text-align:left!important;
+ font-size:inherit!important;
+}
+.vii-wb-tree-select>svg{flex:0 0 13px!important;opacity:.55}
+.vii-wb-child{
+ display:flex!important;gap:4px!important;
+ padding:2px 5px!important;
+ min-height:36px!important;
+}
+.vii-wb-child .vii-wb-grip{
+ width:23px!important;min-width:23px!important;flex-basis:23px!important;
+ height:30px!important;
+ color:#85858e!important;
+}
+.vii-wb-child-select{
+ display:flex!important;align-items:center!important;
+ min-width:0!important;flex:1 1 auto!important;
+ height:31px!important;
+ padding:0 2px!important;
+ border:0!important;
+ background:transparent!important;
+ color:inherit!important;
+ text-align:left!important;
+}
+.vii-wb-child-select>span{
+ min-width:0!important;
+ overflow:hidden!important;text-overflow:ellipsis!important;
+ white-space:nowrap!important;
+ font-size:10px!important;
+}
+.vii-wb-tree-row.is-drop-target,
+.vii-wb-child.is-drop-target{
+ border-color:rgba(221,226,237,.7)!important;
+ background:#ffffff1a!important;
+ box-shadow:inset 3px 0 0 #e9e9ee!important;
+}
+.vii-wb-tree-row.is-drop-target .vii-wb-grip,
+.vii-wb-child.is-drop-target .vii-wb-grip{color:#fff!important}
+@media (hover:none),(pointer:coarse){
+ .vii-wb-grip{width:33px!important;min-width:33px!important;flex-basis:33px!important;height:40px!important}
+ .vii-wb-tree-row{grid-template-columns:34px minmax(0,1fr)!important;min-height:48px!important}
+ .vii-wb-tree-select{height:47px!important}
+ .vii-wb-child .vii-wb-grip{width:31px!important;min-width:31px!important;flex-basis:31px!important;height:38px!important}
+ .vii-wb-child-select{height:40px!important}
+}
