@@ -141,3 +141,19 @@
     transition:none!important;
   }
 }
+
+/* The circular VIDEO/IMAGE/3D cursor label previously sat directly under the
+   CREDITS lines (visible in the supplied recording). Hide only that secondary
+   label/glass ring while a grid card is hovered. The responsive pointer dot,
+   hover credits, and click-to-open behavior are retained. */
+@media (hover:hover) and (pointer:fine) {
+  body:has(.team-portfolio-grid-item.has-portfolio-credits:hover)>.iconic-cursor-caption,
+  body:has(.team-portfolio-grid-item.has-portfolio-credits:hover)>.iconic-cursor-optics,
+  body:has(.team-portfolio-grid-item.has-portfolio-credits:hover) .iconic-cursor-caption,
+  body:has(.team-portfolio-grid-item.has-portfolio-credits:hover) .iconic-cursor-optics {
+    opacity:0!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+}
+/* End of caption label from the responsive cursor suppression. */
