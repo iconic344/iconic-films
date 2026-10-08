@@ -447,7 +447,7 @@ export default function VisualSiteEditor({
   try{
    setUploading(true);setBusy(true);setUploadState({key,filename:file.name,percent:0,phase:'uploading'});
    const url=await uploadFile(file,percent=>setUploadState(current=>current?.key===key?{...current,percent,phase:'uploading'}:current));
-   setConfig(d=>({...d,[key]:url,...(key==='aboutImage'?{aboutMediaType:'image'}:{})}));
+   setConfig(d=>({...d,[key]:url,...(key==='aboutImage'?{aboutMediaType:'image'}:{}),...((key==='heroVideo'||key==='heroPoster')?{heroMediaFit:'cover'}:{})}));
    setUploadState({key,filename:file.name,percent:100,phase:'done',message:'업로드 완료 · 현재 미리보기에 적용됨'});
    notify(key==='heroVideo'?'메인 미디어 업로드 완료. 현재 화면에 바로 적용했습니다. 저장을 눌러 최종 반영하세요.':'파일 업로드 완료. 현재 화면에 바로 적용했습니다.');
   }catch(error){
