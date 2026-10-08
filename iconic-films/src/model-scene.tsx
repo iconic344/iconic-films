@@ -201,12 +201,29 @@ export default function ModelScene({
     };
     const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
     ro?.observe(v);
+    // Refit only when rotation actually requires a new safe camera distance.
+    // Keeps the visual object large while its angle changes, without cropping.
+    let orbitRaf=0;
+    const onCameraChange=()=>{
+      if(orbitRaf)return;
+      orbitRaf=requestAnimationFrame(()=>{
+        orbitRaf=0;
+        frameModelViewer(v,{
+          scale:c.modelScale,outerScale,
+          offsetX:c.modelOffsetX,offsetY:c.modelOffsetY,
+          resetDistance:false
+        });
+      });
+    };
+    v.addEventListener('camera-change',onCameraChange);
     v.addEventListener('load', update);
     if (v.loaded) update();
     return () => {
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(orbitRaf);
       ro?.disconnect();
       v.removeEventListener('load', update);
+      v.removeEventListener('camera-change',onCameraChange);
     };
   }, [ready, source, c.modelScale, c.modelOffsetX, c.modelOffsetY, outerScale]);
 
