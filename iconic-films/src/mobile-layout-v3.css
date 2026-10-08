@@ -1150,3 +1150,159 @@
    font-size:9px!important;padding-inline:1px!important;
  }
 }
+
+
+/* PROJECT 07 — 3D visibility, iPhone poster and editorial section cadence */
+@media (max-width:1024px), (max-width:1366px) and (any-pointer:coarse){
+  /* No administration controls on touch-oriented phone/iPad layouts. */
+  .site>.nav.nav-recomposed>.nav-tools,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-tools,
+  .site>.nav.nav-recomposed :is(.admin-link,.nav-edit-link),
+  .team-portfolio-page>.nav.nav-recomposed :is(.admin-link,.nav-edit-link){
+    display:none!important;
+  }
+  /* Theme button at left and exactly centered brand, independent of menu text. */
+  .site>.nav.nav-recomposed>.nav-centered-brand,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-centered-brand{
+    grid-column:2 / 6!important;
+    justify-self:center!important;
+    text-align:center!important;
+  }
+  .site>.nav.nav-recomposed>.nav-menu-left,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-menu-left{
+    grid-column:1 / 5!important;
+    justify-content:space-around!important;
+  }
+  .site>.nav.nav-recomposed>.nav-menu-right,
+  .team-portfolio-page>.nav.nav-recomposed>.nav-menu-right{
+    grid-column:5 / 7!important;
+    justify-content:space-around!important;
+  }
+  /* Two left and one right labels => equal thirds via common coordinate grid. */
+  .site>.nav.nav-recomposed>.nav-menu-left:has(>:nth-child(2)):not(:has(>:nth-child(3))),
+  .team-portfolio-page>.nav.nav-recomposed>.nav-menu-left:has(>:nth-child(2)):not(:has(>:nth-child(3))){
+    grid-column:1 / 5!important;
+  }
+  /* Mobile editorial sections must not retain desktop gap/grid row behavior. */
+  .site main>.about[data-visual-section="about"]{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:auto auto auto!important;
+    grid-auto-rows:min-content!important;
+    align-content:start!important;
+    align-items:start!important;
+    justify-items:stretch!important;
+    height:auto!important;min-height:0!important;
+    gap:clamp(12px,2.5vw,22px)!important;
+    padding-top:clamp(18px,3vw,32px)!important;
+    padding-bottom:clamp(18px,3vw,34px)!important;
+    margin:0!important;
+    translate:none!important;
+    scale:1!important;
+  }
+  .site main>.about>.kicker{
+    grid-column:1!important;grid-row:1!important;
+    margin:0!important;padding:0!important;
+    width:100%!important;min-width:0!important;
+  }
+  .site main>.about>.about-copy{
+    grid-column:1!important;grid-row:2!important;
+    margin:0!important;padding:0!important;
+    min-width:0!important;
+    display:flex!important;flex-direction:column!important;align-items:stretch!important;
+    gap:clamp(12px,2.5vw,22px)!important;
+  }
+  .site main>.about>.about-copy h2,
+  .site main>.about>.about-copy p,
+  .site main>.about>.about-copy .disciplines{
+    margin:0!important;padding:0!important;
+    min-width:0!important;width:100%!important;max-width:100%!important;
+    translate:none!important;transform:none!important;
+    overflow-wrap:break-word!important;
+  }
+  .site main>.about>.about-copy h2{
+    line-height:1.02!important;
+    font-size:clamp(34px,6vw,58px)!important;
+  }
+  .site main>.about>.about-copy p{
+    line-height:1.55!important;
+    font-size:clamp(13px,1.8vw,16px)!important;
+  }
+  .site main>.about>.about-visual{
+    grid-column:1!important;grid-row:3!important;
+    display:block!important;
+    justify-self:stretch!important;
+    align-self:start!important;
+    height:clamp(220px,44vw,410px)!important;
+    min-height:0!important;max-height:410px!important;
+    margin:0!important;padding:0!important;
+    border-radius:0!important;
+    overflow:visible!important;
+    background:transparent!important;
+    aspect-ratio:auto!important;
+  }
+  .site main>.about>.about-visual.is-model .model-stage,
+  .site main>.about>.about-visual.is-model model-viewer{
+    display:block!important;
+    width:100%!important;height:100%!important;
+    min-height:0!important;max-height:none!important;
+    overflow:visible!important;
+    background:transparent!important;
+  }
+  .site footer[data-visual-section="footer"]{
+    height:auto!important;min-height:0!important;
+    padding-top:16px!important;
+    padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))!important;
+    margin:0!important;
+  }
+  /* Keep the upload poster visible above dormant Safari video layers. */
+  .site .hero-media-shell .hero-gallery{position:relative!important}
+  .site .hero-media-shell .hero-gallery>.hero-media-fallback{
+    position:absolute!important;
+    inset:0!important;
+    z-index:8!important;
+    width:100%!important;height:100%!important;
+    object-fit:cover!important;
+    object-position:center center!important;
+    pointer-events:none!important;
+    opacity:1!important;
+    transition:opacity .28s ease!important;
+  }
+  .site .hero-media-shell .hero-gallery:has(video[data-media-ready="true"])>.hero-media-fallback{
+    opacity:0!important;
+  }
+  html.mobile-nav-hidden .site>.nav.nav-recomposed,
+  html.mobile-nav-hidden .team-portfolio-page>.nav.nav-recomposed{
+    transform:translate(-50%,calc(-100% - 40px))!important;
+    pointer-events:none!important;
+    opacity:0!important;
+  }
+  .site>.nav.nav-recomposed,.team-portfolio-page>.nav.nav-recomposed{
+    transition:transform .24s ease,opacity .2s ease!important;
+  }
+}
+@media(max-width:600px){
+ .site main>.about[data-visual-section="about"]{
+   gap:15px!important;
+   padding-top:18px!important;padding-bottom:16px!important;
+ }
+ .site main>.about>.about-copy{gap:16px!important}
+ .site main>.about>.about-copy h2{
+   font-size:clamp(34px,10vw,44px)!important;
+ }
+ .site main>.about>.about-visual,
+ .site main>.about>.about-visual.is-model{
+   height:clamp(220px,64vw,295px)!important;
+   max-height:295px!important;
+   min-height:0!important;
+ }
+ .site main>.about>.about-visual.is-model .model-stage,
+ .site main>.about>.about-visual.is-model model-viewer{
+   height:100%!important;max-height:none!important;
+ }
+ .site main>.about>.about-copy p{font-size:14px!important}
+ .site main>.about>.about-copy .disciplines{
+   display:flex!important;gap:12px!important;
+   flex-wrap:wrap!important;
+ }
+}
