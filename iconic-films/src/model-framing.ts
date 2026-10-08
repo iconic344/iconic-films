@@ -59,7 +59,7 @@ export function calculateModelFrame(
  }else{
    // Conservative backward-compatible fallback for callers without orbit data.
    const radius=Math.hypot(sx,sy,sz);
-   fittedDistance=radius/Math.sin(Math.min(halfVFov,halfHFov));
+   fittedDistance=radius/Math.sin(Math.min(halfVFov,halfHFov))*1.18;
  }
  const offsetX=Math.min(.25,Math.abs(options.offsetX??0)/100);
  const offsetY=Math.min(.25,Math.abs(options.offsetY??0)/100);
