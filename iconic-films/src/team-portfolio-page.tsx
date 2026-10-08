@@ -374,7 +374,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     </nav>}
     {renderDividers('switcher')}
 
-    <footer className="team-portfolio-footer" data-portfolio-section="footer" data-portfolio-hidden={member.portfolioSections.footer.visible?'false':'true'} style={sectionStyle('footer')}><span>© 2026 {config.name}</span><button type="button" data-portfolio-edit="footerReturn" onClick={()=>{if(!visualEditing)onBack()}}>{member.portfolioReturnLabel||'Back to team'}</button></footer>
+    <footer className="team-portfolio-footer" data-portfolio-section="footer" data-portfolio-hidden={member.portfolioSections.footer.visible?'false':'true'} style={sectionStyle('footer')}><span>© 2026 {config.name}</span><button type="button" data-portfolio-edit="footerReturn" onClick={()=>{if(!visualEditing)onBack()}}>{compact?'Back to team':member.portfolioReturnLabel||'Back to team'}</button></footer>
     {renderDividers('footer')}
 
     <MediaGalleryDialog items={galleryItems} index={viewerIndex} onClose={closeViewer} onIndexChange={setViewerIndex} autoPlay={member.portfolioSliderAutoplay!==false} autoplayMs={member.portfolioSliderAutoplayMs||6500} transitionMs={member.portfolioSliderTransitionMs||820} easing={member.portfolioSliderEasing||'smooth'}/>
