@@ -306,6 +306,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     '--portfolio-grid-width':(layoutMaster.portfolioGridWidth||100)+'%',
     '--portfolio-work-x':(compact?0:layoutMaster.portfolioSections.work.x||0)+'px',
   } as CSSProperties;
+  const effectivePortfolioOrder=(member.portfolioSectionOrder||['nav','hero','index','work','switcher','footer']).filter((key):key is PortfolioSectionKey=>['hero','index','work'].includes(key));
   const sectionStyle=(key:PortfolioSectionKey):CSSProperties=>{
     const own=member.portfolioSections[key];
     const shared=(key==='index'||key==='work')?(layoutMaster.portfolioSections[key]||own):own;
@@ -314,6 +315,8 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
       scale:String(compact?1:shared.scale||1),
       minHeight:compact?undefined:shared.minHeight>0?shared.minHeight+'px':undefined,
       opacity:(own.opacity??100)/100,
+      order:effectivePortfolioOrder.indexOf(key)<0?0:effectivePortfolioOrder.indexOf(key)*10,
+      '--portfolio-section-rank':effectivePortfolioOrder.indexOf(key)<0?0:effectivePortfolioOrder.indexOf(key)*10,
       background:own.background||undefined,
       borderRadius:own.radius?own.radius+'px':undefined
     };
@@ -341,7 +344,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     </header>
     {renderDividers('nav')}
 
-    <main className="team-portfolio-main">
+    <main className="team-portfolio-main" style={{display:'flex',flexDirection:'column'}}>
       <section ref={heroRef} data-portfolio-section="hero" data-portfolio-hidden={member.portfolioSections.hero.visible?'false':'true'} style={sectionStyle('hero')} className={'team-portfolio-hero'+(member.photo?' has-hero-media':'')}>
         {member.photo&&<div className="team-portfolio-hero-media" aria-hidden="true">
           <TeamMedia src={member.photo} alt="" className="team-portfolio-hero-media-element" autoPlay/>
