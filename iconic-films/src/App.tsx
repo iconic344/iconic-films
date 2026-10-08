@@ -85,14 +85,25 @@ export default function Home(){
  useEffect(()=>{
   // A fixed liquid-glass header should not hide editorial text while reading.
   // On touch viewports it retracts while scrolling down and returns on scroll up.
-  let last=window.scrollY;
+  let last=window.scrollY,upward=0,downward=0;
   const mobile=window.matchMedia('(max-width: 1024px), (max-width: 1366px) and (any-pointer: coarse)');
   const update=()=>{
-    const y=window.scrollY;
-    if(!mobile.matches||y<85||Math.abs(y-last)>2&&y<last-3){
+    const y=Math.max(0,window.scrollY);
+    const delta=y-last;
+    if(!mobile.matches||y<85){
+      upward=0;downward=0;
       document.documentElement.classList.remove('mobile-nav-hidden');
-    }else if(y>180&&y>last+2){
-      document.documentElement.classList.add('mobile-nav-hidden');
+    }else if(delta>1){
+      upward=0;downward+=delta;
+      if(y>165&&downward>=12)document.documentElement.classList.add('mobile-nav-hidden');
+    }else if(delta< -1){
+      downward=0;upward+=-delta;
+      // Ignore tiny Safari scroll bounce; reveal only after intentional
+      // upward scrolling so the header cannot cover editorial headings.
+      if(upward>=72){
+        document.documentElement.classList.remove('mobile-nav-hidden');
+        upward=0;
+      }
     }
     last=y;
   };
