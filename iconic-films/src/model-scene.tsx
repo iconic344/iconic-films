@@ -4,9 +4,10 @@ import {createElement, useEffect, useRef, useState} from 'react';
 import type {Config} from './defaults';
 import {defaultModelLighting} from './logo-settings';
 import {modelSource} from './model-source';
+import {frameModelViewer,type FramingViewer} from './model-framing';
 import {createModelReturn, type ReturnViewer} from './model-return';
 
-type Viewer = HTMLElement &
+type Viewer = FramingViewer &
   ReturnViewer & {
     loaded: boolean;
     availableAnimations: string[];
@@ -20,9 +21,11 @@ type Viewer = HTMLElement &
 export default function ModelScene({
   config: c,
   onAnimations,
+  outerScale = 1,
 }: {
   config: Config;
   onAnimations?: (animations: string[]) => void;
+  outerScale?: number;
 }) {
   const ref = useRef<Viewer | null>(null);
   const dragging = useRef(false);
@@ -64,7 +67,10 @@ export default function ModelScene({
       setLoading(false);
       v.setAttribute('camera-target', 'auto auto auto');
       void v.updateFraming().then(() => {
-        if (live) v.jumpCameraToGoal();
+        if (live) {
+          frameModelViewer(v, {scale: c.modelScale, outerScale, offsetX: c.modelOffsetX, offsetY: c.modelOffsetY, resetDistance: true});
+          v.jumpCameraToGoal();
+        }
       }).catch(() => {});
 
       const names = v.availableAnimations || [];
@@ -173,6 +179,37 @@ export default function ModelScene({
     v.style.touchAction = c.modelDrag ? 'none' : 'pan-y';
   }, [ready, c.modelDrag, c.modelZoom, c.modelAutoRotate, c.modelSpeed, c.motion]);
 
+
+  // Model size, aspect ratio, screen rotation and editor zoom may change after
+  // the initial load. Keep an absolute camera-distance safety floor in meters.
+  // During regular drag we only prevent clipping; we never reset the angles.
+  useEffect(() => {
+    const v = ref.current;
+    if (!ready || !v) return;
+    let raf = 0;
+    const update = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        frameModelViewer(v, {
+          scale: c.modelScale,
+          outerScale,
+          offsetX: c.modelOffsetX,
+          offsetY: c.modelOffsetY,
+          resetDistance: true,
+        });
+      });
+    };
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    ro?.observe(v);
+    v.addEventListener('load', update);
+    if (v.loaded) update();
+    return () => {
+      cancelAnimationFrame(raf);
+      ro?.disconnect();
+      v.removeEventListener('load', update);
+    };
+  }, [ready, source, c.modelScale, c.modelOffsetX, c.modelOffsetY, outerScale]);
+
   const reduced = typeof window !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function react(e: React.PointerEvent) {
@@ -201,9 +238,9 @@ export default function ModelScene({
         'auto-rotate-delay': '0',
         'rotation-per-second': `${c.modelSpeed}deg`,
         'camera-target': 'auto auto auto',
-        'camera-orbit': `0deg 75deg ${110 / c.modelScale}%`,
-        'min-camera-orbit': 'auto auto 20%',
-        'max-camera-orbit': 'auto auto 300%',
+        'camera-orbit': `0deg 75deg ${Math.max(120, 145 / Math.max(0.05, c.modelScale))}%`,
+        'min-camera-orbit': 'auto auto 100%',
+        'max-camera-orbit': 'auto auto 3000%',
         orientation: `${c.modelRotateX}deg ${c.modelRotateY}deg ${c.modelRotateZ}deg`,
         'shadow-intensity': lighting.enabled ? lighting.shadowIntensity : 0,
         'shadow-softness': lighting.shadowSoftness,
@@ -216,7 +253,7 @@ export default function ModelScene({
         style: {
           width: '100%',
           height: '100%',
-          transform: `translate(${c.modelOffsetX}%, ${c.modelOffsetY}%)`,
+          transform: `translate(${Math.max(-30,Math.min(30,c.modelOffsetX))}%, ${Math.max(-30,Math.min(30,c.modelOffsetY))}%)`,
         },
       })}
       {loading && !error && <div className="model-status">Loading 3D…</div>}
