@@ -40,8 +40,8 @@ function previewDestination(page:EditorPage,memberId?:string){
 export default function EditSiteWorkbench({config,page,memberId,selection,onSelect,onContent,onSettings,onLayers,onSave,onCancel,onUndo,onAddWork,onOpenAdmin,canUndo,busy}:Props){
  const [device,setDevice]=useState<EditorDevice>('desktop');
  const [direct,setDirect]=useState(false);
- const [leftOpen,setLeftOpen]=useState(true);
- const [rightOpen,setRightOpen]=useState(true);
+ const [leftOpen,setLeftOpen]=useState(()=>typeof window!=='undefined'&&window.innerWidth>1100);
+ const [rightOpen,setRightOpen]=useState(()=>typeof window!=='undefined'&&window.innerWidth>1100);
  const [ready,setReady]=useState(false);
  const stageRef=useRef<HTMLDivElement>(null);
  const iframeRef=useRef<HTMLIFrameElement>(null);
@@ -88,7 +88,7 @@ export default function EditSiteWorkbench({config,page,memberId,selection,onSele
    }else if(msg.type==='select'&&typeof msg.selection==='string'){
     onSelect(msg.selection);
     onContent();
-    if(window.matchMedia('(max-width: 760px)').matches){setRightOpen(true);setLeftOpen(false)}
+    if(window.matchMedia('(max-width: 1100px)').matches){setRightOpen(true);setLeftOpen(false)}
    }
   };
   window.addEventListener('message',onMessage);
@@ -104,7 +104,6 @@ export default function EditSiteWorkbench({config,page,memberId,selection,onSele
  };
  const changeDevice=(next:EditorDevice)=>{
   setDevice(next);setDirect(false);
-  setRightOpen(v=>v);
  };
  const closeEditing=()=>{onCancel()};
  return <div className="vii-workbench" data-page={page} data-device={device} data-direct={direct?'true':'false'}>
