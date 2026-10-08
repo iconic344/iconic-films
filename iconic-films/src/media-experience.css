@@ -758,3 +758,15 @@ body:has(.media-gallery.is-expanded[data-cursor-idle="true"])>.iconic-cursor,bod
 .hero-media-shell[data-hero-ratio]:not([data-hero-ratio="fill"])>.hero-gallery .media-gallery.is-clean-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
   aspect-ratio:auto!important;
 }
+
+
+/* PROJECT 07 — main visual must use the VIIVII sara custom cursor, never OS cursor. */
+@media(any-hover:hover) and (any-pointer:fine){
+  body.iconic-pointer .hero-media-shell,
+  body.iconic-pointer .hero-media-shell *,
+  body.iconic-pointer .hero-media-shell .media-gallery.is-clean-preview,
+  body.iconic-pointer .hero-media-shell .media-gallery.is-clean-preview .media-gallery-artwork,
+  body.iconic-pointer .hero-media-shell .media-gallery.is-clean-preview .media-gallery-artwork>*{
+    cursor:none!important;
+  }
+}
