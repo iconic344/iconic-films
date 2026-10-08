@@ -1,5 +1,6 @@
 'use client';
 import {createElement,useEffect,useRef,useState} from 'react';
+import {frameModelViewer,type FramingViewer} from './model-framing';
 
 const ext=(url:string)=>url.split('?')[0].split('#')[0].toLowerCase();
 export const teamMediaType=(url:string)=>{
@@ -12,6 +13,7 @@ export const teamMediaType=(url:string)=>{
 export default function TeamMedia({src,alt='',className='',interactive=false,autoPlay=false}:{src:string;alt?:string;className?:string;interactive?:boolean;autoPlay?:boolean}){
   const [modelReady,setModelReady]=useState(false);
   const videoRef=useRef<HTMLVideoElement>(null);
+  const modelRef=useRef<FramingViewer|null>(null);
   const visible=useRef(false);
   const type=teamMediaType(src);
   useEffect(()=>{
@@ -36,13 +38,33 @@ export default function TeamMedia({src,alt='',className='',interactive=false,aut
     observer.observe(video);
     return()=>{observer.disconnect();visible.current=false;video.pause()};
   },[type,interactive,autoPlay,src]);
+  useEffect(()=>{
+    const viewer=modelRef.current;
+    if(type!=='model'||!modelReady||!viewer)return;
+    let frame=0;
+    const update=()=>{
+      cancelAnimationFrame(frame);
+      frame=requestAnimationFrame(()=>frameModelViewer(viewer,{resetDistance:true}));
+    };
+    const resize=typeof ResizeObserver!=='undefined'?new ResizeObserver(update):null;
+    resize?.observe(viewer);
+    viewer.addEventListener('load',update);
+    if(viewer.loaded)update();
+    return()=>{cancelAnimationFrame(frame);resize?.disconnect();viewer.removeEventListener('load',update)};
+  },[type,modelReady,src]);
   if(type==='video')return <video ref={videoRef} className={className} src={src} draggable={false} muted loop playsInline preload={autoPlay?'metadata':'none'} controls={interactive} autoPlay={autoPlay} onCanPlay={e=>{if(autoPlay&&visible.current)e.currentTarget.play().catch(()=>{})}} onPointerEnter={e=>{if(!interactive&&!autoPlay&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.play().catch(()=>{})}} onPointerLeave={e=>{if(!interactive&&!autoPlay&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.pause()}}/>;
   if(type==='model')return modelReady?createElement('model-viewer',{
     class:className,
+    ref:modelRef,
     src,
     alt,
     loading:'lazy',
     'camera-controls':interactive?'':undefined,
+    'disable-pan':'',
+    'camera-target':'auto auto auto',
+    'camera-orbit':'0deg 75deg 145%',
+    'min-camera-orbit':'auto auto 100%',
+    'max-camera-orbit':'auto auto 3000%',
     'auto-rotate':'',
     'interaction-prompt':'none',
     'shadow-intensity':'1',
