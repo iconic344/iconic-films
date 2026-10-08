@@ -66,9 +66,23 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const openViewer=(i:number,preview?:HTMLVideoElement|null)=>{
     // Keep the original decoded iPhone video and its buffered timeline.
     const mobile=window.matchMedia('(max-width: 1024px), (any-pointer: coarse)').matches;
-    const canReuse=mobile&&!!preview&&preview.readyState>=2&&
+    const canReuse=mobile&&!!preview&&preview.readyState>=1&&
       teamMediaType(works[i]||'')==='video'&&preview.getAttribute('src')===works[i];
-    if(canReuse&&preview){preview.dataset.fullscreenHandoff='true';setHandoffVideo(preview)}
+    if(canReuse&&preview){
+      preview.dataset.fullscreenHandoff='true';
+      // This is still inside the actual tap/click gesture: ask iOS for sound
+      // without recreating, seeking or rebuffering the playing element.
+      if(preview.muted){
+        preview.muted=false;
+        preview.defaultMuted=false;
+        void preview.play().catch(()=>{
+          preview.muted=true;
+          preview.defaultMuted=true;
+          void preview.play().catch(()=>{});
+        });
+      }
+      setHandoffVideo(preview);
+    }
     else setHandoffVideo(null);
     setViewerIndex(i);
   };
