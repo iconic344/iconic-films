@@ -1,6 +1,6 @@
 import type {Config,PortfolioSectionKey,SiteSectionKey,TeamMember} from './defaults';
 
-export const HOME_SECTIONS:readonly SiteSectionKey[]=['nav','hero','work','team','about','footer'];
+export const HOME_SECTIONS:readonly SiteSectionKey[]=['nav','hero','work','about','team','footer'];
 export const PORTFOLIO_SECTIONS:readonly PortfolioSectionKey[]=['nav','hero','index','work','switcher','footer'];
 export const LOCKED_HOME_SECTIONS:readonly SiteSectionKey[]=['nav','footer'];
 export const LOCKED_PORTFOLIO_SECTIONS:readonly PortfolioSectionKey[]=['nav','switcher','footer'];
