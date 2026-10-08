@@ -4,6 +4,7 @@ import {ChevronLeft,ChevronRight,Grid2X2,GalleryHorizontal,Moon,Sun} from 'lucid
 import MediaGalleryDialog,{MediaGallery,portfolioMediaFrame} from './media-gallery';
 import type {Config,NavItemKey,PortfolioDivider,PortfolioMediaRatio,PortfolioSectionKey,TeamMember} from './defaults';
 import TeamMedia,{teamMediaType} from './team-media';
+import useCompactLayout from './use-compact-layout';
 
 function PortfolioGridCard({src,ratio,index,sourceIndex,name,onOpen,visualEditing}:{src:string;ratio:PortfolioMediaRatio;index:number;sourceIndex:number;name:string;onOpen:()=>void;visualEditing:boolean}){
   const [frameRatio,setFrameRatio]=useState(()=>ratio==='auto'?4/5:portfolioMediaFrame(1,1,ratio).ratio);
@@ -28,6 +29,7 @@ function PortfolioGridCard({src,ratio,index,sourceIndex,name,onOpen,visualEditin
 }
 
 export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate,onSelectMember,onToggleTheme,onContact,onAdmin,onVideoViewerOpen,onVideoViewerClose,onMemberEdit,onEditSite,visualEditing=false}:{config:Config;member:TeamMember;theme:string;onBack:()=>void;onNavigate:(target:'top'|'work'|'about'|'team')=>void;onSelectMember:(member:TeamMember,direction?:1|-1)=>void;onToggleTheme:()=>void;onContact:()=>void;onAdmin:()=>void;onVideoViewerOpen:()=>void;onVideoViewerClose:()=>void;onMemberEdit:(member:TeamMember)=>void;onEditSite:()=>void;visualEditing?:boolean}){
+  const compact=useCompactLayout();
   const [index,setIndex]=useState(0);
   const [subcategory,setSubcategory]=useState('All');
   const [viewerIndex,setViewerIndex]=useState<number|null>(null);
@@ -205,7 +207,18 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     }
   };
 
-  const globalTextStyle=(key:'navBrand'|'navMenu'):CSSProperties=>{const s=config.textStyles[key];return {fontFamily:s.font||undefined,fontSize:s.size+'px',color:s.color||undefined,textAlign:s.align,translate:s.x+'px '+s.y+'px',letterSpacing:(s.letterSpacing??0)+'px',fontWeight:s.weight??undefined,opacity:(s.opacity??100)/100,textTransform:s.textTransform&&s.textTransform!=='none'?s.textTransform:undefined}};
+  const globalTextStyle=(key:'navBrand'|'navMenu'):CSSProperties=>{
+    const s=config.textStyles[key];
+    return {
+      fontFamily:s.font||undefined,
+      fontSize:(compact?Math.min(s.size,key==='navBrand'?23:13):s.size)+'px',
+      color:s.color||undefined,textAlign:s.align,
+      translate:compact?'0px 0px':s.x+'px '+s.y+'px',
+      letterSpacing:(s.letterSpacing??0)+'px',
+      fontWeight:s.weight??undefined,opacity:(s.opacity??100)/100,
+      textTransform:s.textTransform&&s.textTransform!=='none'?s.textTransform:undefined
+    };
+  };
   const renderSiteNavItem=(item:NavItemKey)=>item==='work'?
     <a key={item} href="/#work" data-portfolio-edit="navWorkLabel" style={globalTextStyle('navMenu')} onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('work')}}>{config.navWorkLabel}</a>
     :item==='about'?
@@ -219,7 +232,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     '--portfolio-gap':(layoutMaster.portfolioGap||14)+'px',
     '--portfolio-radius':(layoutMaster.portfolioRadius??18)+'px',
     '--portfolio-name-font':member.portfolioNameFont||'Arial, Helvetica, sans-serif',
-    '--portfolio-name-size':(layoutMaster.portfolioNameSize||112)+'px',
+    '--portfolio-name-size':(compact?Math.min(layoutMaster.portfolioNameSize||112,54):layoutMaster.portfolioNameSize||112)+'px',
     '--portfolio-name-color':member.portfolioNameColor||'var(--ink)',
     '--portfolio-name-align':member.portfolioNameAlign||'left',
     '--portfolio-name-x':(layoutMaster.portfolioNameX||0)+'px',
@@ -237,7 +250,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     '--portfolio-bio-x':(member.portfolioBioX||0)+'px',
     '--portfolio-bio-y':(member.portfolioBioY||0)+'px',
     '--portfolio-title-font':member.portfolioTitleFont||'Arial, Helvetica, sans-serif',
-    '--portfolio-title-size':(layoutMaster.portfolioTitleSize||76)+'px',
+    '--portfolio-title-size':(compact?Math.min(layoutMaster.portfolioTitleSize||76,48):layoutMaster.portfolioTitleSize||76)+'px',
     '--portfolio-title-color':member.portfolioTitleColor||'var(--ink)',
     '--portfolio-title-align':member.portfolioTitleAlign||'left',
     '--portfolio-title-x':(layoutMaster.portfolioTitleX||0)+'px',
@@ -257,20 +270,20 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     '--portfolio-return-x':(layoutMaster.portfolioReturnX||0)+'px',
     '--portfolio-return-y':(layoutMaster.portfolioReturnY||0)+'px',
     '--portfolio-slider-width':(layoutMaster.portfolioSliderWidth||100)+'%',
-    '--portfolio-slider-height':(layoutMaster.portfolioSliderHeight||760)+'px',
+    '--portfolio-slider-height':(compact?Math.min(layoutMaster.portfolioSliderHeight||760,560):layoutMaster.portfolioSliderHeight||760)+'px',
     '--portfolio-slider-landscape-vw':Math.max(30,(layoutMaster.portfolioSliderWidth||100)*.665)+'vw',
     '--portfolio-slider-portrait-vw':Math.max(24,(layoutMaster.portfolioSliderWidth||100)*.42)+'vw',
     '--portfolio-slider-square-vw':Math.max(28,(layoutMaster.portfolioSliderWidth||100)*.54)+'vw',
     '--portfolio-grid-width':(layoutMaster.portfolioGridWidth||100)+'%',
-    '--portfolio-work-x':(layoutMaster.portfolioSections.work.x||0)+'px',
+    '--portfolio-work-x':(compact?0:layoutMaster.portfolioSections.work.x||0)+'px',
   } as CSSProperties;
   const sectionStyle=(key:PortfolioSectionKey):CSSProperties=>{
     const own=member.portfolioSections[key];
     const shared=(key==='index'||key==='work')?(layoutMaster.portfolioSections[key]||own):own;
     return {
-      translate:`${shared.x||0}px ${shared.y||0}px`,
-      scale:String(shared.scale||1),
-      minHeight:shared.minHeight>0?shared.minHeight+'px':undefined,
+      translate:compact?'0px 0px':`${shared.x||0}px ${shared.y||0}px`,
+      scale:String(compact?1:shared.scale||1),
+      minHeight:compact?undefined:shared.minHeight>0?shared.minHeight+'px':undefined,
       opacity:(own.opacity??100)/100,
       background:own.background||undefined,
       borderRadius:own.radius?own.radius+'px':undefined
@@ -348,7 +361,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           })}
         </div>}
 
-        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={()=>{if(!visualEditing)openViewer(index)}} balanceEdges autoPlay={member.portfolioSliderAutoplay!==false} autoplayMs={member.portfolioSliderAutoplayMs||6500} transitionMs={member.portfolioSliderTransitionMs||820} easing={member.portfolioSliderEasing||'smooth'} maxCardHeight={member.portfolioSliderHeight||760}/></div>}
+        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={()=>{if(!visualEditing)openViewer(index)}} balanceEdges autoPlay={member.portfolioSliderAutoplay!==false} autoplayMs={member.portfolioSliderAutoplayMs||6500} transitionMs={member.portfolioSliderTransitionMs||820} easing={member.portfolioSliderEasing||'smooth'} maxCardHeight={compact?Math.min(member.portfolioSliderHeight||760,560):member.portfolioSliderHeight||760}/></div>}
       </section>
       {renderDividers('work')}
     </main>
