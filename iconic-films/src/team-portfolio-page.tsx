@@ -45,7 +45,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     category:member.portfolioWorkCategories?.[i]||subcategories[0]||'All',
     kicker:member.portfolioWorkCategories?.[i]||subcategories[0]||'All',
     ratio:member.portfolioWorkRatios?.[i]||'auto'
-  })).filter(item=>subcategory==='All'||item.category===subcategory),[member.id,member.name,member.works,member.portfolioWorkCategories,member.portfolioWorkTitles,member.portfolioWorkInfo,member.portfolioWorkCredits,member.portfolioWorkRatios,member.portfolioCredits,member.portfolioCreditsVisible,subcategories,subcategory]);
+  })).filter(item=>!!item.src?.trim()&&(subcategory==='All'||item.category===subcategory)),[member.id,member.name,member.works,member.portfolioWorkCategories,member.portfolioWorkTitles,member.portfolioWorkInfo,member.portfolioWorkCredits,member.portfolioWorkRatios,member.portfolioCredits,member.portfolioCreditsVisible,subcategories,subcategory]);
   const works=useMemo(()=>galleryItems.map(item=>item.src),[galleryItems]);
   const teamMembers=useMemo(()=>(config.teamMembers||[]).filter(item=>item.visible),[config.teamMembers]);
   // Fashion (first visible portfolio) is the shared layout master. Content stays per-category,
