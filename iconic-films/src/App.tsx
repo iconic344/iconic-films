@@ -53,6 +53,7 @@ export default function Home(){
  const cached=useRef<Config|null|undefined>(undefined);
  if(cached.current===undefined)cached.current=readCachedConfig();
  const bootConfig=cached.current||initial;
+ const workbenchPreview=typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('viivii-workbench-preview')==='1';
  const [hasBootConfig]=useState(()=>!!cached.current);
  const [saved,setSaved]=useState<Config>(bootConfig),[draft,setDraft]=useState<Config>(bootConfig),[theme,setTheme]=useState(()=>cachedTheme(bootConfig.theme)),[admin,setAdmin]=useState(false),[preview,setPreview]=useState(false),[login,setLogin]=useState(false),[loginTarget,setLoginTarget]=useState<'admin'|'visual'>('admin'),[pin,setPin]=useState(''),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[category,setCategory]=useState('All'),[work,setWork]=useState<Work|null>(null),[music,setMusic]=useState(false),[track,setTrack]=useState(0),[playing,setPlaying]=useState(false),[shuffle,setShuffle]=useState(bootConfig.musicShuffle),[repeat,setRepeat]=useState(bootConfig.musicRepeatMode==='one'?1:bootConfig.musicRepeatMode==='all'?2:0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[group,setGroup]=useState('Tracks'),[filter,setFilter]=useState('All'),[volume,setVolume]=useState(bootConfig.volume),[newPin,setNewPin]=useState(''),[loaded,setLoaded]=useState(false),[scrollTarget,setScrollTarget]=useState<'top'|'bottom'>('bottom'),[autoplayBlocked,setAutoplayBlocked]=useState(false),[editorTab,setEditorTab]=useState('music'),[contactOpen,setContactOpen]=useState(false),[teamRoute,setTeamRoute]=useState(()=>typeof window==='undefined'?'':decodeURIComponent(window.location.pathname.match(/^\/team\/([^/]+)/)?.[1]||'')),[teamPageClosing,setTeamPageClosing]=useState(false),[adminClosing,setAdminClosing]=useState(false),[ownerMode,setOwnerMode]=useState(false),[memberLogin,setMemberLogin]=useState<TeamMember|null>(null),[memberPin,setMemberPin]=useState(''),[memberEditor,setMemberEditor]=useState<TeamMember|null>(null),[memberDraft,setMemberDraft]=useState<TeamMember|null>(null),[memberBusy,setMemberBusy]=useState(false),[teamPins,setTeamPins]=useState<Record<string,string>>({});
  const [focusIndex,setFocusIndex]=useState<number|null>(null);
@@ -81,7 +82,52 @@ export default function Home(){
   margin:compactViewport ? `${Math.min(20,Math.max(0,divider.marginTop))}px auto ${Math.min(20,Math.max(0,divider.marginBottom))}px` : `${divider.marginTop}px auto ${divider.marginBottom}px`,
   translate:compactViewport?'0 0':`0 ${divider.offsetY||0}px`
  });
- useEffect(()=>{api('/api/config').then(j=>{const v=normalizeConfig(j.config||{});try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(v))}catch{}setSaved(v);setDraft(v);setTheme(cachedTheme(v.theme));setVolume(v.volume);setShuffle(v.musicShuffle);setRepeat(v.musicRepeatMode==='one'?1:v.musicRepeatMode==='all'?2:0);setLoaded(true)}).catch(e=>{setLoaded(true);setNote(e.message)});},[]);
+ useEffect(()=>{if(workbenchPreview){setLoaded(true);return;}api('/api/config').then(j=>{const v=normalizeConfig(j.config||{});try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(v))}catch{}setSaved(v);setDraft(v);setTheme(cachedTheme(v.theme));setVolume(v.volume);setShuffle(v.musicShuffle);setRepeat(v.musicRepeatMode==='one'?1:v.musicRepeatMode==='all'?2:0);setLoaded(true)}).catch(e=>{setLoaded(true);setNote(e.message)});},[]);
+ useEffect(()=>{
+  if(!workbenchPreview||window.parent===window)return;
+  const send=(payload:Record<string,unknown>)=>window.parent.postMessage({source:'viivii-preview',...payload},window.location.origin);
+  const message=(event:MessageEvent)=>{
+   if(event.origin!==window.location.origin||event.source!==window.parent)return;
+   const data=event.data;
+   if(!data||data.source!=='viivii-editor')return;
+   if(data.type==='sync'&&data.config){
+    const next=normalizeConfig(data.config as Config);
+    setSaved(next);setDraft(next);setLoaded(true);
+    setTheme(next.theme);
+   }
+   if(data.type==='focus'&&typeof data.selection==='string'){
+    const selection=data.selection as string;
+    const query=selection.startsWith('work:')
+      ?'[data-visual-work-id="'+CSS.escape(selection.slice(5))+'"],[data-portfolio-work-index="'+CSS.escape(selection.slice(5))+'"]'
+      :selection.startsWith('text:')
+      ?'[data-visual-text="'+CSS.escape(selection.slice(5))+'"],[data-portfolio-edit="'+CSS.escape(selection.slice(5))+'"]'
+      :'[data-visual-section="'+CSS.escape(selection)+'"],[data-portfolio-section="'+CSS.escape(selection)+'"]';
+    document.querySelector<HTMLElement>(query)?.scrollIntoView({behavior:'smooth',block:'center'});
+   }
+  };
+  const select=(e:MouseEvent)=>{
+   const target=e.target;
+   if(!(target instanceof HTMLElement))return;
+   const data=target.closest<HTMLElement>('[data-visual-text],[data-visual-work-text],[data-visual-team-text],[data-visual-divider-id],[data-visual-block-id],[data-visual-work-id],[data-visual-section],[data-portfolio-work-index],[data-portfolio-edit],[data-portfolio-section]');
+   if(!data)return;
+   e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+   const choice=
+    data.dataset.visualText?'text:'+data.dataset.visualText:
+    data.dataset.visualWorkText?'worktext:'+data.dataset.visualWorkText:
+    data.dataset.visualTeamText?'teamtext:'+data.dataset.visualTeamText:
+    data.dataset.visualDividerId?'divider:'+data.dataset.visualDividerId:
+    data.dataset.visualBlockId?'block:'+data.dataset.visualBlockId:
+    data.dataset.visualWorkId?'work:'+data.dataset.visualWorkId:
+    data.dataset.portfolioWorkIndex!==undefined?'work:'+data.dataset.portfolioWorkIndex:
+    data.dataset.portfolioEdit?'text:'+data.dataset.portfolioEdit:
+    data.dataset.visualSection||data.dataset.portfolioSection||'hero';
+   send({type:'select',selection:choice});
+  };
+  window.addEventListener('message',message);
+  document.addEventListener('click',select,true);
+  send({type:'ready'});
+  return()=>{window.removeEventListener('message',message);document.removeEventListener('click',select,true)};
+ },[workbenchPreview]);
  useEffect(()=>{
   // A fixed liquid-glass header should not hide editorial text while reading.
   // On touch viewports it retracts while scrolling down and returns on scroll up.
