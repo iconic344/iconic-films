@@ -5,22 +5,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="description" content="VIIVIIsara® — Film & Direction." />
     <title>VIIVIIsara®</title>
-    <!-- Render this BEFORE React/CSS loads; no light-theme flash or page jumps
-         while the server's authoritative hero/video is being resolved. -->
+    <!-- Critical loading surface exists before React: no header/media flash.
+         Its SVG silhouette is faithfully traced from the supplied white PNG. -->
     <style id="viivii-startup-style">
-      html,body{margin:0;min-height:100%;background:#09090b}
-      #viivii-startup{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:#0b0b0d;color:#eee;pointer-events:all;opacity:1;visibility:visible;transition:opacity .46s cubic-bezier(.2,.7,.3,1),visibility 0s linear .46s}
-      html[data-site-boot-ready="true"] #viivii-startup{opacity:0;visibility:hidden;pointer-events:none}
-      #viivii-startup .brandmark{font:600 clamp(19px,3.5vw,34px)/1 Arial,Helvetica,sans-serif;letter-spacing:-.065em;opacity:.79;white-space:nowrap}
-      #viivii-startup .brandmark em{font:italic 400 1em/1 Georgia,serif}
-      #viivii-startup .track{position:absolute;left:50%;bottom:clamp(34px,6vh,70px);transform:translateX(-50%);height:1px;width:min(148px,38vw);overflow:hidden;background:rgba(255,255,255,.12)}
-      #viivii-startup .track::after{content:"";position:absolute;inset:0;width:40%;background:rgba(255,255,255,.72);animation:viivii-startup-line 1.5s cubic-bezier(.5,0,.2,1) infinite}
-      @keyframes viivii-startup-line{from{transform:translateX(-110%)}to{transform:translateX(350%)}}
-      @media(prefers-reduced-motion:reduce){#viivii-startup .track::after{animation:none}}
+      html,body{margin:0;min-height:100%;background:#fff}
+      #viivii-startup{
+        position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;
+        overflow:hidden;background:#fff;color:#000;pointer-events:all;
+        opacity:1;visibility:visible;
+        transition:opacity .55s cubic-bezier(.2,.7,.3,1),visibility 0s linear .55s
+      }
+      html[data-site-boot-ready="true"] #viivii-startup{
+        opacity:0;visibility:hidden;pointer-events:none
+      }
+      #viivii-loading-hit{
+        width:clamp(190px,29vw,318px);aspect-ratio:1;display:grid;place-items:center;
+        perspective:1100px;touch-action:none;cursor:grab;user-select:none;
+        -webkit-user-select:none;-webkit-tap-highlight-color:transparent;
+        outline:none
+      }
+      #viivii-loading-hit.is-dragging{cursor:grabbing}
+      #viivii-loading-object{
+        position:relative;width:100%;height:100%;transform-style:preserve-3d;
+        will-change:transform;backface-visibility:visible;
+        filter:drop-shadow(0 12px 18px rgba(0,0,0,.045))
+      }
+      #viivii-loading-object::before{
+        content:"";position:absolute;inset:0;
+        background:#bdbdbd;opacity:.14;
+        -webkit-mask:url('/viivii-loading-logo.svg') center/contain no-repeat;
+        mask:url('/viivii-loading-logo.svg') center/contain no-repeat;
+        transform:translateZ(-7px)
+      }
+      #viivii-loading-object .viivii-loading-base,
+      #viivii-loading-object .viivii-loading-ink-window{
+        position:absolute;inset:0;
+        -webkit-mask:url('/viivii-loading-logo.svg') center/contain no-repeat;
+        mask:url('/viivii-loading-logo.svg') center/contain no-repeat
+      }
+      #viivii-loading-object .viivii-loading-base{
+        background:#e8e8e8;transform:translateZ(0)
+      }
+      #viivii-loading-object .viivii-loading-ink-window{
+        overflow:hidden;transform:translateZ(1px)
+      }
+      #viivii-loading-object .viivii-loading-ink-flow{
+        position:absolute;top:0;bottom:0;left:-10%;width:118%;background:#000;
+        /* Ragged, ink-like leading edge; black is the ONLY paint color. */
+        -webkit-clip-path:polygon(0 0,94% 0,96% 8%,93% 16%,96.6% 26%,94.5% 35%,97% 43%,93.5% 54%,96% 63%,93.5% 72%,96.5% 82%,93.5% 90%,95.5% 100%,0 100%);
+        clip-path:polygon(0 0,94% 0,96% 8%,93% 16%,96.6% 26%,94.5% 35%,97% 43%,93.5% 54%,96% 63%,93.5% 72%,96.5% 82%,93.5% 90%,95.5% 100%,0 100%);
+        animation:viivii-loading-ink 2.7s cubic-bezier(.37,0,.17,1) infinite;
+        will-change:transform
+      }
+      #viivii-loading-object .viivii-loading-ink-flow::after{
+        content:"";position:absolute;top:9%;right:1%;height:82%;width:7%;
+        background:
+          radial-gradient(circle at 18% 8%,#000 0 3px,transparent 3.4px),
+          radial-gradient(circle at 66% 34%,#000 0 2px,transparent 2.4px),
+          radial-gradient(circle at 22% 58%,#000 0 3.5px,transparent 4px),
+          radial-gradient(circle at 80% 89%,#000 0 2px,transparent 2.4px);
+        pointer-events:none
+      }
+      @keyframes viivii-loading-ink{
+        0%,6%{transform:translateX(-118%)}
+        76%,94%{transform:translateX(0)}
+        100%{transform:translateX(0)}
+      }
+      @media(max-width:600px){
+        #viivii-loading-hit{width:clamp(190px,61vw,270px)}
+      }
+      @media(prefers-reduced-motion:reduce){
+        #viivii-loading-object{transform:none!important;filter:none}
+        #viivii-loading-object .viivii-loading-ink-flow{animation:none!important;transform:translateX(0)!important}
+      }
     </style>
   </head>
-  <body class="antialiased"><div id="viivii-startup" role="status" aria-label="사이트를 준비하는 중"><span class="brandmark">VIIVII <em>sara</em></span><span class="track" aria-hidden="true"></span></div><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
+  <body class="antialiased">
+    <div id="viivii-startup" role="status" aria-label="사이트 로딩 중">
+      <div id="viivii-loading-hit" role="img" aria-label="VIIVII 로고가 검정 잉크로 채워지고 있습니다">
+        <div id="viivii-loading-object" aria-hidden="true">
+          <span class="viivii-loading-base"></span>
+          <span class="viivii-loading-ink-window">
+            <span class="viivii-loading-ink-flow"></span>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div id="root"></div>
+    <script src="/viivii-loading-interaction.js" defer></script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
