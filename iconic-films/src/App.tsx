@@ -546,6 +546,28 @@ export default function Home(){
  const heroDisplaySrc=verifiedHero?heroPrimary:'';
  const heroItems:GalleryItem[]=[{id:'reel',src:heroDisplaySrc,poster:heroPrimaryKind==='video'?c.heroPoster:undefined,title:c.heroCaption||'Director’s cut',kicker:'SHOWREEL'}].filter(item=>item.src);
  const heroDisplayReady=verifiedHero&&Boolean(heroDisplaySrc)&&heroReadySource===heroDisplaySrc;
+ // The HTML bootstrap layer is mounted before React, and therefore cannot
+ // flash the user's previously cached light theme or an empty hero. Release
+ // it only after the server/draft configuration and CURRENT hero are ready.
+ useEffect(()=>{
+   const boot=document.getElementById('viivii-startup');
+   if(!boot||!loaded)return;
+   if(!teamRoute&&c.showHero&&heroDisplaySrc&&!heroDisplayReady)return;
+   let next=0;
+   let last=0;
+   next=requestAnimationFrame(()=>{last=requestAnimationFrame(()=>{
+     document.documentElement.dataset.siteBootReady='true';
+   })});
+   return()=>{cancelAnimationFrame(next);cancelAnimationFrame(last)};
+ },[loaded,teamRoute,c.showHero,heroDisplaySrc,heroDisplayReady]);
+ useEffect(()=>{
+   // Fail open if a connection never delivers a decodable hero; don't trap
+   // visitors behind a permanent overlay on slow/offline mobile networks.
+   const watchdog=window.setTimeout(()=>{
+     document.documentElement.dataset.siteBootReady='true';
+   },11000);
+   return()=>window.clearTimeout(watchdog);
+ },[]);
  useEffect(()=>{
    if(!verifiedHero||!heroDisplaySrc)return;
    const still=heroPrimaryKind==='video'?c.heroPoster:heroDisplaySrc;
