@@ -561,12 +561,15 @@ export default function Home(){
    const boot=document.getElementById('viivii-startup');
    if(!boot||!loaded)return;
    if(!teamRoute&&c.showHero&&heroDisplaySrc&&!heroDisplayReady)return;
-   let next=0;
-   let last=0;
-   next=requestAnimationFrame(()=>{last=requestAnimationFrame(()=>{
+   // Keep the centered ink logo visible long enough for its first real sweep,
+   // without delaying the EDIT SITE iframe preview or bypassing hero readiness.
+   let next=0,last=0;
+   const release=()=>{next=requestAnimationFrame(()=>{last=requestAnimationFrame(()=>{
      document.documentElement.dataset.siteBootReady='true';
-   })});
-   return()=>{cancelAnimationFrame(next);cancelAnimationFrame(last)};
+   })})};
+   const remaining=workbenchPreview?0:Math.max(0,1750-performance.now());
+   const timeout=window.setTimeout(release,remaining);
+   return()=>{window.clearTimeout(timeout);cancelAnimationFrame(next);cancelAnimationFrame(last)};
  },[loaded,teamRoute,c.showHero,heroDisplaySrc,heroDisplayReady]);
  useEffect(()=>{
    // Fail open if a connection never delivers a decodable hero; don't trap
