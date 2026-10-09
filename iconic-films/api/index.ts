@@ -167,6 +167,13 @@ function resolveLegacyMedia(value:any):any{
   return value;
 }
 
+function stripRetiredEditorialMedia(value:any):any {
+  if(typeof value==='string')return /(?:^|\/)editorial\.jpg(?:[?#].*)?$/i.test(value.trim())?'':value;
+  if(Array.isArray(value))return value.map(stripRetiredEditorialMedia);
+  if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([key,entry])=>[key,stripRetiredEditorialMedia(entry)]));
+  return value;
+}
+
 function fillMedia(current:any,fallback:any){
   const source=fallback&&typeof fallback==='object'?fallback:{};
   const base={...structuredClone(source),...(current&&typeof current==='object'?structuredClone(current):{})};
@@ -191,7 +198,7 @@ function fillMedia(current:any,fallback:any){
       base.tracks=base.tracks.map((t:any)=>{const s:any=byId.get(t.id);return s?{...t,url:t.url||s.url||'',cover:t.cover||s.cover||''}:t});
     }
   }
-  return resolveLegacyMedia(base);
+  return stripRetiredEditorialMedia(resolveLegacyMedia(base));
 }
 async function getSetting(key:string){
   const {data,error}=await db().from('iconic_settings').select('value').eq('key',key).maybeSingle();
@@ -822,7 +829,7 @@ export default async function handler(req:Req,res:ServerResponse){
       }
       if(method==='PUT'){
         await requireAdmin(req);
-        const cfg=await body(req);
+        const cfg=stripRetiredEditorialMedia(await body(req));
         validateConfig(cfg);
         if(cfg._mediaRevision){
           if(!uuid.test(cfg._mediaRevision)||cfg.works.length||cfg.tracks.length)throw new HttpError(400,'편집 저장 요청이 올바르지 않습니다.');
