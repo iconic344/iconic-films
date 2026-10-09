@@ -18,15 +18,16 @@
       isolation:isolate;perspective:1250px;
       background:transparent;color:#fff;pointer-events:all;
       opacity:1;visibility:visible;
-      transition:opacity .12s linear 1.12s,visibility 0s linear 1.24s
+      transition:opacity .24s ease-out 1.25s,visibility 0s linear 1.49s
     }
     #viivii-startup .viivii-fold-face{
       position:absolute;top:-1%;bottom:-1%;width:50.08%;
       background:#000;backface-visibility:hidden;
-      transform-style:preserve-3d;will-change:transform,opacity,filter;
-      transition:transform 1.05s cubic-bezier(.22,.7,.16,1),
-        filter .94s cubic-bezier(.24,.72,.2,1),
-        opacity .95s cubic-bezier(.24,.72,.2,1);
+      transform-style:preserve-3d;will-change:transform,opacity;
+      /* Wide, low-angle fold rather than two doors snapping back. Animate
+         only composited transforms and opacity for smooth iPad/mobile motion. */
+      transition:transform 1.46s cubic-bezier(.19,.77,.20,1),
+        opacity 1.32s cubic-bezier(.36,0,.19,1);
     }
     #viivii-startup .viivii-fold-left{
       left:-.05%;transform-origin:100% 50%;transform:rotateY(0deg) translateZ(0)
@@ -35,22 +36,22 @@
       right:-.05%;transform-origin:0% 50%;transform:rotateY(0deg) translateZ(0)
     }
     #viivii-startup .viivii-duo-focus{
-      position:absolute;inset:0;z-index:-1;pointer-events:none;
-      -webkit-backdrop-filter:blur(0px);
-      backdrop-filter:blur(0px);
-      opacity:0
+      position:absolute;inset:0;z-index:1;pointer-events:none;
+      -webkit-backdrop-filter:blur(9px);
+      backdrop-filter:blur(9px);
+      opacity:0;will-change:opacity
     }
     #viivii-loading-logo-wrap{
       position:relative;z-index:2;display:grid;place-items:center;
       width:clamp(190px,29vw,318px);aspect-ratio:1;
       perspective:980px;pointer-events:none;
-      transition:opacity .27s cubic-bezier(.4,0,.2,1),
-        transform .58s cubic-bezier(.24,.78,.2,1);
+      transition:opacity .75s cubic-bezier(.24,.72,.22,1),
+        transform 1.10s cubic-bezier(.16,.8,.22,1);
     }
     #viivii-loading-object{
       position:relative;width:100%;height:100%;
       transform-style:preserve-3d;backface-visibility:visible;
-      animation:viivii-auto-turn 6.4s linear infinite;
+      animation:viivii-auto-turn 11.5s linear infinite;
       filter:drop-shadow(0 4px 16px rgba(255,255,255,.045))
     }
     #viivii-loading-object::before,
@@ -89,9 +90,9 @@
       76%,94%,100%{transform:translateX(0)}
     }
     @keyframes viivii-auto-turn{
-      0%{transform:rotateX(-6deg) rotateY(0deg)}
-      50%{transform:rotateX(6deg) rotateY(180deg)}
-      100%{transform:rotateX(-6deg) rotateY(360deg)}
+      0%{transform:rotateX(-3deg) rotateY(0deg)}
+      50%{transform:rotateX(3deg) rotateY(180deg)}
+      100%{transform:rotateX(-3deg) rotateY(360deg)}
     }
     /* iPhone Duo-inspired handoff: hinge-edge fold plus progressive clarity.
        The actual site underneath is already render-ready; no fake duplicate
@@ -100,24 +101,28 @@
       pointer-events:none;opacity:0;visibility:hidden
     }
     html[data-site-boot-ready="true"] #viivii-loading-logo-wrap{
-      opacity:0;transform:scale(.88) translateZ(-50px)
+      opacity:0;transform:scale(.965) translateY(-6px) translateZ(-12px)
     }
     html[data-site-boot-ready="true"] #viivii-startup .viivii-fold-left{
-      transform:rotateY(83deg) translateZ(-16px);
-      filter:blur(7px);opacity:0
+      transform:translate3d(-7vw,0,-12px) rotateY(24deg);
+      opacity:0
     }
     html[data-site-boot-ready="true"] #viivii-startup .viivii-fold-right{
-      transform:rotateY(-83deg) translateZ(-16px);
-      filter:blur(7px);opacity:0
+      transform:translate3d(7vw,0,-12px) rotateY(-24deg);
+      opacity:0
     }
     html[data-site-boot-ready="true"] #viivii-startup .viivii-duo-focus{
-      animation:viivii-unlock-focus 1.12s cubic-bezier(.2,.74,.22,1) both
+      animation:viivii-unlock-focus 1.35s cubic-bezier(.23,.64,.22,1) both
     }
+    /* The underlying home screen begins slightly softened and gently clears.
+       Keep blur fixed and animate its opacity to avoid costly fullscreen filter
+       interpolation, especially on iPad Safari. */
     @keyframes viivii-unlock-focus{
-      0%{opacity:1;-webkit-backdrop-filter:blur(24px) brightness(.68);backdrop-filter:blur(24px) brightness(.68)}
-      33%{opacity:1;-webkit-backdrop-filter:blur(14px) brightness(.84);backdrop-filter:blur(14px) brightness(.84)}
-      72%{opacity:.55;-webkit-backdrop-filter:blur(4px) brightness(.98);backdrop-filter:blur(4px) brightness(.98)}
-      100%{opacity:0;-webkit-backdrop-filter:blur(0px) brightness(1);backdrop-filter:blur(0px) brightness(1)}
+      0%{opacity:0}
+      16%{opacity:.72}
+      42%{opacity:.6}
+      78%{opacity:.18}
+      100%{opacity:0}
     }
     @media(max-width:600px){
       #viivii-loading-logo-wrap{width:clamp(190px,61vw,270px)}
