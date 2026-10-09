@@ -15,30 +15,30 @@
     #viivii-startup{
       position:fixed;inset:0;z-index:2147483000;
       display:grid;place-items:center;overflow:hidden;
-      isolation:isolate;perspective:1250px;
+      isolation:isolate;
       background:transparent;color:#fff;pointer-events:all;
       opacity:1;visibility:visible;
-      transition:opacity .24s ease-out 1.25s,visibility 0s linear 1.49s
+      transition:opacity .22s ease-out 1.55s,visibility 0s linear 1.77s
     }
-    #viivii-startup .viivii-fold-face{
-      position:absolute;top:-1%;bottom:-1%;width:50.08%;
-      background:#000;backface-visibility:hidden;
-      transform-style:preserve-3d;will-change:transform,opacity;
-      /* Wide, low-angle fold rather than two doors snapping back. Animate
-         only composited transforms and opacity for smooth iPad/mobile motion. */
-      transition:transform 1.46s cubic-bezier(.19,.77,.20,1),
-        opacity 1.32s cubic-bezier(.36,0,.19,1);
+    /* ONE full-screen black sheet, lifted upward from the bottom edge.
+       No left/right door panels, no hinge/slit, no perspective distortion.
+       Underlying homepage is visible from bottom to top as the sheet rises. */
+    #viivii-startup .viivii-rise-curtain{
+      position:absolute;inset:0;z-index:1;
+      display:grid;place-items:center;background:#000;
+      backface-visibility:hidden;transform:translate3d(0,0,0);
+      will-change:transform;
+      transition:transform 1.46s cubic-bezier(.22,.76,.18,1) .12s;
     }
-    #viivii-startup .viivii-fold-left{
-      left:-.05%;transform-origin:100% 50%;transform:rotateY(0deg) translateZ(0)
-    }
-    #viivii-startup .viivii-fold-right{
-      right:-.05%;transform-origin:0% 50%;transform:rotateY(0deg) translateZ(0)
+    #viivii-startup .viivii-rise-curtain::after{
+      content:"";position:absolute;inset:auto 0 -25px 0;height:25px;
+      background:linear-gradient(to bottom,rgba(0,0,0,.22),rgba(0,0,0,0));
+      pointer-events:none;
     }
     #viivii-startup .viivii-duo-focus{
-      position:absolute;inset:0;z-index:1;pointer-events:none;
-      -webkit-backdrop-filter:blur(9px);
-      backdrop-filter:blur(9px);
+      position:absolute;inset:0;z-index:0;pointer-events:none;
+      -webkit-backdrop-filter:blur(7px);
+      backdrop-filter:blur(7px);
       opacity:0;will-change:opacity
     }
     #viivii-loading-logo-wrap{
@@ -94,34 +94,28 @@
       50%{transform:rotateX(3deg) rotateY(180deg)}
       100%{transform:rotateX(-3deg) rotateY(360deg)}
     }
-    /* iPhone Duo-inspired handoff: hinge-edge fold plus progressive clarity.
-       The actual site underneath is already render-ready; no fake duplicate
-       screenshot, secondary media, pointer listener, or new autoplay source. */
+    /* A continuous bottom-to-top lift with a soft trailing edge.
+       The real preloaded homepage appears directly underneath; no cloned UI,
+       separate media playback, mouse-driven motion or content reflow. */
     html[data-site-boot-ready="true"] #viivii-startup{
       pointer-events:none;opacity:0;visibility:hidden
     }
+    html[data-site-boot-ready="true"] #viivii-startup .viivii-rise-curtain{
+      transform:translate3d(0,-105%,0)
+    }
     html[data-site-boot-ready="true"] #viivii-loading-logo-wrap{
-      opacity:0;transform:scale(.965) translateY(-6px) translateZ(-12px)
-    }
-    html[data-site-boot-ready="true"] #viivii-startup .viivii-fold-left{
-      transform:translate3d(-7vw,0,-12px) rotateY(24deg);
-      opacity:0
-    }
-    html[data-site-boot-ready="true"] #viivii-startup .viivii-fold-right{
-      transform:translate3d(7vw,0,-12px) rotateY(-24deg);
-      opacity:0
+      opacity:0;transform:translate3d(0,-14px,0) scale(.975)
     }
     html[data-site-boot-ready="true"] #viivii-startup .viivii-duo-focus{
-      animation:viivii-unlock-focus 1.35s cubic-bezier(.23,.64,.22,1) both
+      animation:viivii-unlock-focus 1.52s cubic-bezier(.22,.72,.2,1) both
     }
-    /* The underlying home screen begins slightly softened and gently clears.
-       Keep blur fixed and animate its opacity to avoid costly fullscreen filter
-       interpolation, especially on iPad Safari. */
+    /* Hold one small blur kernel and fade its layer instead of
+       animating expensive fullscreen backdrop blur on mobile Safari. */
     @keyframes viivii-unlock-focus{
       0%{opacity:0}
-      16%{opacity:.72}
-      42%{opacity:.6}
-      78%{opacity:.18}
+      18%{opacity:.55}
+      55%{opacity:.36}
+      84%{opacity:.08}
       100%{opacity:0}
     }
     @media(max-width:600px){
@@ -131,8 +125,8 @@
       #viivii-loading-object{animation:none!important;transform:none!important}
       #viivii-loading-object .viivii-loading-ink-flow{animation:none!important;transform:translateX(0)!important}
       #viivii-loading-logo-wrap{transition:opacity .16s linear!important}
-      #viivii-startup .viivii-fold-face{transition:opacity .16s linear!important}
-      html[data-site-boot-ready="true"] #viivii-startup .viivii-fold-face{transform:none!important;filter:none!important;opacity:0!important}
+      #viivii-startup .viivii-rise-curtain{transition:opacity .16s linear!important}
+      html[data-site-boot-ready="true"] #viivii-startup .viivii-rise-curtain{transform:none!important;opacity:0!important}
       html[data-site-boot-ready="true"] #viivii-startup .viivii-duo-focus{animation:none!important}
       #viivii-startup{transition:opacity .16s linear,visibility 0s linear .16s!important}
     }
@@ -141,14 +135,14 @@
 <body class="antialiased">
   <div id="viivii-startup" role="status" aria-label="사이트 로딩 중">
     <div class="viivii-duo-focus" aria-hidden="true"></div>
-    <div class="viivii-fold-face viivii-fold-left" aria-hidden="true"></div>
-    <div class="viivii-fold-face viivii-fold-right" aria-hidden="true"></div>
-    <div id="viivii-loading-logo-wrap">
-      <div id="viivii-loading-object" aria-hidden="true">
-        <span class="viivii-loading-base"></span>
-        <span class="viivii-loading-ink-window">
-          <span class="viivii-loading-ink-flow"></span>
-        </span>
+    <div class="viivii-rise-curtain" aria-hidden="true">
+      <div id="viivii-loading-logo-wrap">
+        <div id="viivii-loading-object">
+          <span class="viivii-loading-base"></span>
+          <span class="viivii-loading-ink-window">
+            <span class="viivii-loading-ink-flow"></span>
+          </span>
+        </div>
       </div>
     </div>
   </div>
