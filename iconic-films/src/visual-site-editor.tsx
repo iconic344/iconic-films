@@ -2,7 +2,7 @@
 import {useEffect,useRef,useState,type CSSProperties,type Dispatch,type PointerEvent,type SetStateAction} from 'react';
 import {ArrowDown,ArrowUp,Copy,Eye,EyeOff,Grip,Layers3,Maximize2,PanelLeft,PanelRight,Plus,RotateCcw,Save,Settings2,SlidersHorizontal,Trash2,Type,Undo2,X} from 'lucide-react';
 import type {Config,NavItemKey,SiteSectionKey,Work,SectionDivider,PageBlock,PageBlockType} from './defaults';
-import {uploadFile} from './media-upload';
+import {uploadFile,videoPoster} from './media-upload';
 import {checkVideoPlayback} from './video-playback-check';
 import EditSiteFullSettings from './edit-site-full-settings';
 import EditSiteWorkbench from './edit-site-workbench';
@@ -472,6 +472,9 @@ export default function VisualSiteEditor({
     // Slow metadata alone should not produce an "applied" success message.
     if(local==='timeout')notify('영상 디코딩을 확인하는 중입니다. 고용량 파일은 미리보기 로딩이 지연될 수 있습니다.');
    }
+   // Capture the loading poster from THIS uploaded movie, not the previous
+   // site's old hero image. Run extraction while transfer is in progress.
+   const posterTask=isHeroVideo?videoPoster(file).catch(()=>null):Promise.resolve(null);
    const url=await uploadFile(file,percent=>setUploadState(current=>current?.key===key?{...current,percent,phase:'uploading'}:current));
    if(isHeroVideo){
     setUploadState({key,filename:file.name,percent:100,phase:'verifying',message:'서버 업로드 완료 · 영상 디코딩 및 미리보기 확인 중'});
@@ -484,10 +487,18 @@ export default function VisualSiteEditor({
      return;
     }
    }
+   let matchingPoster='';
+   if(isHeroVideo){
+    const still=await posterTask;
+    if(still){
+     try{matchingPoster=await uploadFile(still)}
+     catch{notify('영상은 정상 업로드됐습니다. 포스터 이미지 저장은 완료하지 못했지만 영상 재생에는 영향이 없습니다.')}
+    }
+   }
    setConfig(d=>({...d,[key]:url,...(key==='aboutImage'?{aboutMediaType:'image'}:{}),...((key==='heroVideo'||key==='heroPoster')?{heroMediaFit:'cover'}:{}),
-     // The former heroPoster (often an older photo) used to sit OVER the new
-     // video in the responsive gallery and made a working upload look broken.
-     ...(isHeroVideo?{heroPoster:'',autoplay:true}:{}),
+     // The poster must be a frame from the SAME movie. Never reuse a stale
+     // photo that visually flashes just before a new uploaded video plays.
+     ...(isHeroVideo?{heroPoster:matchingPoster,autoplay:true}:{}),
    }));
    setUploadState({key,filename:file.name,percent:100,phase:'done',message:isHeroVideo?'업로드 및 영상 재생 확인 완료 · 미리보기에 적용됨':'업로드 완료 · 현재 미리보기에 적용됨'});
    notify(isHeroVideo?'영상 업로드와 재생 준비 확인 완료. 저장 · 적용을 눌러 최종 반영하세요.':key==='heroVideo'?'메인 미디어가 미리보기에 적용됐습니다. 저장을 눌러 최종 반영하세요.':'파일 업로드 완료. 현재 화면에 바로 적용했습니다.');
