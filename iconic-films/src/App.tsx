@@ -60,6 +60,7 @@ export default function Home(){
  const [focusIndex,setFocusIndex]=useState<number|null>(null);
  const [visualEdit,setVisualEdit]=useState(false),[visualSelection,setVisualSelection]=useState<VisualSelection>('hero');
  const draftRef=useRef<Config>(bootConfig),visualUndoStack=useRef<Config[]>([]),visualLastMutationAt=useRef(0);
+ const visualEntryThemeRef=useRef(theme),visualThemeEditedRef=useRef(false);
  const navDragItemRef=useRef<NavItemKey|null>(null);
  const [navDraggingItem,setNavDraggingItem]=useState<NavItemKey|null>(null),[navDropItem,setNavDropItem]=useState<NavItemKey|null>(null);
  const musicButton=useRef<HTMLButtonElement>(null),musicPanel=useRef<HTMLElement>(null);
@@ -327,6 +328,7 @@ export default function Home(){
   }
   visualLastMutationAt.current=now;
   draftRef.current=next;
+  if(next.theme!==current.theme){visualThemeEditedRef.current=true;setTheme(next.theme)}
   setDraft(next);
  }
  function undoVisualEdit(){
@@ -335,6 +337,7 @@ export default function Home(){
   visualLastMutationAt.current=0;
   const restored=structuredClone(previous);
   draftRef.current=restored;
+  if(restored.theme!==theme)setTheme(restored.theme);
   setDraft(restored);
  }
  function closeAdmin(){
@@ -351,19 +354,24 @@ export default function Home(){
  }
  function startVisualEdit(){
   setLoginTarget('visual');setPin('');setAdmin(false);setPreview(false);
-  const base=structuredClone(saved);draftRef.current=base;setDraft(base);resetVisualHistory(base);
+  // Enter Edit Site with the mode already selected on the public site.
+  visualEntryThemeRef.current=theme;visualThemeEditedRef.current=false;
+  const base=structuredClone(saved);base.theme=theme;draftRef.current=base;setDraft(base);resetVisualHistory(base);
   if(ownerMode){setLogin(false);setVisualSelection('hero');setVisualEdit(true);return}
   setVisualEdit(false);setLogin(true);
  }
- function cancelVisualEdit(){const base=structuredClone(saved);draftRef.current=base;setDraft(base);resetVisualHistory(base);setTheme(base.theme);try{localStorage.setItem('iconic-theme',base.theme)}catch{}setVisualEdit(false);setVisualSelection('hero')}
+ function cancelVisualEdit(){const base=structuredClone(saved);draftRef.current=base;setDraft(base);resetVisualHistory(base);const before=visualEntryThemeRef.current;setTheme(before);try{localStorage.setItem('iconic-theme',before)}catch{}setVisualEdit(false);setVisualSelection('hero')}
  async function saveVisualEdit(){
   try{
    setBusy(true);
    const next=normalizeConfig(draftRef.current);
+   // Editing ordinary content must not turn the visitor's chosen light/dark mode into a global default.
+   if(!visualThemeEditedRef.current)next.theme=saved.theme;
    await api('/api/config','PUT',next);
    const applied=structuredClone(next);
-   setSaved(applied);draftRef.current=applied;setDraft(applied);resetVisualHistory(applied);setTheme(next.theme);
-   try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(next));localStorage.setItem('iconic-theme',next.theme)}catch{}
+   setSaved(applied);draftRef.current=applied;setDraft(applied);resetVisualHistory(applied);
+   // Retain the user's current mode after Save & Apply, regardless of the saved default.
+   try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(next));localStorage.setItem('iconic-theme',theme)}catch{}
    setNote('비주얼 편집 저장 완료. 모든 기기에 적용됩니다.');
   }catch(e){setNote((e as Error).message)}
   finally{setBusy(false)}
@@ -639,8 +647,8 @@ export default function Home(){
  </main>
  {c.showFooter&&<footer data-visual-section="footer" style={sectionStyle('footer')}><span className="footer-copy" data-visual-text="footerCopyright" style={textCss('footerCopyright')}>© {new Date().getFullYear()} {c.name}</span>{!compactViewport&&<button data-visual-text="footerAdminLabel" style={textCss('footerAdmin')} onClick={enter}>{c.footerAdminLabel}</button>}</footer>}</>}
  {visualEdit&&(teamPage&&routedMember?
-  <PortfolioVisualEditor config={draft} memberId={routedMember.id} setConfig={setVisualDraft} onSave={saveVisualEdit} onCancel={cancelVisualEdit} onOpenAdmin={openAdminFromVisual} onUndo={undoVisualEdit} canUndo={visualUndoStack.current.length>0} busy={busy} setBusy={setBusy} notify={setNote} onThemeChange={value=>{setTheme(value);try{localStorage.setItem('iconic-theme',value)}catch{}}}/>:
-  <VisualSiteEditor config={draft} setConfig={setVisualDraft} selection={visualSelection} setSelection={setVisualSelection} onSave={saveVisualEdit} onCancel={cancelVisualEdit} onOpenAdmin={openAdminFromVisual} onUndo={undoVisualEdit} canUndo={visualUndoStack.current.length>0} busy={busy} setBusy={setBusy} notify={setNote} onThemeChange={value=>{setTheme(value);try{localStorage.setItem('iconic-theme',value)}catch{}}}/> )}
+  <PortfolioVisualEditor config={draft} memberId={routedMember.id} setConfig={setVisualDraft} onSave={saveVisualEdit} onCancel={cancelVisualEdit} onOpenAdmin={openAdminFromVisual} onUndo={undoVisualEdit} canUndo={visualUndoStack.current.length>0} busy={busy} setBusy={setBusy} notify={setNote} onThemeChange={value=>{visualThemeEditedRef.current=true;setTheme(value)}}/>:
+  <VisualSiteEditor config={draft} setConfig={setVisualDraft} selection={visualSelection} setSelection={setVisualSelection} onSave={saveVisualEdit} onCancel={cancelVisualEdit} onOpenAdmin={openAdminFromVisual} onUndo={undoVisualEdit} canUndo={visualUndoStack.current.length>0} busy={busy} setBusy={setBusy} notify={setNote} onThemeChange={value=>{visualThemeEditedRef.current=true;setTheme(value)}}/> )}
   <button type="button" className={'scroll-toggle glass '+(c.showMusic?'':'scroll-toggle--solo')} aria-label={scrollTarget==='top'?'맨 위로 이동':'맨 아래로 이동'} title={scrollTarget==='top'?'맨 위로':'맨 아래로'} onClick={jumpScroll}><span key={scrollTarget} className={'scroll-toggle-icon '+(scrollTarget==='top'?'is-up':'is-down')} aria-hidden="true">{scrollTarget==='top'?<ChevronUp size={18} strokeWidth={1.35}/>:<ChevronDown size={18} strokeWidth={1.35}/>}</span></button>
  {c.showMusic&&<><button ref={musicButton} type="button" className={'sound-toggle glass '+(playing?'is-playing ':'')+(music?'is-open':'')} aria-label={music?'음악 플레이어 접기':'음악 플레이어 펼치기'} aria-expanded={music} aria-controls="iconic-music-panel" onClick={()=>setMusic(v=>!v)}><span className="sound-label" aria-hidden="true">{music?'CLOSE':'SOUND'}</span><span className="sound-wave" aria-hidden="true">{[3,7,12,5,15,8,13,5,10,6,3].map((h,i)=><i key={i} style={{'--bar-height':h+'px','--bar-delay':i*.09+'s'} as CSSProperties}/>)}</span></button>
  <aside ref={musicPanel} id="iconic-music-panel" className="music-panel glass" data-open={music} aria-hidden={!music} inert={!music} aria-label="음악 플레이어"><div className="panel-top"><span>LISTENING ROOM</span></div><div className="now-playing"><div className={'album '+(playing?'spinning':'')}>{t?.cover?<img src={t.cover} alt="앨범 커버"/>:<Disc3 size={48}/>}</div><div><h3>{t?.title||'Your soundtrack.'}</h3><p>{t?.artist||'음악을 등록해 나만의 무드를 만드세요.'}</p>{autoplayBlocked&&<small className="autoplay-hint">클릭·터치하면 음악이 시작됩니다.</small>}</div></div><Slider aria-label="재생 위치" value={[time]} max={duration||1} onValueChange={v=>{if(audio.current)audio.current.currentTime=v[0];setTime(v[0])}}/><div className="times"><span>{fmt(time)}</span><span>{fmt(duration)}</span></div><div className="transport"><Btn label="셔플" active={shuffle} onClick={()=>setShuffle(!shuffle)}><Shuffle size={18}/></Btn><Btn label="이전 곡" onClick={()=>next(-1)}><SkipBack size={20}/></Btn><Btn label={playing?'일시정지':'재생'} onClick={toggle}>{playing?<Pause size={25} fill="currentColor"/>:<Play size={25} fill="currentColor"/>}</Btn><Btn label="다음 곡" onClick={()=>next()}><SkipForward size={20}/></Btn><Btn label={repeat===0?'전체 반복 켜기':repeat===2?'한 곡 반복 켜기':'반복 끄기'} active={repeat>0} onClick={()=>setRepeat(repeat===0?2:repeat===2?1:0)}>{repeat===1?<Repeat1 size={18}/>:<Repeat size={18}/>}</Btn></div><p className="repeat-label">{shuffle?'셔플 · ':''}{repeat===1?'한 곡 반복':repeat===2?'전체 반복':'반복 없음'}</p><label className="volume"><Volume2 size={16}/><Slider aria-label="음량" value={[volume]} onValueChange={v=>setVolume(v[0])}/><span>{volume}%</span></label><Tabs value={group} onValueChange={v=>{setGroup(v);setFilter('All')}}><TabsList>{['Tracks','Artists','Albums','Playlists'].map(g=><TabsTrigger value={g} key={g}>{g}</TabsTrigger>)}</TabsList><TabsContent value={group}>{group!=='Tracks'&&<div className="group-chips">{['All',...new Set(group==='Playlists'?[...(c.musicPlaylists||[]),...c.tracks.flatMap(playlistsOf)]:c.tracks.map(t=>group==='Artists'?t.artist:t.album).filter(Boolean))].map(v=><button key={v} className={filter===v?'selected':''} onClick={()=>setFilter(v)}>{v}</button>)}</div>}<div className="track-list">{list.map(({x,i})=><button key={x.id} className={track===i?'current':''} onClick={()=>selectTrack(i)}><span>{String(i+1).padStart(2,'0')}</span><div><strong>{x.title}</strong><small>{x.artist} / {x.album}</small></div>{track===i&&playing?<span className="equalizer">▥</span>:<Play size={14}/>}</button>)}{!c.tracks.length&&<p className="empty-music">등록된 음악이 없습니다.<br/>admin → 음악에서 파일을 추가하세요.</p>}</div></TabsContent></Tabs></aside>
