@@ -4,6 +4,7 @@ import {mkdir, writeFile, stat} from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
 import path from 'node:path';
 import seed from '../src/site-config.json';
+import {stripRetiredEditorialMedia} from '../src/defaults';
 import {store, cloudStorage, supabase, bucketName, dataDirectory} from './store.ts';
 
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
@@ -128,9 +129,9 @@ export async function handler(req:RequestLike,res:ServerResponse) {
       }
     }
     if(route==='/api/config') {
-      if(method==='GET'){let config:any=seed;try{config=await store().get('config')||seed}catch(e){console.warn('ICONIC config fallback:',e)}json(res,{config});return;}
+      if(method==='GET'){let config:any=seed;try{config=await store().get('config')||seed}catch(e){console.warn('ICONIC config fallback:',e)}json(res,{config:stripRetiredEditorialMedia(config)});return;}
       if(method==='PUT') {
-        await requireAdmin(req);const c=await body(req);validateConfig(c);
+        await requireAdmin(req);const c=stripRetiredEditorialMedia(await body(req)) as any;validateConfig(c);
         if(c._mediaRevision) {
           if(!uuid.test(c._mediaRevision)||c.works.length||c.tracks.length)throw new HttpError(400,'편집 저장 요청이 올바르지 않습니다.');
           let size=Buffer.byteLength(JSON.stringify(c));
