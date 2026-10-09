@@ -1,101 +1,153 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="description" content="VIIVIIsara® — Film & Direction." />
-    <title>VIIVIIsara®</title>
-    <!-- Critical loading surface exists before React: no header/media flash.
-         Its SVG silhouette is faithfully traced from the supplied white PNG. -->
-    <style id="viivii-startup-style">
-      html,body{margin:0;min-height:100%}
-      #viivii-startup{
-        position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;
-        overflow:hidden;background:#fff;color:#000;pointer-events:all;
-        opacity:1;visibility:visible;
-        transition:opacity .55s cubic-bezier(.2,.7,.3,1),visibility 0s linear .55s
-      }
-      html[data-site-boot-ready="true"] #viivii-startup{
-        opacity:0;visibility:hidden;pointer-events:none
-      }
-      #viivii-loading-hit{
-        width:clamp(190px,29vw,318px);aspect-ratio:1;display:grid;place-items:center;
-        perspective:1100px;touch-action:none;cursor:grab;user-select:none;
-        -webkit-user-select:none;-webkit-tap-highlight-color:transparent;
-        outline:none
-      }
-      #viivii-loading-hit.is-dragging{cursor:grabbing}
-      #viivii-loading-object{
-        position:relative;width:100%;height:100%;transform-style:preserve-3d;
-        will-change:transform;backface-visibility:visible;
-        filter:drop-shadow(0 12px 18px rgba(0,0,0,.045))
-      }
-      #viivii-loading-object::before{
-        content:"";position:absolute;inset:0;
-        background:#bdbdbd;opacity:.14;
-        -webkit-mask:url('/viivii-loading-logo.svg') center/contain no-repeat;
-        mask:url('/viivii-loading-logo.svg') center/contain no-repeat;
-        transform:translateZ(-7px)
-      }
-      #viivii-loading-object .viivii-loading-base,
-      #viivii-loading-object .viivii-loading-ink-window{
-        position:absolute;inset:0;
-        -webkit-mask:url('/viivii-loading-logo.svg') center/contain no-repeat;
-        mask:url('/viivii-loading-logo.svg') center/contain no-repeat
-      }
-      #viivii-loading-object .viivii-loading-base{
-        background:#e8e8e8;transform:translateZ(0)
-      }
-      #viivii-loading-object .viivii-loading-ink-window{
-        overflow:hidden;transform:translateZ(1px)
-      }
-      #viivii-loading-object .viivii-loading-ink-flow{
-        position:absolute;top:0;bottom:0;left:-10%;width:118%;background:#000;
-        /* Ragged, ink-like leading edge; black is the ONLY paint color. */
-        -webkit-clip-path:polygon(0 0,94% 0,96% 8%,93% 16%,96.6% 26%,94.5% 35%,97% 43%,93.5% 54%,96% 63%,93.5% 72%,96.5% 82%,93.5% 90%,95.5% 100%,0 100%);
-        clip-path:polygon(0 0,94% 0,96% 8%,93% 16%,96.6% 26%,94.5% 35%,97% 43%,93.5% 54%,96% 63%,93.5% 72%,96.5% 82%,93.5% 90%,95.5% 100%,0 100%);
-        animation:viivii-loading-ink 2.2s cubic-bezier(.37,0,.17,1) infinite;
-        will-change:transform
-      }
-      #viivii-loading-object .viivii-loading-ink-flow::after{
-        content:"";position:absolute;top:9%;right:1%;height:82%;width:7%;
-        background:
-          radial-gradient(circle at 18% 8%,#000 0 3px,transparent 3.4px),
-          radial-gradient(circle at 66% 34%,#000 0 2px,transparent 2.4px),
-          radial-gradient(circle at 22% 58%,#000 0 3.5px,transparent 4px),
-          radial-gradient(circle at 80% 89%,#000 0 2px,transparent 2.4px);
-        pointer-events:none
-      }
-      @keyframes viivii-loading-ink{
-        0%,6%{transform:translateX(-118%)}
-        76%,94%{transform:translateX(0)}
-        100%{transform:translateX(0)}
-      }
-      @media(max-width:600px){
-        #viivii-loading-hit{width:clamp(190px,61vw,270px)}
-      }
-      @media(prefers-reduced-motion:reduce){
-        #viivii-loading-object{transform:none!important;filter:none}
-        #viivii-loading-object .viivii-loading-ink-flow{animation:none!important;transform:translateX(0)!important}
-      }
-    </style>
-  </head>
-  <body class="antialiased">
-    <div id="viivii-startup" role="status" aria-label="사이트 로딩 중">
-      <div id="viivii-loading-hit" role="img" aria-label="VIIVII 로고가 검정 잉크로 채워지고 있습니다">
-        <div id="viivii-loading-object" aria-hidden="true">
-          <span class="viivii-loading-base"></span>
-          <span class="viivii-loading-ink-window">
-            <span class="viivii-loading-ink-flow"></span>
-          </span>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="description" content="VIIVIIsara® — Film & Direction." />
+  <title>VIIVIIsara®</title>
+  <link rel="preload" as="image" href="/viivii-loading-logo.svg" type="image/svg+xml" />
+  <!-- This exists before React to protect the ready hero from flash/reflow. -->
+  <style id="viivii-startup-style">
+    #viivii-startup, #viivii-startup * { cursor:none!important }
+    #viivii-startup{
+      position:fixed;inset:0;z-index:2147483000;
+      display:grid;place-items:center;overflow:hidden;
+      isolation:isolate;perspective:1250px;
+      background:transparent;color:#fff;pointer-events:all;
+      opacity:1;visibility:visible;
+      transition:opacity .12s linear 1.12s,visibility 0s linear 1.24s
+    }
+    #viivii-startup .viivii-fold-face{
+      position:absolute;top:-1%;bottom:-1%;width:50.08%;
+      background:#000;backface-visibility:hidden;
+      transform-style:preserve-3d;will-change:transform,opacity,filter;
+      transition:transform 1.05s cubic-bezier(.22,.7,.16,1),
+        filter .94s cubic-bezier(.24,.72,.2,1),
+        opacity .95s cubic-bezier(.24,.72,.2,1);
+    }
+    #viivii-startup .viivii-fold-left{
+      left:-.05%;transform-origin:100% 50%;transform:rotateY(0deg) translateZ(0)
+    }
+    #viivii-startup .viivii-fold-right{
+      right:-.05%;transform-origin:0% 50%;transform:rotateY(0deg) translateZ(0)
+    }
+    #viivii-startup .viivii-duo-focus{
+      position:absolute;inset:0;z-index:-1;pointer-events:none;
+      -webkit-backdrop-filter:blur(0px);
+      backdrop-filter:blur(0px);
+      opacity:0
+    }
+    #viivii-loading-logo-wrap{
+      position:relative;z-index:2;display:grid;place-items:center;
+      width:clamp(190px,29vw,318px);aspect-ratio:1;
+      perspective:980px;pointer-events:none;
+      transition:opacity .27s cubic-bezier(.4,0,.2,1),
+        transform .58s cubic-bezier(.24,.78,.2,1);
+    }
+    #viivii-loading-object{
+      position:relative;width:100%;height:100%;
+      transform-style:preserve-3d;backface-visibility:visible;
+      animation:viivii-auto-turn 6.4s linear infinite;
+      filter:drop-shadow(0 4px 16px rgba(255,255,255,.045))
+    }
+    #viivii-loading-object::before,
+    #viivii-loading-object .viivii-loading-base,
+    #viivii-loading-object .viivii-loading-ink-window{
+      position:absolute;inset:0;
+      -webkit-mask:url('/viivii-loading-logo.svg') center/contain no-repeat;
+      mask:url('/viivii-loading-logo.svg') center/contain no-repeat;
+    }
+    #viivii-loading-object::before{
+      content:"";background:rgba(255,255,255,.10);transform:translateZ(-3px)
+    }
+    #viivii-loading-object .viivii-loading-base{
+      background:rgba(255,255,255,.34);transform:translateZ(0)
+    }
+    #viivii-loading-object .viivii-loading-ink-window{
+      overflow:hidden;transform:translateZ(1px)
+    }
+    #viivii-loading-object .viivii-loading-ink-flow{
+      position:absolute;inset:0 auto 0 -10%;width:118%;
+      background:#fff;
+      -webkit-clip-path:polygon(0 0,94% 0,96% 8%,93% 16%,96.6% 26%,94.5% 35%,97% 43%,93.5% 54%,96% 63%,93.5% 72%,96.5% 82%,93.5% 90%,95.5% 100%,0 100%);
+      clip-path:polygon(0 0,94% 0,96% 8%,93% 16%,96.6% 26%,94.5% 35%,97% 43%,93.5% 54%,96% 63%,93.5% 72%,96.5% 82%,93.5% 90%,95.5% 100%,0 100%);
+      animation:viivii-loading-ink 2.2s cubic-bezier(.37,0,.17,1) infinite;
+      will-change:transform
+    }
+    #viivii-loading-object .viivii-loading-ink-flow::after{
+      content:"";position:absolute;right:1%;top:9%;height:82%;width:7%;pointer-events:none;
+      background:radial-gradient(circle at 18% 8%,#fff 0 3px,transparent 3.4px),
+      radial-gradient(circle at 66% 34%,#fff 0 2px,transparent 2.4px),
+      radial-gradient(circle at 22% 58%,#fff 0 3.5px,transparent 4px),
+      radial-gradient(circle at 80% 89%,#fff 0 2px,transparent 2.4px);
+    }
+    @keyframes viivii-loading-ink{
+      0%,6%{transform:translateX(-118%)}
+      76%,94%,100%{transform:translateX(0)}
+    }
+    @keyframes viivii-auto-turn{
+      0%{transform:rotateX(-6deg) rotateY(0deg)}
+      50%{transform:rotateX(6deg) rotateY(180deg)}
+      100%{transform:rotateX(-6deg) rotateY(360deg)}
+    }
+    /* iPhone Duo-inspired handoff: hinge-edge fold plus progressive clarity.
+       The actual site underneath is already render-ready; no fake duplicate
+       screenshot, secondary media, pointer listener, or new autoplay source. */
+    html[data-site-boot-ready="true"] #viivii-startup{
+      pointer-events:none;opacity:0;visibility:hidden
+    }
+    html[data-site-boot-ready="true"] #viivii-loading-logo-wrap{
+      opacity:0;transform:scale(.88) translateZ(-50px)
+    }
+    html[data-site-boot-ready="true"] #viivii-startup .viivii-fold-left{
+      transform:rotateY(83deg) translateZ(-16px);
+      filter:blur(7px);opacity:0
+    }
+    html[data-site-boot-ready="true"] #viivii-startup .viivii-fold-right{
+      transform:rotateY(-83deg) translateZ(-16px);
+      filter:blur(7px);opacity:0
+    }
+    html[data-site-boot-ready="true"] #viivii-startup .viivii-duo-focus{
+      animation:viivii-unlock-focus 1.12s cubic-bezier(.2,.74,.22,1) both
+    }
+    @keyframes viivii-unlock-focus{
+      0%{opacity:1;-webkit-backdrop-filter:blur(24px) brightness(.68);backdrop-filter:blur(24px) brightness(.68)}
+      33%{opacity:1;-webkit-backdrop-filter:blur(14px) brightness(.84);backdrop-filter:blur(14px) brightness(.84)}
+      72%{opacity:.55;-webkit-backdrop-filter:blur(4px) brightness(.98);backdrop-filter:blur(4px) brightness(.98)}
+      100%{opacity:0;-webkit-backdrop-filter:blur(0px) brightness(1);backdrop-filter:blur(0px) brightness(1)}
+    }
+    @media(max-width:600px){
+      #viivii-loading-logo-wrap{width:clamp(190px,61vw,270px)}
+    }
+    @media(prefers-reduced-motion:reduce){
+      #viivii-loading-object{animation:none!important;transform:none!important}
+      #viivii-loading-object .viivii-loading-ink-flow{animation:none!important;transform:translateX(0)!important}
+      #viivii-loading-logo-wrap{transition:opacity .16s linear!important}
+      #viivii-startup .viivii-fold-face{transition:opacity .16s linear!important}
+      html[data-site-boot-ready="true"] #viivii-startup .viivii-fold-face{transform:none!important;filter:none!important;opacity:0!important}
+      html[data-site-boot-ready="true"] #viivii-startup .viivii-duo-focus{animation:none!important}
+      #viivii-startup{transition:opacity .16s linear,visibility 0s linear .16s!important}
+    }
+  </style>
+</head>
+<body class="antialiased">
+  <div id="viivii-startup" role="status" aria-label="사이트 로딩 중">
+    <div class="viivii-duo-focus" aria-hidden="true"></div>
+    <div class="viivii-fold-face viivii-fold-left" aria-hidden="true"></div>
+    <div class="viivii-fold-face viivii-fold-right" aria-hidden="true"></div>
+    <div id="viivii-loading-logo-wrap">
+      <div id="viivii-loading-object" aria-hidden="true">
+        <span class="viivii-loading-base"></span>
+        <span class="viivii-loading-ink-window">
+          <span class="viivii-loading-ink-flow"></span>
+        </span>
       </div>
     </div>
-    <div id="root"></div>
-    <script src="/viivii-loading-interaction.js" defer></script>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  </div>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
 </html>
