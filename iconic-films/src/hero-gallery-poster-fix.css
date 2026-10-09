@@ -59,3 +59,56 @@
 .site .hero-media-shell > .hero-gallery > .hero-media-fallback {
   display:none!important;
 }
+
+/* Refresh stability: show a soft editorial holding surface until the CURRENT
+   hero source has its own poster loaded or the video has decoded its first
+   frame. This is NOT a replacement slide and never alters published media. */
+.site .hero-media-shell .hero-gallery>.hero-stage-loading{
+ position:absolute!important;
+ inset:0!important;
+ z-index:12!important;
+ display:flex!important;
+ align-items:center!important;
+ justify-content:center!important;
+ overflow:hidden!important;
+ pointer-events:none!important;
+ opacity:1!important;
+ visibility:visible!important;
+ background:
+  radial-gradient(ellipse at 55% 48%,rgba(126,128,139,.20),transparent 64%),
+  linear-gradient(122deg,#18181c,#2b2b31 46%,#141416)!important;
+ transition:opacity .45s cubic-bezier(.18,.72,.34,1),visibility 0s linear .45s!important;
+}
+.site .hero-media-shell .hero-gallery>.hero-stage-loading::before{
+ content:"";
+ position:absolute;
+ inset:-55%;
+ opacity:.27;
+ background:linear-gradient(110deg,transparent 40%,rgba(255,255,255,.07) 51%,transparent 62%);
+ transform:translate3d(-20%,0,0);
+ animation:hero-stage-shimmer 2.8s ease-in-out infinite;
+}
+@keyframes hero-stage-shimmer{
+ 0%{transform:translate3d(-20%,0,0)}
+ 100%{transform:translate3d(20%,0,0)}
+}
+.site .hero-media-shell .hero-gallery>.hero-stage-loading.is-ready{
+ opacity:0!important;
+ visibility:hidden!important;
+}
+.site .hero-media-shell .hero-stage-monogram{
+ position:relative;
+ z-index:1;
+ display:block;
+ color:rgba(255,255,255,.55);
+ font:600 clamp(18px,2.6vw,38px)/1 Arial,Helvetica,sans-serif;
+ letter-spacing:-.055em;
+ white-space:nowrap;
+}
+.site .hero-media-shell .hero-stage-monogram em{
+ font:italic 400 1em/1 Georgia,serif;
+ letter-spacing:-.04em;
+}
+@media(prefers-reduced-motion:reduce){
+ .site .hero-media-shell .hero-gallery>.hero-stage-loading::before{animation:none!important}
+}
