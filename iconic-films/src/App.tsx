@@ -83,7 +83,7 @@ export default function Home(){
   margin:compactViewport ? `${Math.min(20,Math.max(0,divider.marginTop))}px auto ${Math.min(20,Math.max(0,divider.marginBottom))}px` : `${divider.marginTop}px auto ${divider.marginBottom}px`,
   translate:compactViewport?'0 0':`0 ${divider.offsetY||0}px`
  });
- useEffect(()=>{if(workbenchPreview){setLoaded(true);return;}api('/api/config').then(j=>{const v=normalizeConfig(j.config||{});try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(v))}catch{}setSaved(v);setDraft(v);setTheme(cachedTheme(v.theme));setVolume(v.volume);setShuffle(v.musicShuffle);setRepeat(v.musicRepeatMode==='one'?1:v.musicRepeatMode==='all'?2:0);setLoaded(true)}).catch(e=>{setLoaded(true);setNote(e.message)});},[]);
+ useEffect(()=>{if(workbenchPreview)return;api('/api/config').then(j=>{const v=normalizeConfig(j.config||{});try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(v))}catch{}setSaved(v);setDraft(v);setTheme(cachedTheme(v.theme));setVolume(v.volume);setShuffle(v.musicShuffle);setRepeat(v.musicRepeatMode==='one'?1:v.musicRepeatMode==='all'?2:0);setLoaded(true)}).catch(e=>{setLoaded(true);setNote(e.message)});},[]);
  useEffect(()=>{
   if(!workbenchPreview||window.parent===window)return;
   document.documentElement.dataset.viiviiPreview='true';
