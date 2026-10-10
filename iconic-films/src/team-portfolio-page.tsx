@@ -64,7 +64,15 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const memberNext=()=>teamMembers.length&&selectMember(teamMembers[(memberIndex+1)%teamMembers.length],1);
   const prev=()=>setIndex(i=>(i-1+works.length)%works.length);
   const next=()=>setIndex(i=>(i+1)%works.length);
+  const silenceGalleryPreviews=(except?:HTMLVideoElement|null)=>{
+    // Never let a previous carousel/slide remain audible under the fullscreen dialog.
+    document.querySelectorAll<HTMLVideoElement>('.team-portfolio-slider video,.team-portfolio-grid video').forEach(v=>{
+      if(v===except)return;
+      v.pause();v.muted=true;v.defaultMuted=true;
+    });
+  };
   const openViewer=(i:number,preview?:HTMLVideoElement|null)=>{
+    silenceGalleryPreviews(preview);
     // Keep the original decoded iPhone video and its buffered timeline.
     const mobile=window.matchMedia('(max-width: 1024px), (any-pointer: coarse)').matches;
     const canReuse=mobile&&!!preview&&preview.readyState>=1&&
@@ -87,7 +95,15 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     else setHandoffVideo(null);
     setViewerIndex(i);
   };
-  const closeViewer=()=>{setViewerIndex(null);setHandoffVideo(null)};
+  const closeViewer=()=>{
+    // Stop sound synchronously on X/backdrop/Escape before the portal is removed.
+    document.querySelectorAll<HTMLVideoElement>('.unified-media-dialog video').forEach(v=>{
+      v.pause();v.muted=true;v.defaultMuted=true;
+    });
+    if(handoffVideo){handoffVideo.pause();handoffVideo.muted=true;handoffVideo.defaultMuted=true}
+    silenceGalleryPreviews();
+    setViewerIndex(null);setHandoffVideo(null);
+  };
   useEffect(()=>{
     setIndex(0);
     setSubcategory('All');
@@ -106,16 +122,17 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     return()=>{for(const image of warmed)image.src=''};
   },[teamMembers]);
   useEffect(()=>{
-    const current=viewerIndex===null?'':works[viewerIndex]||'';
-    const isVideo=!!current&&teamMediaType(current)==='video';
-    if(isVideo&&!viewerMusicHeld.current){
+    // Every fullscreen item suspends site music until the dialog is fully closed.
+    // Switching to an image must NOT resume a separate soundtrack behind it.
+    if(viewerIndex!==null&&!viewerMusicHeld.current){
       viewerMusicHeld.current=true;
       onVideoViewerOpen();
-    }else if(!isVideo&&viewerMusicHeld.current){
+    }else if(viewerIndex===null&&viewerMusicHeld.current){
       viewerMusicHeld.current=false;
       onVideoViewerClose();
     }
-  },[viewerIndex,works]);
+    if(viewerIndex!==null)silenceGalleryPreviews(handoffVideo);
+  },[viewerIndex,handoffVideo,works]);
   useEffect(()=>()=>{if(viewerMusicHeld.current){viewerMusicHeld.current=false;onVideoViewerClose()}},[]);
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>{
@@ -384,7 +401,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           <span className="team-portfolio-layout-label">{member.portfolioLayout==='slider'?<GalleryHorizontal size={15}/>:<Grid2X2 size={15}/>} {member.portfolioLayout}</span>
         </div>
         {!!subcategories.length&&<div className="team-portfolio-subfilters" role="group" aria-label={(member.name||'Portfolio')+' 세부 카테고리'}>
-          {['All',...subcategories].map(label=><button type="button" key={label} className={subcategory===label?'active':''} onClick={()=>{setSubcategory(label);setIndex(0);setViewerIndex(null)}}>{label}</button>)}
+          {['All',...subcategories].map(label=><button type="button" key={label} className={subcategory===label?'active':''} onClick={()=>{closeViewer();setSubcategory(label);setIndex(0)}}>{label}</button>)}
         </div>}
 
         {member.portfolioLayout==='grid'&&<div className="team-portfolio-grid">
@@ -394,7 +411,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           })}
         </div>}
 
-        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={(_,preview)=>{if(!visualEditing)openViewer(index,preview)}} balanceEdges autoPlay={member.portfolioSliderAutoplay!==false} autoplayMs={member.portfolioSliderAutoplayMs||6500} transitionMs={member.portfolioSliderTransitionMs||820} easing={member.portfolioSliderEasing||'smooth'} maxCardHeight={compact?Math.min(member.portfolioSliderHeight||760,560):member.portfolioSliderHeight||760}/></div>}
+        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={(chosen,preview)=>{if(!visualEditing)openViewer(chosen??index,preview)}} balanceEdges editorialPreview autoPlay={member.portfolioSliderAutoplay!==false} autoplayMs={member.portfolioSliderAutoplayMs||6500} transitionMs={member.portfolioSliderTransitionMs||820} easing={member.portfolioSliderEasing||'smooth'} maxCardHeight={compact?Math.min(layoutMaster.portfolioSliderHeight||760,560):layoutMaster.portfolioSliderHeight||760}/></div>}
       </section>
       {renderDividers('work')}
     </main>
