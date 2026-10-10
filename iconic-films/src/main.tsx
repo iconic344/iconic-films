@@ -13,5 +13,7 @@ import './mobile-video-playback.css';
 import './edit-site-workbench.css';
 import './portfolio-section-order.css';
 import './hero-gallery-poster-fix.css';
+// Always last: replaces earlier desktop/mobile header rules with the responsive M menu.
+import './site-menu.css';
 
 createRoot(document.getElementById('root')!).render(<App/>);
