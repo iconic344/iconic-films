@@ -24,13 +24,13 @@ export const portfolioMediaFrame=(width:number,height:number,override:PortfolioM
 };
 const formatTime=(n:number)=>`${Math.floor(n/60)}:${String(Math.floor(n%60)).padStart(2,'0')}`;
 
-type GalleryProps={items:GalleryItem[];initialIndex?:number;onIndexChange?:(index:number)=>void;onExpand?:(index?:number,previewVideo?:HTMLVideoElement|null)=>void;onReady?:()=>void;modal?:boolean;preserveItems?:boolean;captionTitleStyle?:CSSProperties;captionVisualText?:string;balanceEdges?:boolean;cleanPreview?:boolean;nativeCursor?:boolean;mediaFit?:'contain'|'cover';mediaPositionX?:number;mediaPositionY?:number;autoPlay?:boolean;autoplayMs?:number;transitionMs?:number;easing?:'smooth'|'soft'|'snappy'|'linear';maxCardHeight?:number;borrowedVideo?:HTMLVideoElement|null;editorialPreview?:boolean};
+type GalleryProps={items:GalleryItem[];initialIndex?:number;onIndexChange?:(index:number)=>void;onExpand?:(index?:number,previewVideo?:HTMLVideoElement|null)=>void;onReady?:()=>void;modal?:boolean;preserveItems?:boolean;captionTitleStyle?:CSSProperties;captionVisualText?:string;balanceEdges?:boolean;cleanPreview?:boolean;nativeCursor?:boolean;mediaFit?:'contain'|'cover';mediaPositionX?:number;mediaPositionY?:number;autoPlay?:boolean;autoplayMs?:number;transitionMs?:number;easing?:'smooth'|'soft'|'snappy'|'linear';maxCardHeight?:number;borrowedVideo?:HTMLVideoElement|null;editorialPreview?:boolean;suspended?:boolean};
 export function MediaGallery({items,initialIndex=0,onIndexChange,preserveItems=false,...props}:GalleryProps){
  if(preserveItems)return <ScopedMediaGallery {...props} items={items} initialIndex={initialIndex} onIndexChange={onIndexChange}/>;
  const scoped=scopeGallery(items,initialIndex);
  return <ScopedMediaGallery {...props} items={scoped.items} initialIndex={scoped.index} onIndexChange={index=>onIndexChange?.(scoped.sourceIndices[index])}/>;
 }
-function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false,captionTitleStyle,captionVisualText,balanceEdges=false,cleanPreview=false,nativeCursor=true,mediaFit='contain',mediaPositionX=50,mediaPositionY=50,autoPlay=true,autoplayMs=6500,transitionMs=820,easing='smooth',maxCardHeight,borrowedVideo,editorialPreview=false}:GalleryProps){
+function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand,modal=false,captionTitleStyle,captionVisualText,balanceEdges=false,cleanPreview=false,nativeCursor=true,mediaFit='contain',mediaPositionX=50,mediaPositionY=50,autoPlay=true,autoplayMs=6500,transitionMs=820,easing='smooth',maxCardHeight,borrowedVideo,editorialPreview=false,suspended=false}:GalleryProps){
  const [index,setIndex]=useState(Math.min(initialIndex,Math.max(0,items.length-1)));
  const [creditsOpen,setCreditsOpen]=useState(false);
  const creditsPanelId=useId();
@@ -85,6 +85,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
    if(marker.parentNode)marker.parentNode.replaceChild(v,marker);
    else originalParent.appendChild(v);
    delete v.dataset.fullscreenHandoff;
+   requestAnimationFrame(()=>v.dispatchEvent(new Event('viivii:preview-restored',{bubbles:true})));
    if(video.current===v)video.current=null;
   };
  },[handedOff,borrowedVideo,item?.src,item?.ratio]);
@@ -108,7 +109,48 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
   return()=>{live=false;probe.onload=null};
  },[item?.src,item?.ratio]);
  useEffect(()=>{if(modal)root.current?.focus({preventScroll:true})},[modal]);
- useEffect(()=>{if(!modal)setPlaying(autoPlay&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)},[autoPlay]);
+ useEffect(()=>{
+   if(modal)return;
+   if(suspended){
+     const v=video.current;
+     if(v&&v.dataset.fullscreenHandoff!=='true')v.pause();
+     return;
+   }
+   setPlaying(autoPlay&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+ },[autoPlay,modal,suspended]);
+ // Restore the preview's configured autoplay whenever the fullscreen viewer
+ // closes, even if playback was rejected or paused while the modal was open.
+ const previousSuspended=useRef(suspended);
+ useEffect(()=>{
+   const returning=previousSuspended.current&&!suspended;
+   previousSuspended.current=suspended;
+   if(modal||!returning||!autoPlay||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+   elapsed.current=0;setProgress(0);setMuted(true);
+   const frame=requestAnimationFrame(()=>{
+     const v=root.current?.querySelector<HTMLVideoElement>('.media-gallery-slide.is-active video');
+     if(!v||v.dataset.fullscreenHandoff==='true')return;
+     if(v.ended)try{v.currentTime=0}catch{}
+     v.muted=true;v.defaultMuted=true;
+     void v.play().catch(()=>{});
+   });
+   return()=>cancelAnimationFrame(frame);
+ },[modal,suspended,autoPlay]);
+ // iPhone Safari may return the original video decoder AFTER the fullscreen
+ // exit state change; replay only the active preview once it is restored.
+ useEffect(()=>{
+   const host=root.current;if(!host||modal)return;
+   const restored=(event:Event)=>{
+     if(suspended||!autoPlay||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+     const node=event.target;
+     if(!(node instanceof HTMLVideoElement)||!node.closest('.media-gallery-slide.is-active'))return;
+     node.muted=true;node.defaultMuted=true;
+     if(node.ended)try{node.currentTime=0}catch{}
+     setPlaying(true);
+     void node.play().catch(()=>{});
+   };
+   host.addEventListener('viivii:preview-restored',restored);
+   return()=>host.removeEventListener('viivii:preview-restored',restored);
+ },[modal,suspended,autoPlay]);
  useEffect(()=>{if(modal)setMuted(mediaVolume<=0)},[modal,item?.id]);
  useEffect(()=>{const v=video.current;if(!v)return;v.volume=Math.max(0,Math.min(1,mediaVolume));v.muted=mediaVolume<=0?true:muted},[mediaVolume,muted,item?.id]);
  useEffect(()=>{if(isFullscreen)root.current?.focus({preventScroll:true})},[isFullscreen]);
@@ -160,16 +202,17 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
  useEffect(()=>{
   const v=video.current;if(!v)return;
   if(!modal&&v.dataset.fullscreenHandoff==='true')return;
+  if(!modal&&suspended){if(v.dataset.fullscreenHandoff!=='true')v.pause();return}
   if(playing&&visible)v.play().catch(()=>{if(modal){if(!v.muted){v.muted=true;setMuted(true);void v.play().catch(()=>setPlaying(false))}else setPlaying(false);return}if(!v.muted){v.muted=true;setMuted(true);v.play().catch(()=>setPlaying(false))}else setPlaying(false)});
   else v.pause();
- },[playing,visible,item?.id,item?.src,expanded]);
+ },[playing,visible,item?.id,item?.src,expanded,suspended]);
  useEffect(()=>{
-  if(type==='video'||!playing||!visible||!item||error)return;
+  if(type==='video'||!playing||!visible||suspended||!item||error)return;
   let last=performance.now();
   const intervalMs=Math.max(1200,Number(autoplayMs)||6500);
   const timer=window.setInterval(()=>{const now=performance.now();elapsed.current+=now-last;last=now;setProgress(Math.min(1,elapsed.current/intervalMs));if(elapsed.current>=intervalMs)advance()},120);
   return()=>window.clearInterval(timer);
- },[type,playing,visible,index,items.length,error,autoplayMs]);
+ },[type,playing,visible,suspended,index,items.length,error,autoplayMs]);
  const toggle=()=>setPlaying(v=>!v);
  const exitFullscreen=()=>{
   restoreTime.current=video.current?.currentTime??null;
@@ -243,7 +286,7 @@ function ScopedMediaGallery({items,initialIndex=0,onIndexChange,onReady,onExpand
      const active=sourceIndex===index,kind=teamMediaType(entry.src);
      return <article className={'media-gallery-slide '+(active?'is-active ':'')} key={slideKey} aria-hidden={!active} inert={!active&&!balancedPreview} data-gallery-index={sourceIndex} data-portfolio-work-index={balanceEdges&&Number.isInteger(entry.sourceIndex)?entry.sourceIndex:undefined}>
       <div className="media-gallery-artwork" data-cursor-label={cleanPreview&&!isFullscreen&&!modal?undefined:(kind==='video'?'VIDEO':kind==='model'?'3D':'IMAGE')} data-native-cursor={cleanPreview&&!isFullscreen&&!modal&&nativeCursor?'true':undefined} onClick={()=>{if(dragged.current){dragged.current=false;return}if(!active){if(balanceEdges)choose(sourceIndex);return}if(modal&&kind==='video'){toggle();return}if(onExpand&&kind!=='model'){onExpand(index,video.current);return}if(kind==='video')toggle()}}>
-       {kind==='video'&&active&&handedOff?<div ref={handoffHost} className="media-gallery-handoff" aria-label="이어 재생 중인 영상"/>:kind==='video'?<>{entry.poster&&<img className="media-gallery-video-poster" src={entry.poster} alt="" aria-hidden="true"/>}<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-displayIndex)<=1?entry.src:undefined} poster={entry.poster} data-has-poster={entry.poster?'true':'false'} data-media-ready={readySrc===entry.src&&!error?'true':'false'} muted={active?muted:true} data-site-autoplay={!modal&&active?'true':undefined} autoPlay={active} playsInline preload={active||Math.abs(i-displayIndex)<=1?'auto':'none'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setError(false);setReady(n=>n+1);onReady?.();if(playing&&visible){const v=video.current;if(v&&!modal){v.muted=true;setMuted(true)}v?.play().catch(()=>setPlaying(false))}}}} onPlaying={()=>{if(active)setReadySrc(entry.src)}} onCanPlay={e=>{if(active&&playing&&visible){if(!modal)e.currentTarget.muted=true;void e.currentTarget.play().catch(()=>{})}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setLandscape((e.currentTarget.videoWidth||0)/(e.currentTarget.videoHeight||1)>=1.45);const nextFrame=portfolioMediaFrame(e.currentTarget.videoWidth,e.currentTarget.videoHeight,entry.ratio||'auto');mediaFrameCache.set(entry.src+'|'+(entry.ratio||'auto'),nextFrame);setFrame(nextFrame);if(modal){e.currentTarget.volume=mediaVolume;e.currentTarget.muted=mediaVolume<=0;setMuted(mediaVolume<=0)}setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){if(e.currentTarget.currentTime>0)setReadySrc(entry.src);setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setReadySrc('');setPlaying(false);onReady?.()}}}/></>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
+       {kind==='video'&&active&&handedOff?<div ref={handoffHost} className="media-gallery-handoff" aria-label="이어 재생 중인 영상"/>:kind==='video'?<>{entry.poster&&<img className="media-gallery-video-poster" src={entry.poster} alt="" aria-hidden="true"/>}<video key={entry.src} ref={active?video:undefined} src={Math.abs(i-displayIndex)<=1?entry.src:undefined} poster={entry.poster} data-has-poster={entry.poster?'true':'false'} data-media-ready={readySrc===entry.src&&!error?'true':'false'} muted={active?muted:true} data-site-autoplay={!modal&&active?'true':undefined} autoPlay={active&&!suspended} playsInline preload={active||Math.abs(i-displayIndex)<=1?'auto':'none'} onLoadedData={()=>{if(active){setReadySrc(entry.src);setError(false);setReady(n=>n+1);onReady?.();if(playing&&visible&&!suspended){const v=video.current;if(v&&!modal){v.muted=true;setMuted(true)}v?.play().catch(()=>setPlaying(false))}}}} onPlaying={()=>{if(active)setReadySrc(entry.src)}} onCanPlay={e=>{if(active&&playing&&visible&&!suspended){if(!modal)e.currentTarget.muted=true;void e.currentTarget.play().catch(()=>{})}}} onLoadedMetadata={e=>{if(active){if(restoreTime.current!==null){e.currentTarget.currentTime=restoreTime.current;restoreTime.current=null}setDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setLandscape((e.currentTarget.videoWidth||0)/(e.currentTarget.videoHeight||1)>=1.45);const nextFrame=portfolioMediaFrame(e.currentTarget.videoWidth,e.currentTarget.videoHeight,entry.ratio||'auto');mediaFrameCache.set(entry.src+'|'+(entry.ratio||'auto'),nextFrame);setFrame(nextFrame);if(modal){e.currentTarget.volume=mediaVolume;e.currentTarget.muted=mediaVolume<=0;setMuted(mediaVolume<=0)}setReady(n=>n+1)}}} onTimeUpdate={e=>{if(active){if(e.currentTarget.currentTime>0)setReadySrc(entry.src);setTime(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}} onEnded={()=>{if(active&&playing)advance()}} onError={()=>{if(active){setError(true);setReadySrc('');setPlaying(false);onReady?.()}}}/></>:<TeamMedia src={entry.src} alt={entry.title} autoPlay={active} interactive={active&&kind==='model'}/>}
       </div>
 
       {balanceEdges&&!modal&&!isFullscreen&&<PortfolioHoverCredits title={entry.title} kicker={entry.kicker} info={entry.info} credits={entry.credits}/>}
