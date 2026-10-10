@@ -114,7 +114,7 @@ export default function SiteMenu({items,onAdmin,onEdit,theme,onToggleTheme,editi
  const dismiss=()=>{setOpen(false);opener.current?.focus({preventScroll:true})};
  const runAction=(action:()=>void)=>{setOpen(false);action()};
  return <>
-  <div className="vii-menu-inline-wrap">
+  <div className="vii-menu-inline-wrap" style={{'--vii-menu-font':fontFamily||'inherit'} as CSSProperties}>
    <nav className="vii-menu-inline-links" aria-label="상단 빠른 메뉴">
     {items.map((item,index)=>{
      const text=<span className="vii-inline-text-stack" aria-hidden="true"><span>{item.label}</span><span>{item.label}</span></span>;
@@ -122,6 +122,7 @@ export default function SiteMenu({items,onAdmin,onEdit,theme,onToggleTheme,editi
       className:'vii-menu-inline-link',
       'aria-label':item.label,
       'data-visual-text':item.visualTextKey,
+      'data-cursor-label':'MENU',
       style:{'--vii-nav-index':index} as CSSProperties
      };
      return item.href
