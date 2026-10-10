@@ -27,15 +27,29 @@ async function collect(page, selector) {
 async function verifyViewport(width,height,checkFullscreen=false){
  const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
  page.on('pageerror',e=>console.log('Browser JS error:',String(e).slice(0,220)));
+ page.on('response',response=>{if(/\/media\/viivii-hero-777|\/api\/config/.test(response.url()))console.log('NETWORK',response.status(),response.url())});
+ page.on('requestfailed',request=>{if(/\/media\/|\/api\//.test(request.url()))console.log('REQUEST FAILED',request.failure()?.errorText,request.url())});
  try{
   const response=await page.goto(origin,{waitUntil:'domcontentloaded',timeout:30000});
   assert.equal(response?.status(),200,'Site homepage must respond 200');
   const selector='.site .hero-media-shell .media-gallery-artwork video';
   await page.locator(selector).first().waitFor({state:'attached',timeout:24000});
-  await page.waitForFunction(selector=>{
-   const v=document.querySelector(selector);
-   return v instanceof HTMLVideoElement && v.videoWidth>0 && v.readyState>=2;
-  },selector,{timeout:24000});
+  console.log('ATTACHED',width,height,JSON.stringify(await collect(page,selector)));
+  try{
+   await page.waitForFunction(selector=>{
+    const v=document.querySelector(selector);
+    return v instanceof HTMLVideoElement && v.videoWidth>0 && v.readyState>=2;
+   },selector,{timeout:24000});
+  }catch(e){
+   const diagnostic=await page.evaluate(()=>({
+    ready:document.documentElement.dataset.siteBootReady,
+    hero:document.querySelector('.site .hero-media-shell')?.getAttribute('data-hero-has-media'),
+    videos:[...document.querySelectorAll('video')].map(v=>({src:v.currentSrc||v.src,error:v.error?.code,networkState:v.networkState,readyState:v.readyState,paused:v.paused,loop:v.loop,videoWidth:v.videoWidth,outerHTML:v.outerHTML.slice(0,380)})),
+    startup:document.getElementById('viivii-startup')?.outerHTML.slice(0,180)
+   }));
+   console.log('FRAME TIMEOUT DIAGNOSTIC',JSON.stringify(diagnostic));
+   throw e;
+  }
   let state=await collect(page,selector);
   console.log('PREVIEW',width,height,JSON.stringify(state));
   assert.match(state.currentSrc,/\/media\/viivii-hero-777\.mp4/,'Opening reel must have the expected source');
