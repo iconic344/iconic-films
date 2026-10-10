@@ -101,3 +101,47 @@ html.viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-mini
   border-color:transparent!important;
   box-shadow:none!important;
 }
+
+
+/* PROJECT 09 — light-mode, scrolled navigation contrast.
+   On the hero preserve the white lettering and original circular M.
+   Only the restored light Liquid Glass bar switches to black editorial type.
+   Color transitions do not modify the existing two-line rollover animation. */
+:root[data-theme="light"] .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-link,
+:root[data-theme="light"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-link{
+  transition:color .48s cubic-bezier(.22,.76,.2,1),
+             text-shadow .48s ease,
+             opacity .32s ease!important;
+}
+html[data-theme="light"].viivii-nav-scrolled .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap,
+html[data-theme="light"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap{
+  --vii-inline-ink:#17181b;
+  color:#17181b;
+}
+html[data-theme="light"].viivii-nav-scrolled .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links>.vii-menu-inline-link,
+html[data-theme="light"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links>.vii-menu-inline-link{
+  color:#17181b!important;
+  text-shadow:none!important;
+}
+/* The existing theme-specific white M glass and its inset glow were stronger
+   than the previous generic scrolled override. Target scrolled LIGHT state
+   explicitly, including hover/focus, and make M a clean black glyph inside
+   the single nav glass surface, with no secondary circle. */
+html[data-theme="light"].viivii-nav-scrolled .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger,
+html[data-theme="light"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger,
+html[data-theme="light"].viivii-nav-scrolled .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger:is(:hover,:active,:focus-visible),
+html[data-theme="light"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger:is(:hover,:active,:focus-visible){
+  color:#17181b!important;
+  border:1px solid transparent!important;
+  background:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+@media(prefers-reduced-motion:reduce){
+  :root[data-theme="light"] .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-link,
+  :root[data-theme="light"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-link{
+    transition:none!important;
+  }
+}
