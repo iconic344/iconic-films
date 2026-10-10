@@ -40,7 +40,7 @@ results['home']=page['status']==200 and b'<html' in page['body'].lower()
 if results['home']:
     # Vite may inline CSS or provide a link to a built CSS file.
     document=page['body'].decode('utf-8','replace')
-    css_matches=re.findall(r'<link[^>]+href=["\\']([^"\\']+\.css(?:\?[^"\\']*)?)', document)
+    css_matches=re.findall(r'''<link[^>]+href=["']([^"']+\.css(?:\?[^"']*)?)''', document)
     style_sources=[document]
     for url in css_matches[:3]:
         asset=fetch(urllib.parse.urlparse(urllib.parse.urljoin(BASE,url)).path, max_bytes=2_000_000)
