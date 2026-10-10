@@ -163,3 +163,84 @@ html[data-theme="dark"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-
   -webkit-backdrop-filter:none!important;
   backdrop-filter:none!important;
 }
+
+
+/* PROJECT 09 — shared theme-aware navigation inside team portfolio routes.
+   Home's top-of-hero look is unchanged. Team portfolio pages have their own
+   foreground from the moment they open because their hero can be very bright.
+   The existing 'viivii-nav-scrolled' class keeps both routes on the SAME
+   scroll-triggered glass geometry, duration and easing. */
+html[data-theme="light"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-header-home,
+html[data-theme="light"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-header-home-name,
+html[data-theme="light"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-header-home sup{
+  color:#17181b!important;
+  mix-blend-mode:normal!important;
+  text-shadow:0 1px 12px rgba(255,255,255,.65)!important;
+}
+html[data-theme="light"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-header-home img{
+  filter:brightness(0)!important;
+  mix-blend-mode:normal!important;
+}
+html[data-theme="light"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap{
+  --vii-inline-ink:#17181b!important;
+  color:#17181b!important;
+}
+html[data-theme="light"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links>.vii-menu-inline-link{
+  color:#17181b!important;
+  text-shadow:0 1px 12px rgba(255,255,255,.55)!important;
+  transition:color .48s cubic-bezier(.22,.76,.2,1),
+    text-shadow .48s ease,opacity .32s ease!important;
+}
+html[data-theme="light"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links>.vii-menu-inline-link{
+  text-shadow:none!important;
+}
+/* Preserve dark contrast independently from light-mode CSS and inherited
+   white-overlay fallbacks. Same logo, sizes and animation as the home menu. */
+html[data-theme="dark"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-header-home,
+html[data-theme="dark"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-header-home-name,
+html[data-theme="dark"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-header-home sup{
+  color:#f5f5f7!important;
+  mix-blend-mode:normal!important;
+  text-shadow:0 1px 12px rgba(0,0,0,.6)!important;
+}
+html[data-theme="dark"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap{
+  --vii-inline-ink:#f5f5f7!important;
+  color:#f5f5f7!important;
+}
+html[data-theme="dark"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links>.vii-menu-inline-link{
+  color:#f5f5f7!important;
+  text-shadow:0 1px 12px rgba(0,0,0,.6)!important;
+  transition:color .48s cubic-bezier(.22,.76,.2,1),
+    text-shadow .48s ease,opacity .32s ease!important;
+}
+html[data-theme="dark"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-header-home img{
+  filter:brightness(0) invert(1)!important;
+  mix-blend-mode:normal!important;
+}
+/* On portfolio pages the 'M' is a clean glass-disc action, never the old
+   extra grey circular stroke. Once the main glass nav enters on scroll,
+   discard the separate disc fill exactly as the home page does. */
+html[data-theme="light"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger,
+html[data-theme="light"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger:is(:hover,:focus-visible){
+  color:#17181b!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+html[data-theme="dark"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger,
+html[data-theme="dark"] .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger:is(:hover,:focus-visible){
+  color:#f5f5f7!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+html[data-theme="light"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger,
+html[data-theme="dark"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger,
+html[data-theme="light"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger:is(:hover,:focus-visible),
+html[data-theme="dark"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger:is(:hover,:focus-visible){
+  border-color:transparent!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+/* No changes to navigation geometry, Work/About/Contact text rollover, or
+   the scrolled liquid-glass background used in both routes. */
