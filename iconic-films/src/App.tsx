@@ -625,7 +625,7 @@ export default function Home(){
    '--edit-letter-spacing':(s.letterSpacing??0)+'px'
   } as CSSProperties;
  };
- const menuItems:SiteMenuItem[]=c.navOrder.flatMap((item:NavItemKey)=>{
+ const menuItems:SiteMenuItem[]=c.navOrder.flatMap<SiteMenuItem>((item:NavItemKey):SiteMenuItem[]=>{
   if(item==='work')return [{key:item,label:c.navWorkLabel,href:'#work',visualTextKey:'navWorkLabel'}];
   if(item==='about')return c.showAbout?[{key:item,label:c.navAboutLabel,href:'#about',visualTextKey:'navAboutLabel'}]:[];
   if(item==='team')return c.showTeam&&c.teamMembers.some(m=>m.visible)?[{key:item,label:c.navTeamLabel,href:'#team',visualTextKey:'navTeamLabel'}]:[];
