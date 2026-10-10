@@ -1,0 +1,103 @@
+/* PROJECT 09 — the Fashion editorial slider is the shared visual standard.
+   Every existing/future GRID→SLIDER conversion renders only real media in
+   identical 4:5 preview cards. The fullscreen dialog preserves source ratios. */
+.team-portfolio-page .team-portfolio-slider .media-gallery.is-editorial-preview:not(.is-modal):not(.is-fullscreen){
+  --gallery-card:min(42vw,calc(69dvh * .8),720px)!important;
+  --gallery-gap:18px!important;
+  --gallery-frame-ratio:.8!important;
+  width:100vw!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0 0 24px!important;
+  background:transparent!important;
+}
+.team-portfolio-page .team-portfolio-slider .media-gallery.is-editorial-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-viewport{
+  width:100%!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+.team-portfolio-page .team-portfolio-slider .media-gallery.is-editorial-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-track{
+  display:flex!important;
+  align-items:stretch!important;
+  gap:18px!important;
+  width:100%!important;
+}
+.team-portfolio-page .team-portfolio-slider .media-gallery.is-editorial-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
+  flex:0 0 var(--gallery-card)!important;
+  width:var(--gallery-card)!important;
+  min-width:var(--gallery-card)!important;
+  max-width:var(--gallery-card)!important;
+  aspect-ratio:4 / 5!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  border-radius:clamp(20px,2vw,31px)!important;
+  overflow:hidden!important;
+  background:color-mix(in srgb,var(--page) 88%,var(--ink) 12%)!important;
+}
+.team-portfolio-page .team-portfolio-slider .media-gallery.is-editorial-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork{
+  position:absolute!important;
+  inset:0!important;
+  display:block!important;
+  overflow:hidden!important;
+  border-radius:inherit!important;
+}
+.team-portfolio-page .team-portfolio-slider .media-gallery.is-editorial-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>img,
+.team-portfolio-page .team-portfolio-slider .media-gallery.is-editorial-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>video,
+.team-portfolio-page .team-portfolio-slider .media-gallery.is-editorial-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>model-viewer{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:100%!important;
+  max-height:100%!important;
+  object-fit:cover!important;
+  object-position:50% 50%!important;
+  background:transparent!important;
+  border-radius:inherit!important;
+}
+.team-portfolio-page .team-portfolio-slider .media-gallery.is-editorial-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-navigation{
+  position:relative!important;
+  margin-top:14px!important;
+}
+/* Existing portrait-slide geometry is the reference even if an uploaded video
+   is 16:9. Fullscreen is intentionally NOT targeted and shows its original frame. */
+@media (max-width:1024px), (max-width:1366px) and (any-pointer:coarse){
+  .team-portfolio-page .team-portfolio-slider .media-gallery.is-editorial-preview:not(.is-modal):not(.is-fullscreen){
+    --gallery-card:min(82vw,calc(74dvh * .8))!important;
+    --gallery-gap:12px!important;
+    max-width:100%!important;
+    width:100%!important;
+  }
+  .team-portfolio-page .team-portfolio-slider .media-gallery.is-editorial-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-track{
+    gap:12px!important;
+  }
+  .team-portfolio-page .team-portfolio-slider .media-gallery.is-editorial-preview:not(.is-modal):not(.is-fullscreen) .media-gallery-slide{
+    flex-basis:var(--gallery-card)!important;
+    width:var(--gallery-card)!important;
+    min-width:var(--gallery-card)!important;
+    max-width:var(--gallery-card)!important;
+    aspect-ratio:4/5!important;
+    max-height:74dvh!important;
+    border-radius:18px!important;
+  }
+}
+@media(max-width:600px){
+  .team-portfolio-page .team-portfolio-slider .media-gallery.is-editorial-preview:not(.is-modal):not(.is-fullscreen){
+    --gallery-card:min(86vw,calc(71dvh * .8))!important;
+    width:100%!important;
+    max-width:100%!important;
+  }
+}
+/* On scroll the restored Liquid Glass bar becomes the single border;
+   remove only M's SECOND circular stroke. Original top-of-page M is untouched.
+   Keep M's contrast-appropriate glass fill and all open/close animation. */
+html.viivii-nav-scrolled .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger,
+html.viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger{
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+html.viivii-nav-scrolled .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger:hover,
+html.viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger:hover{
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
