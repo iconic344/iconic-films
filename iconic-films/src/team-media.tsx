@@ -12,6 +12,9 @@ export const teamMediaType=(url:string)=>{
 
 export default function TeamMedia({src,alt='',className='',interactive=false,autoPlay=false,suspended=false}:{src:string;alt?:string;className?:string;interactive?:boolean;autoPlay?:boolean;suspended?:boolean}){
   const [modelReady,setModelReady]=useState(false);
+  const [mediaReady,setMediaReady]=useState(false);
+  const [mediaFailed,setMediaFailed]=useState(false);
+  useEffect(()=>{setMediaReady(false);setMediaFailed(false)},[src]);
   const videoRef=useRef<HTMLVideoElement>(null);
   const modelRef=useRef<FramingViewer|null>(null);
   const visible=useRef(false);
@@ -54,7 +57,7 @@ export default function TeamMedia({src,alt='',className='',interactive=false,aut
     if(viewer.loaded)update();
     return()=>{cancelAnimationFrame(frame);resize?.disconnect();viewer.removeEventListener('load',update)};
   },[type,modelReady,src]);
-  if(type==='video')return <video ref={videoRef} className={className} src={src} draggable={false} muted loop playsInline preload={autoPlay?'metadata':'none'} controls={interactive} autoPlay={autoPlay} onCanPlay={e=>{if(autoPlay&&!suspended&&visible.current)e.currentTarget.play().catch(()=>{})}} onPointerEnter={e=>{if(!suspended&&!interactive&&!autoPlay&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.play().catch(()=>{})}} onPointerLeave={e=>{if(!suspended&&!interactive&&!autoPlay&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.pause()}}/>;
+  if(type==='video')return <video ref={videoRef} className={className} src={src} draggable={false} muted loop playsInline preload={autoPlay||className.includes('team-stack-media')?'metadata':'none'} controls={interactive} autoPlay={autoPlay} data-media-ready={mediaFailed?'error':mediaReady?'true':'false'} onLoadedData={()=>setMediaReady(true)} onPlaying={()=>setMediaReady(true)} onError={()=>{setMediaReady(false);setMediaFailed(true)}} onCanPlay={e=>{if(autoPlay&&!suspended&&visible.current)e.currentTarget.play().catch(()=>{})}} onPointerEnter={e=>{if(!suspended&&!interactive&&!autoPlay&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.play().catch(()=>{})}} onPointerLeave={e=>{if(!suspended&&!interactive&&!autoPlay&&window.matchMedia('(hover:hover) and (pointer:fine)').matches)e.currentTarget.pause()}}/>;
   if(type==='model')return modelReady?createElement('model-viewer',{
     class:className,
     ref:modelRef,
@@ -72,5 +75,5 @@ export default function TeamMedia({src,alt='',className='',interactive=false,aut
     'shadow-intensity':'1',
     style:{width:'100%',height:'100%',display:'block',background:'transparent'}
   }):<div className={className+' team-model-loading'}>3D</div>;
-  return <img className={className} src={src} alt={alt} loading={autoPlay?'eager':'lazy'} decoding="async" draggable={false} onDragStart={e=>e.preventDefault()}/>;
+  return <img className={className} src={src} alt={alt} loading={autoPlay||className.includes('team-stack-media')?'eager':'lazy'} decoding="async" data-media-ready={mediaFailed?'error':mediaReady?'true':'false'} onLoad={()=>setMediaReady(true)} onError={()=>{setMediaReady(false);setMediaFailed(true)}} draggable={false} onDragStart={e=>e.preventDefault()}/>;
 }
