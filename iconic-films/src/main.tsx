@@ -15,5 +15,7 @@ import './portfolio-section-order.css';
 import './hero-gallery-poster-fix.css';
 // Always last: replaces earlier desktop/mobile header rules with the responsive M menu.
 import './site-menu.css';
+// Mobile-only editorial finishing layer; never changes desktop layout.
+import './mobile-official.css';
 
 createRoot(document.getElementById('root')!).render(<App/>);
