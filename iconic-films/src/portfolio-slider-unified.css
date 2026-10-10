@@ -244,3 +244,19 @@ html[data-theme="dark"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-
 }
 /* No changes to navigation geometry, Work/About/Contact text rollover, or
    the scrolled liquid-glass background used in both routes. */
+
+/* PROJECT 10 / temporary 777 showreel: protect the original 16:9 composition.
+   This is deliberately isolated to the pre-NAS opening video, never to other
+   customer work or the editor's universal media layout settings. */
+.site .hero-media-shell .hero-gallery .media-gallery.is-pre-nas-showreel .media-gallery-artwork>video,
+.site .hero-media-shell .hero-gallery .media-gallery.is-pre-nas-showreel .media-gallery-artwork>.media-gallery-video-poster{
+  object-fit:contain!important;
+  object-position:center center!important;
+}
+.unified-media-dialog .media-gallery.is-pre-nas-showreel.is-fullscreen.has-video .media-gallery-artwork>video,
+.unified-media-dialog .media-gallery.is-pre-nas-showreel.is-fullscreen.has-video .media-gallery-handoff>video{
+  object-fit:contain!important;
+  object-position:center center!important;
+}
+/* Fullscreen already allocates the full viewport; letterbox rather than
+   cutting off the top of the model's head on non-16:9 displays. */
