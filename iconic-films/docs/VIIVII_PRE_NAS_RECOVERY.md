@@ -33,3 +33,11 @@ The original `config` and `media:...` keys were NOT overwritten. These backups c
 - A **static fallback repairs the public page's structure** but does NOT restore missing videos, administrator saves, login sessions or notifications while the DB API is suspended.
 - Do not delete Supabase media, downgrade/reseed site config, or convert the sanitized public JSON into the new canonical editable record.
 - When the billing period resets and the backend returns `source: saved`, the app will resume the authoritative VIIVII DB config automatically.
+
+## Temporary pre-NAS opening video (2026-10-11)
+
+- The owner-provided `777.mp4` is available in the public build as `/media/viivii-hero-777.mp4` (H.264, 1920x1080, 8.3 seconds, about 2.5 MB).
+- Its poster is `/media/viivii-hero-777-poster.jpg` (extracted from the same video, no placeholder photo).
+- Both `src/viivii-public-snapshot.json` and the saved Supabase `config` have these two media paths. The older source media links remain intact in the private `backup:viivii-pre-nas-2026-10-11:config` backup.
+- This static video is served by the site's own web host, bypassing restricted Supabase Storage, and must be moved to the NAS origin once enabled. Keep the same content paths via redirects or update the relative asset keys in a single transaction.
+- If offline public config is being shown during a Supabase 402, the current video remains available even though the other media placeholders remain intentionally empty.
