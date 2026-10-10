@@ -340,9 +340,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
 
   return <div className={'team-portfolio-page'+(visualEditing?' is-visual-editing':'')} style={pageStyle}>
     <header className="nav nav-recomposed team-portfolio-site-nav vii-minimal-nav" data-portfolio-section="nav" data-portfolio-hidden={member.portfolioSections.nav.visible?'false':'true'} style={sectionStyle('nav')}>
-      <div className="nav-left-tools"><button type="button" className="icon" aria-label={theme==='light'?'다크 모드':'라이트 모드'} title={theme==='light'?'다크 모드':'라이트 모드'} onClick={()=>{if(!visualEditing)onToggleTheme()}}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</button></div>
-      <a href="/" className="brand nav-centered-brand" onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:<span className="brand-editable-text" data-portfolio-edit="siteName" style={globalTextStyle('navBrand')}>{config.name}</span>}<span>®</span></a>
-      <div className="nav-tools"><SiteMenu items={menuItems} fontFamily={config.font} onAdmin={onAdmin} onEdit={onEditSite} editing={visualEditing}/></div>
+      <div className="nav-tools"><SiteMenu items={menuItems} fontFamily={config.font} onAdmin={onAdmin} onEdit={onEditSite} theme={theme} onToggleTheme={()=>{if(!visualEditing)onToggleTheme()}} editing={visualEditing}/></div>
     </header>
     {renderDividers('nav')}
 
