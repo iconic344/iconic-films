@@ -697,3 +697,72 @@ html.mobile-nav-hidden .team-portfolio-page>header.nav.nav-recomposed.vii-minima
 @media(prefers-reduced-motion:reduce){
   .vii-inline-text-stack{transition:none!important;will-change:auto!important}
 }
+
+
+/* PROJECT 09 — precision-only corrections to the uploaded 19:28 screenshot.
+   Restore the same horizontal M/scroll-control inset; pull the logo inward;
+   eliminate ONLY obsolete header framing and rectangular link hover surfaces.
+   Leave the existing character-roll animations and glass panel untouched. */
+.site>header.nav.nav-recomposed.vii-minimal-nav,
+.team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav{
+  left:clamp(34px,8.4vw,156px)!important;
+  right:28px!important;
+  border:0!important;
+  border-width:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  background-image:none!important;
+}
+.site>header.nav.nav-recomposed.vii-minimal-nav::before,
+.site>header.nav.nav-recomposed.vii-minimal-nav::after,
+.team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav::before,
+.team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav::after{
+  content:none!important;
+  display:none!important;
+  opacity:0!important;
+  box-shadow:none!important;
+  border:0!important;
+  background:none!important;
+}
+/* The old site-wide '.nav nav a:hover' paints a rectangular glass box.
+   Strip only that box and its pseudo highlights, not the two-line text reel. */
+.site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links>.vii-menu-inline-link,
+.team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links>.vii-menu-inline-link{
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  outline-offset:0!important;
+  background:none!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+.site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links>.vii-menu-inline-link:is(:hover,:focus,:active),
+.team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links>.vii-menu-inline-link:is(:hover,:focus,:active){
+  border:0!important;
+  outline:0!important;
+  background:transparent!important;
+  background-color:transparent!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+.site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links>.vii-menu-inline-link::before,
+.site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links>.vii-menu-inline-link::after,
+.team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links>.vii-menu-inline-link::before,
+.team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links>.vii-menu-inline-link::after{
+  content:none!important;
+  display:none!important;
+}
+/* Keep the small-screen logo inset and the M axis aligned to the
+   existing bottom-right UP/DOWN control (16px from the screen edge). */
+@media(max-width:820px){
+  .site>header.nav.nav-recomposed.vii-minimal-nav,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav{
+    left:clamp(18px,3.5vw,34px)!important;
+    right:16px!important;
+  }
+}
