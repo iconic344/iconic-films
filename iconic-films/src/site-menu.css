@@ -715,7 +715,7 @@ html.mobile-nav-hidden .team-portfolio-page>header.nav.nav-recomposed.vii-minima
   min-height:70px!important;
   max-height:70px!important;
   margin:0 auto!important;
-  padding:0 12px 0 clamp(28px,5.5vw,106px)!important;
+  padding:0 12px 0 clamp(20px,1.8vw,34px)!important;
   display:flex!important;
   flex-direction:row!important;
   align-items:center!important;
