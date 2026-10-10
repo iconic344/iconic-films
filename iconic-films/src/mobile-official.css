@@ -1,0 +1,439 @@
+/*
+ * PROJECT 09 — Mobile editorial finish (2026-10-11)
+ * Scoped to phone/touch layouts. Desktop remains untouched.
+ * Loaded after site-menu.css to resolve old multi-row navigation overrides.
+ * No user-owned media, layout orders, text animations or assets are replaced.
+ */
+@media (max-width:1024px), (max-width:1366px) and (any-pointer:coarse){
+  :root{--vii-mobile-gutter:clamp(18px,4.25vw,38px)}
+  .site,.team-portfolio-page{max-width:100%;overflow-x:clip}
+  .site>header.nav.nav-recomposed.vii-minimal-nav,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav{
+    position:fixed!important;
+    top:calc(12px + env(safe-area-inset-top,0px))!important;
+    left:12px!important;
+    right:12px!important;
+    bottom:auto!important;
+    width:calc(100% - 24px)!important;
+    max-width:none!important;
+    height:64px!important;
+    min-height:64px!important;
+    max-height:64px!important;
+    padding:0 8px 0 16px!important;
+    margin:0!important;
+    display:flex!important;
+    flex-flow:row nowrap!important;
+    justify-content:space-between!important;
+    align-items:center!important;
+    column-gap:10px!important;
+    grid-template-rows:none!important;
+    grid-template-columns:none!important;
+    transform:none!important;
+    translate:none!important;
+    scale:1!important;
+    box-sizing:border-box!important;
+    overflow:visible!important;
+    border-radius:22px!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home{
+    position:relative!important;
+    display:flex!important;
+    flex:0 1 auto!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    align-self:center!important;
+    max-width:min(31vw,220px)!important;
+    min-width:0!important;
+    line-height:1!important;
+    margin:0!important;
+    padding:0!important;
+    transform:none!important;
+    translate:none!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home img,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home img{
+    width:auto!important;height:auto!important;
+    max-width:100%!important;max-height:40px!important;
+    object-fit:contain!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home .vii-header-home-name,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home .vii-header-home-name{
+    font-size:clamp(16px,2.55vw,23px)!important;
+    font-weight:750!important;
+    line-height:1.08!important;
+    letter-spacing:-.057em!important;
+    translate:none!important;
+    transform:none!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav>.nav-tools,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav>.nav-tools{
+    display:flex!important;
+    flex:0 1 auto!important;
+    width:auto!important;max-width:calc(100% - min(31vw,180px))!important;
+    min-width:0!important;
+    height:100%!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    grid-area:auto!important;grid-row:auto!important;grid-column:auto!important;
+    margin:0!important;padding:0!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap{
+    display:flex!important;
+    align-items:center!important;justify-content:flex-end!important;
+    gap:clamp(8px,1.65vw,20px)!important;
+    height:100%!important;
+    padding:0!important;
+    margin:0!important;
+    min-width:0!important;
+    flex-wrap:nowrap!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links{
+    display:flex!important;
+    height:100%!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:clamp(7px,1.45vw,18px)!important;
+    flex-wrap:nowrap!important;
+    min-width:0!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-link,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-link{
+    position:relative!important;
+    flex:none!important;
+    align-self:center!important;
+    height:30px!important;
+    min-height:30px!important;max-height:30px!important;
+    font-size:clamp(10px,1.48vw,13px)!important;
+    line-height:30px!important;
+    font-weight:500!important;
+    letter-spacing:-.01em!important;
+    padding:0 1px!important;
+    margin:0!important;
+    translate:none!important;
+    transform:none!important;
+  }
+  /* The existing 30px x 2 character-roll transition is intentionally intact. */
+  .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger{
+    position:static!important;
+    display:grid!important;
+    place-items:center!important;
+    flex:0 0 46px!important;
+    align-self:center!important;
+    margin:0!important;
+    width:46px!important;height:46px!important;
+    min-width:46px!important;min-height:46px!important;
+    max-width:46px!important;max-height:46px!important;
+    top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;
+    transform:none!important;translate:none!important;
+  }
+  /* iPad: keep the editorial card grid spacious and avoid the old desktop gap. */
+  .site .team-stack-section{
+    width:100%!important;
+    min-height:0!important;
+    padding:clamp(28px,4.8vw,48px) var(--vii-mobile-gutter) clamp(44px,6vw,72px)!important;
+  }
+  .site .team-stack-section .team-stack-list{width:100%!important;max-width:100%!important}
+  .site .team-stack-section .team-stack-card{
+    overflow:hidden!important;
+    min-width:0!important;
+    transition:background-color .3s ease!important;
+  }
+  .site .team-stack-section .team-stack-visual{
+    position:relative!important;
+    overflow:hidden!important;
+    background:color-mix(in srgb,var(--ink) 5%,var(--page))!important;
+    transform:none!important;
+  }
+  .site .team-stack-section .team-stack-placeholder{
+    position:absolute!important;
+    inset:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex-direction:column!important;
+    gap:6px!important;
+    background:linear-gradient(145deg,color-mix(in srgb,var(--ink) 10%,var(--page)),color-mix(in srgb,var(--ink) 3%,var(--page)))!important;
+    z-index:0!important;
+    text-align:center!important;
+    line-height:1!important;
+    color:color-mix(in srgb,var(--ink) 63%,transparent)!important;
+  }
+  .site .team-stack-placeholder>strong{
+    font-size:clamp(25px,4vw,46px)!important;
+    font-weight:500!important;
+    letter-spacing:-.045em!important;
+    font-family:inherit!important;
+  }
+  .site .team-stack-placeholder>small{
+    font-size:clamp(6px,.75vw,9px)!important;
+    font-weight:550!important;
+    letter-spacing:.13em!important;
+    opacity:.6!important;
+  }
+  .site .team-stack-visual>.team-stack-media{
+    position:absolute!important;
+    inset:0!important;
+    z-index:1!important;
+    display:block!important;
+    width:100%!important;height:100%!important;
+    object-fit:cover!important;object-position:center!important;
+    transform:none!important;
+    transition:opacity .28s ease!important;
+  }
+  .site .team-stack-visual>img.team-stack-media:not([data-media-ready="true"]),
+  .site .team-stack-visual>video.team-stack-media:not([data-media-ready="true"]){
+    opacity:0!important;
+  }
+  /* A real loaded thumbnail always covers the typographic fallback. */
+  .site .team-stack-visual>.team-stack-media[data-media-ready="true"]{opacity:1!important}
+  .site .team-stack-section .team-stack-view{
+    display:inline-flex!important;align-items:center!important;
+    gap:8px!important;white-space:nowrap!important;
+  }
+  /* Member portfolio pages: consistent breathing room under the fixed nav. */
+  .team-portfolio-page>.team-portfolio-main{
+    width:100%!important;min-width:0!important;
+    margin:0!important;padding:0!important;
+  }
+  .team-portfolio-page .team-portfolio-work,
+  .team-portfolio-page .team-portfolio-member-index{
+    padding-left:var(--vii-mobile-gutter)!important;
+    padding-right:var(--vii-mobile-gutter)!important;
+  }
+  .team-portfolio-page .team-portfolio-work-head{
+    max-width:100%!important;
+    margin-bottom:clamp(15px,2.7vw,27px)!important;
+    align-items:flex-start!important;
+  }
+  .team-portfolio-page .team-portfolio-grid{
+    gap:clamp(12px,2.5vw,24px)!important;
+  }
+  .site main>.about[data-visual-section="about"]{
+    padding-inline:var(--vii-mobile-gutter)!important;
+  }
+}
+@media(max-width:600px){
+  :root{--vii-mobile-gutter:18px}
+  .site>header.nav.nav-recomposed.vii-minimal-nav,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav{
+    top:calc(10px + env(safe-area-inset-top,0px))!important;
+    left:10px!important;
+    right:10px!important;
+    width:calc(100% - 20px)!important;
+    height:58px!important;min-height:58px!important;max-height:58px!important;
+    padding:0 5px 0 9px!important;
+    gap:5px!important;
+    border-radius:19px!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home{
+    flex:0 1 auto!important;
+    max-width:clamp(89px,29vw,124px)!important;
+    min-width:0!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home .vii-header-home-name,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home .vii-header-home-name{
+    font-size:clamp(14px,3.4vw,18px)!important;
+    white-space:nowrap!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home sup,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home sup{
+    font-size:8px!important;margin-left:1px!important;transform:translateY(-4px)!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav>.nav-tools,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav>.nav-tools{
+    max-width:calc(100% - 93px)!important;
+    flex:0 1 auto!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap{
+    gap:clamp(5px,1.55vw,8px)!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-links{
+    gap:clamp(3px,1.65vw,8px)!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-link,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-link{
+    font-size:clamp(9px,2.7vw,11px)!important;
+    min-height:30px!important;max-height:30px!important;
+  }
+  .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger,
+  .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger{
+    flex-basis:43px!important;
+    width:43px!important;height:43px!important;
+    min-width:43px!important;min-height:43px!important;
+    max-width:43px!important;max-height:43px!important;
+    font-size:14px!important;
+  }
+  /* Instagram WebView and narrow iPhones: don't let the quick links overlap. */
+  @media(max-width:355px){
+    .site>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home,
+    .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav>.vii-header-home{max-width:84px!important}
+    .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-link,
+    .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-link{font-size:9px!important;padding:0!important}
+    .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap,
+    .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap{gap:4px!important}
+  }
+
+  /* Real media remains edge-to-edge. Reduce dead black space under the film,
+     but retain the user's own aspect and uploads. */
+  .site>main>.hero[data-visual-section="hero"]{
+    min-height:0!important;
+    padding-bottom:0!important;
+    row-gap:0!important;
+  }
+  .site .hero>.hero-media-shell[data-hero-has-media="true"]{
+    margin-bottom:0!important;
+  }
+  /* No default stand-in video or fake imagery. */
+  .site .hero>.main-logo[data-logo-type="3d"][data-logo-has-media="true"]{
+    height:clamp(270px,82vw,375px)!important;
+    min-height:270px!important;
+    max-height:none!important;
+    margin:6px auto 16px!important;
+  }
+  /* If the uploaded 3D asset was cleared, use editorial-size fallback type
+     rather than an empty 350px viewer surrounding a tiny wordmark. */
+  .site .hero>.main-logo[data-logo-type="3d"][data-logo-has-media="false"]{
+    height:clamp(112px,30vw,156px)!important;
+    min-height:112px!important;
+    max-height:156px!important;
+    margin:12px auto 16px!important;
+  }
+  .site .hero>.main-logo[data-logo-type="image"],
+  .site .hero>.main-logo[data-logo-type="text"]{
+    height:clamp(115px,31vw,172px)!important;
+    min-height:115px!important;
+    max-height:172px!important;
+    margin:10px auto 14px!important;
+  }
+  .site .hero>.main-logo .logo-word{
+    font-size:clamp(53px,13vw,83px)!important;
+    line-height:1.05!important;
+    letter-spacing:-.075em!important;
+  }
+  .site .hero>.main-logo .logo-group{
+    align-items:center!important;
+  }
+  .site .hero>.hero-bottom{
+    margin:0!important;
+    padding:8px var(--vii-mobile-gutter) 20px!important;
+  }
+  /* Mobile company/category index: consistent image/title/call-to-action
+     baseline and readable, appropriately scaled typography. */
+  .site .team-stack-section{
+    padding:22px var(--vii-mobile-gutter) 46px!important;
+    margin:0!important;
+  }
+  .site .team-stack-section>.team-section-head{
+    margin:0 0 18px!important;
+    gap:10px!important;
+  }
+  .site .team-stack-section .team-section-head h2{
+    font-size:clamp(29px,8.5vw,40px)!important;
+    line-height:1.04!important;
+    letter-spacing:-.055em!important;
+  }
+  .site .team-stack-list>.team-stack-card{
+    display:grid!important;
+    grid-template-columns:clamp(79px,23vw,96px) minmax(0,1fr)!important;
+    grid-template-rows:minmax(0,1fr) auto!important;
+    column-gap:clamp(14px,4vw,20px)!important;
+    row-gap:3px!important;
+    min-height:125px!important;
+    padding:17px 0!important;
+    align-items:center!important;
+  }
+  .site .team-stack-card>.team-stack-visual{
+    grid-column:1!important;grid-row:1 / 3!important;
+    width:100%!important;height:auto!important;
+    aspect-ratio:1!important;
+    align-self:center!important;
+    border-radius:15px!important;
+  }
+  .site .team-stack-card>.team-stack-copy{
+    grid-column:2!important;grid-row:1!important;
+    align-self:end!important;
+    min-width:0!important;
+    margin:0!important;padding:0!important;
+  }
+  .site .team-stack-card .team-stack-copy h3{
+    font-size:clamp(25px,7vw,34px)!important;
+    line-height:1.03!important;
+    letter-spacing:-.05em!important;
+    font-weight:500!important;
+    overflow-wrap:normal!important;
+    word-break:keep-all!important;
+  }
+  .site .team-stack-card .team-stack-subcategories{
+    display:block!important;
+    font-size:clamp(10px,2.6vw,12px)!important;
+    line-height:1.42!important;
+    margin:7px 0 0!important;
+    max-width:100%!important;
+  }
+  .site .team-stack-card>.team-stack-end{
+    grid-column:2!important;grid-row:2!important;
+    align-self:start!important;
+    justify-content:flex-start!important;
+    justify-items:start!important;
+    margin:0!important;padding:6px 0 0!important;
+    min-width:0!important;
+  }
+  .site .team-stack-card .team-stack-view{
+    font-size:clamp(11px,2.8vw,13px)!important;
+    font-weight:500!important;line-height:1.3!important;
+  }
+  .site .team-stack-placeholder>strong{font-size:30px!important}
+  .site .team-stack-placeholder>small{font-size:6px!important}
+  /* About & team member 3D: a substantial but rotation-safe stage. */
+  .site main>.about>.about-visual.is-model{
+    height:clamp(320px,85vw,410px)!important;
+    min-height:320px!important;
+    max-height:410px!important;
+    margin-block:6px 10px!important;
+  }
+  .site main>.about>.about-visual.is-model .model-stage,
+  .site main>.about>.about-visual.is-model model-viewer{
+    height:100%!important;min-height:0!important;
+    display:block!important;
+  }
+  /* Fixed corner controls remain on their existing rail and do not occlude
+     full-width category cards or the Instagram bottom safe area. */
+  .site .sound-toggle,.site .scroll-toggle{
+    width:46px!important;height:46px!important;
+    bottom:max(16px,env(safe-area-inset-bottom,0px))!important;
+  }
+}
+@media(min-width:601px) and (max-width:1024px){
+  :root{--vii-mobile-gutter:clamp(30px,4vw,48px)}
+  .site .hero>.main-logo[data-logo-type="3d"][data-logo-has-media="true"]{
+    height:clamp(325px,53vw,480px)!important;max-height:none!important;
+  }
+  .site main>.about>.about-visual.is-model{
+    height:clamp(375px,54vw,520px)!important;
+    max-height:520px!important;
+  }
+  .site .team-stack-list>.team-stack-card{
+    min-height:154px!important;
+    grid-template-columns:clamp(116px,15vw,154px) minmax(0,1fr) auto!important;
+    gap:22px!important;
+    padding-block:20px!important;
+  }
+  .site .team-stack-card>.team-stack-end{
+    grid-column:3!important;grid-row:1!important;
+    justify-self:end!important;
+    align-self:center!important;
+    padding:0!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .site .team-stack-visual>.team-stack-media{
+    transition:none!important;
+  }
+}
