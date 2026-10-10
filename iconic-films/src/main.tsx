@@ -17,5 +17,7 @@ import './hero-gallery-poster-fix.css';
 import './site-menu.css';
 // Mobile-only editorial finishing layer; never changes desktop layout.
 import './mobile-official.css';
+// Shared Fashion visual standard + scroll-only menu ring polish.
+import './portfolio-slider-unified.css';
 
 createRoot(document.getElementById('root')!).render(<App/>);
