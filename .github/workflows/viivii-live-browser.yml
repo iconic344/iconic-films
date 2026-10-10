@@ -1,0 +1,34 @@
+name: VIIVII live browser
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'iconic-films/scripts/verify-live-browser.mjs'
+      - '.github/workflows/viivii-live-browser.yml'
+      - 'iconic-films/src/media-gallery.tsx'
+      - 'iconic-films/src/portfolio-slider-unified.css'
+      - 'iconic-films/src/viivii-public-snapshot.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: iconic-films
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: iconic-films/package-lock.json
+      - run: npm ci
+      - name: Install isolated browser verification dependencies
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.1
+          npx playwright install --with-deps chromium
+      - name: Verify deployed PC/mobile media and fullscreen loop
+        run: node scripts/verify-live-browser.mjs
