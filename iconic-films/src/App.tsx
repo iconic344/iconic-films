@@ -145,6 +145,9 @@ export default function Home(){
   const mobile=window.matchMedia('(max-width: 1024px), (max-width: 1366px) and (any-pointer: coarse)');
   const update=()=>{
     const y=Math.max(0,window.scrollY);
+    // Homepage: invisible frame on the hero; restore the original adaptive
+    // liquid-glass frame after scrolling down. Same behaviour on Team pages.
+    document.documentElement.classList.toggle('viivii-nav-scrolled',y>Math.max(110,window.innerHeight*.28));
     const delta=y-last;
     if(!mobile.matches||y<85){
       upward=0;downward=0;
@@ -163,12 +166,15 @@ export default function Home(){
     }
     last=y;
   };
+  update();
   window.addEventListener('scroll',update,{passive:true});
+  window.addEventListener('resize',update,{passive:true});
   mobile.addEventListener?.('change',update);
   return()=>{
     window.removeEventListener('scroll',update);
+    window.removeEventListener('resize',update);
     mobile.removeEventListener?.('change',update);
-    document.documentElement.classList.remove('mobile-nav-hidden');
+    document.documentElement.classList.remove('mobile-nav-hidden','viivii-nav-scrolled');
   };
  },[]);
  useEffect(()=>{document.documentElement.dataset.theme=theme;},[theme]);
