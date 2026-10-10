@@ -39,6 +39,25 @@ const accentContrast=(hex:string)=>{
 };
 import {api} from './site-api';
 const SITE_CONFIG_CACHE_KEY='viivii-site-config-v1';
+const OFFLINE_VISUAL_DRAFT_KEY='viivii-offline-visual-draft-v1';
+// A local preview is NEVER an authenticated session or a published site edit.
+function readOfflineVisualDraft():Config|null{
+ try{
+  const raw=typeof window!=='undefined'?localStorage.getItem(OFFLINE_VISUAL_DRAFT_KEY):null;
+  if(!raw)return null;
+  const parsed=JSON.parse(raw);
+  return typeof parsed?.name==='string'&&parsed.name.toLowerCase().includes('viivii')?normalizeConfig(parsed):null;
+ }catch{return null}
+}
+function exportOfflineVisualDraft(config:Config){
+ const blob=new Blob([JSON.stringify(config,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob);
+ const link=document.createElement('a');
+ link.href=url;
+ link.download='viivii-offline-edit-'+new Date().toISOString().slice(0,10)+'.json';
+ document.body.appendChild(link);link.click();link.remove();
+ window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
 // The bundled ICONIC demo is NOT a published VIIVII config. Never let it
 // overwrite the original site's locally cached portfolio or appear as truth.
 function isRetiredIconicSnapshot(value:any){
@@ -72,6 +91,7 @@ export default function Home(){
  const [saved,setSaved]=useState<Config>(bootConfig),[draft,setDraft]=useState<Config>(bootConfig),[theme,setTheme]=useState(()=>cachedTheme(bootConfig.theme)),[admin,setAdmin]=useState(false),[preview,setPreview]=useState(false),[login,setLogin]=useState(false),[loginTarget,setLoginTarget]=useState<'admin'|'visual'>('admin'),[pin,setPin]=useState(''),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[category,setCategory]=useState('All'),[work,setWork]=useState<Work|null>(null),[music,setMusic]=useState(false),[track,setTrack]=useState(0),[playing,setPlaying]=useState(false),[shuffle,setShuffle]=useState(bootConfig.musicShuffle),[repeat,setRepeat]=useState(bootConfig.musicRepeatMode==='one'?1:bootConfig.musicRepeatMode==='all'?2:0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[group,setGroup]=useState('Tracks'),[filter,setFilter]=useState('All'),[volume,setVolume]=useState(bootConfig.volume),[newPin,setNewPin]=useState(''),[loaded,setLoaded]=useState(false),[scrollTarget,setScrollTarget]=useState<'top'|'bottom'>('bottom'),[autoplayBlocked,setAutoplayBlocked]=useState(false),[editorTab,setEditorTab]=useState('music'),[contactOpen,setContactOpen]=useState(false),[teamRoute,setTeamRoute]=useState(()=>typeof window==='undefined'?'':decodeURIComponent(window.location.pathname.match(/^\/team\/([^/]+)/)?.[1]||'')),[teamPageClosing,setTeamPageClosing]=useState(false),[adminClosing,setAdminClosing]=useState(false),[ownerMode,setOwnerMode]=useState(false),[memberLogin,setMemberLogin]=useState<TeamMember|null>(null),[memberPin,setMemberPin]=useState(''),[memberEditor,setMemberEditor]=useState<TeamMember|null>(null),[memberDraft,setMemberDraft]=useState<TeamMember|null>(null),[memberBusy,setMemberBusy]=useState(false),[teamPins,setTeamPins]=useState<Record<string,string>>({});
  const [focusIndex,setFocusIndex]=useState<number|null>(null);
  const [configLoadError,setConfigLoadError]=useState('');
+ const [offlineVisualSession,setOfflineVisualSession]=useState(false);
  const [visualEdit,setVisualEdit]=useState(false),[visualSelection,setVisualSelection]=useState<VisualSelection>('hero');
  const draftRef=useRef<Config>(bootConfig),visualUndoStack=useRef<Config[]>([]),visualLastMutationAt=useRef(0);
  const visualEntryThemeRef=useRef(theme),visualThemeEditedRef=useRef(false);
@@ -121,7 +141,7 @@ export default function Home(){
    // A cached page can still contain now-blocked Supabase media URLs. Use the
    // media-independent snapshot for visitors, while preserving their cached
    // full settings and never writing an offline config back to Supabase.
-   const offline=normalizeConfig(viiviiPublicSnapshot);
+   const offline=readOfflineVisualDraft()||normalizeConfig(viiviiPublicSnapshot);
    setSaved(offline);setDraft(offline);
    setConfigLoadError(message);setLoaded(true);
    document.documentElement.dataset.siteBootReady='true';
@@ -412,13 +432,32 @@ export default function Home(){
   if(ownerMode){setLogin(false);setVisualSelection('hero');setVisualEdit(true);return}
   setVisualEdit(false);setLogin(true);
  }
- function cancelVisualEdit(){const base=structuredClone(saved);draftRef.current=base;setDraft(base);resetVisualHistory(base);const before=visualEntryThemeRef.current;setTheme(before);try{localStorage.setItem('iconic-theme',before)}catch{}setVisualEdit(false);setVisualSelection('hero')}
+ function beginOfflineVisualEdit(){
+  // Available to any visitor only as an isolated, local preview. It does not
+  // grant administrator identity or permission for server-side writes.
+  if(!configLoadError)return;
+  const local=readOfflineVisualDraft()||structuredClone(saved);
+  visualEntryThemeRef.current=theme;visualThemeEditedRef.current=false;
+  const base=structuredClone(local);base.theme=theme;draftRef.current=base;setDraft(base);
+  resetVisualHistory(base);setOfflineVisualSession(true);setLogin(false);setPin('');
+  setAdmin(false);setVisualSelection('hero');setVisualEdit(true);
+ }
+ function cancelVisualEdit(){const base=structuredClone(saved);draftRef.current=base;setDraft(base);resetVisualHistory(base);const before=visualEntryThemeRef.current;setTheme(before);try{localStorage.setItem('iconic-theme',before)}catch{}setVisualEdit(false);setOfflineVisualSession(false);setVisualSelection('hero')}
  async function saveVisualEdit(){
   try{
    setBusy(true);
    const next=normalizeConfig(draftRef.current);
    // Editing ordinary content must not turn the visitor's chosen light/dark mode into a global default.
    if(!visualThemeEditedRef.current)next.theme=saved.theme;
+   if(offlineVisualSession){
+    // Not a publication: never call /api/config or write the normal site cache.
+    try{localStorage.setItem(OFFLINE_VISUAL_DRAFT_KEY,JSON.stringify(next))}
+    catch{throw Error('로컬 임시 저장 공간이 부족합니다. JSON 내보내기를 이용해 백업해 주세요.')}
+    const localApplied=structuredClone(next);
+    setSaved(localApplied);draftRef.current=localApplied;setDraft(localApplied);resetVisualHistory(localApplied);
+    setNote('이 브라우저에만 임시 저장했어요. 다른 방문자에게 게시되지 않습니다.');
+    return;
+   }
    await api('/api/config','PUT',next);
    const applied=structuredClone(next);
    setSaved(applied);draftRef.current=applied;setDraft(applied);resetVisualHistory(applied);
@@ -428,7 +467,10 @@ export default function Home(){
   }catch(e){setNote((e as Error).message)}
   finally{setBusy(false)}
  }
- function openAdminFromVisual(){setVisualEdit(false);setAdminClosing(false);setPreview(false);setLogin(false);setEditorTab('music');setAdmin(true)}
+ function openAdminFromVisual(){
+  if(offlineVisualSession){setNote('Supabase 사용량 제한 중에는 ADMIN에 접속할 수 없습니다. 로컬 미리보기만 가능합니다.');return}
+  setVisualEdit(false);setAdminClosing(false);setPreview(false);setLogin(false);setEditorTab('music');setAdmin(true);
+ }
  function reorderVisualNav(from:NavItemKey,to:NavItemKey){
   if(!visualEdit||from===to)return;
   setVisualDraft(d=>{
@@ -717,6 +759,7 @@ export default function Home(){
  {(c.pageBlocks||[]).map((block,index)=><PageBlockView key={block.id} block={block} config={c} order={sectionRank(block.after)+60+index/100} editing={visualEdit}/>)}
  </main>
  {c.showFooter&&<footer data-visual-section="footer" style={sectionStyle('footer')}><span className="footer-copy" data-visual-text="footerCopyright" style={textCss('footerCopyright')}>© {new Date().getFullYear()} {c.name}</span>{!compactViewport&&<button data-visual-text="footerAdminLabel" style={textCss('footerAdmin')} onClick={enter}>{c.footerAdminLabel}</button>}</footer>}</>}
+ {offlineVisualSession&&visualEdit&&<div role="status" style={{position:'fixed',left:18,bottom:18,zIndex:2147483600,maxWidth:350,padding:'15px 17px',borderRadius:14,background:'rgba(20,20,20,.95)',border:'1px solid rgba(255,255,255,.24)',color:'#fff',boxShadow:'0 16px 50px #0007',display:'flex',flexDirection:'column',gap:9,fontSize:12,lineHeight:1.6}}><strong style={{fontSize:13}}>로컬 편집 · 게시되지 않음</strong><span style={{opacity:.75}}>저장해도 이 브라우저에만 반영돼요. Supabase가 복구되기 전까지 전체 사이트에는 적용되지 않습니다.</span><button type="button" onClick={()=>exportOfflineVisualDraft(normalizeConfig(draftRef.current))} style={{padding:'8px 12px',borderRadius:9,border:'1px solid #fff7',background:'transparent',color:'inherit',cursor:'pointer'}}>수정본 JSON 내보내기</button></div>}
  {visualEdit&&(teamPage&&routedMember?
   <PortfolioVisualEditor config={draft} memberId={routedMember.id} setConfig={setVisualDraft} onSave={saveVisualEdit} onCancel={cancelVisualEdit} onOpenAdmin={openAdminFromVisual} onUndo={undoVisualEdit} canUndo={visualUndoStack.current.length>0} busy={busy} setBusy={setBusy} notify={setNote} onThemeChange={value=>{visualThemeEditedRef.current=true;setTheme(value)}}/>:
   <VisualSiteEditor config={draft} setConfig={setVisualDraft} selection={visualSelection} setSelection={setVisualSelection} onSave={saveVisualEdit} onCancel={cancelVisualEdit} onOpenAdmin={openAdminFromVisual} onUndo={undoVisualEdit} canUndo={visualUndoStack.current.length>0} busy={busy} setBusy={setBusy} notify={setNote} onThemeChange={value=>{visualThemeEditedRef.current=true;setTheme(value)}}/> )}
@@ -730,7 +773,7 @@ export default function Home(){
  <Dialog open={!!memberLogin} onOpenChange={v=>{if(!v){setMemberLogin(null);setMemberPin('')}}}><DialogContent className="login-dialog member-login-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}><button type="button" className="login-dialog-close" aria-label="팀원 포트폴리오 로그인 닫기" onClick={()=>{setMemberLogin(null);setMemberPin('')}}><X size={16}/></button><span className="kicker">VIIVII sara / Team</span><DialogTitle>Portfolio access.</DialogTitle><DialogDescription>{memberLogin?.name||'Team member'} 포트폴리오 비밀번호 숫자 4자리를 입력하세요.</DialogDescription><InputOTP maxLength={4} value={memberPin} onChange={unlockMemberPortfolio} disabled={memberBusy} autoFocus inputMode="numeric" pattern="[0-9]*"><InputOTPGroup>{[0,1,2,3].map(i=><InputOTPSlot key={i} index={i}/>)}</InputOTPGroup></InputOTP><p className="small">이 탭을 닫기 전까지 현재 팀원 페이지의 편집 권한이 유지됩니다.</p></DialogContent></Dialog>
  {memberEditor&&memberDraft&&<MemberPortfolioEditor config={c} member={memberDraft} setMember={setMemberDraft} busy={memberBusy} setBusy={setMemberBusy} notify={setNote} onSave={saveMemberPortfolio} onClose={closeMemberPortfolioEditor}/>}
  <SiteContactNotifications active={ownerMode&&!admin&&!login} onOpenInbox={openSiteInbox} onSessionExpired={()=>setOwnerMode(false)}/>
- <Dialog open={login} onOpenChange={v=>{if(v)setLogin(true);else {setLogin(false);setPin('');setLoginTarget('admin')}}}><DialogContent className="login-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}><button type="button" className="login-dialog-close" aria-label="관리자 로그인 닫기" onClick={()=>{setLogin(false);setPin('');setLoginTarget('admin')}}><X size={16}/></button><span className="kicker">VIIVII sara</span><DialogTitle>{loginTarget==='visual'?'Edit site.':'Welcome back.'}</DialogTitle><DialogDescription>{loginTarget==='visual'?'비주얼 편집을 시작하려면 관리자 비밀번호 숫자 4자리를 입력하세요.':'관리자 비밀번호 숫자 4자리를 입력하세요.'}</DialogDescription><InputOTP maxLength={4} value={pin} onChange={unlock} disabled={busy} autoFocus inputMode="numeric" pattern="[0-9]*"><InputOTPGroup>{[0,1,2,3].map(i=><InputOTPSlot key={i} index={i}/>)}</InputOTPGroup></InputOTP><p className="small">4자리 입력 시 자동으로 접속됩니다.</p></DialogContent></Dialog>
+ <Dialog open={login} onOpenChange={v=>{if(v)setLogin(true);else {setLogin(false);setPin('');setLoginTarget('admin')}}}><DialogContent className="login-dialog" showCloseButton={false} onOpenAutoFocus={e=>e.preventDefault()}><button type="button" className="login-dialog-close" aria-label="관리자 로그인 닫기" onClick={()=>{setLogin(false);setPin('');setLoginTarget('admin')}}><X size={16}/></button><span className="kicker">VIIVII sara</span><DialogTitle>{loginTarget==='visual'?'Edit site.':'Welcome back.'}</DialogTitle><DialogDescription>{loginTarget==='visual'?'비주얼 편집을 시작하려면 관리자 비밀번호 숫자 4자리를 입력하세요.':'관리자 비밀번호 숫자 4자리를 입력하세요.'}</DialogDescription><InputOTP maxLength={4} value={pin} onChange={unlock} disabled={busy} autoFocus inputMode="numeric" pattern="[0-9]*"><InputOTPGroup>{[0,1,2,3].map(i=><InputOTPSlot key={i} index={i}/>)}</InputOTPGroup></InputOTP><p className="small">4자리 입력 시 자동으로 접속됩니다.</p>{configLoadError&&<div style={{marginTop:14,padding:14,border:'1px solid rgba(255,255,255,.18)',borderRadius:14,display:'grid',gap:9}}><strong style={{fontSize:13}}>Supabase 사용량 제한으로 관리자 인증이 일시 중단됐습니다.</strong><span style={{fontSize:12,lineHeight:1.7,opacity:.72}}>서버 저장 없이 이 브라우저에서만 디자인을 편집하고 JSON으로 백업할 수 있어요. 관리자 인증이나 전체 공개 저장은 하지 않습니다.</span><button type="button" onClick={beginOfflineVisualEdit} style={{borderRadius:10,border:'1px solid rgba(255,255,255,.3)',padding:'11px 14px',background:'rgba(255,255,255,.12)',color:'inherit',fontSize:13,cursor:'pointer'}}>로컬 미리보기 편집 시작</button></div>}</DialogContent></Dialog>
  {admin&&<div className={'editor admin-editor '+(preview?'editor-preview-hidden ':'')+(adminClosing?'is-closing':'')}><div className="editor-header"><div className="editor-brand-lockup" aria-label="VIIVII sara"><span className="editor-brand-mark" aria-hidden="true"/></div><div><button onClick={()=>setPreview(true)}><Eye size={16}/> 미리보기</button><button className="save" disabled={busy} onClick={save}><Save size={16}/> {busy?'처리 중…':'저장 & 적용'}</button><Btn label="편집 닫기" onClick={closeAdmin}><X size={22}/></Btn></div></div><div className="admin-editor-scroll"><Tabs value={editorTab} onValueChange={setEditorTab} className="editor-tabs"><div className="editor-nav-shell"><div className="editor-group-tabs" aria-label="관리자 메뉴 그룹">{editorGroups.map(group=><button type="button" key={group.id} className={activeEditorGroup.id===group.id?'active':''} onClick={()=>setEditorTab(group.tabs[0][0])}>{group.label}</button>)}</div><TabsList className="editor-subtabs">{activeEditorGroup.tabs.map(([v,l])=><TabsTrigger value={v} key={v}>{l}</TabsTrigger>)}</TabsList></div>
  <TabsContent value="inbox"><ContactInbox/></TabsContent>
  <TabsContent value="music"><div className="music-editor-stack"><section className="editor-card music-settings"><h3>Playback settings</h3><div className="playback-settings-grid"><div>{sw('showMusic','음악 플레이어 표시')}{sw('musicAutoplay','사이트 방문 시 자동재생')}{sw('musicShuffle','기본 셔플')}{sw('musicRandomStart','첫 곡도 랜덤으로 시작')}<label className="field">기본 반복 모드<Choice value={draft.musicRepeatMode} options={['all','one','none']} onChange={v=>set('musicRepeatMode',v)}/></label></div><div>{range('volume','기본 음량',0,100)}<p>기본값은 셔플 + 전체 반복입니다. 브라우저가 소리 자동재생을 제한하면 첫 클릭이나 터치 후 시작됩니다.</p></div></div></section><MediaLibrary kind="tracks" draft={draft} setDraft={setDraft} busy={busy} setBusy={setBusy} notify={setNote}/></div></TabsContent>
