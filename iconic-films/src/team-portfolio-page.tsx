@@ -339,7 +339,8 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const renderDividers=(_after:PortfolioSectionKey)=>null;
 
   return <div className={'team-portfolio-page'+(visualEditing?' is-visual-editing':'')} style={pageStyle}>
-    <header className="nav nav-recomposed team-portfolio-site-nav vii-minimal-nav" data-portfolio-section="nav" data-portfolio-hidden={member.portfolioSections.nav.visible?'false':'true'} style={sectionStyle('nav')}>
+    <header className="nav nav-recomposed team-portfolio-site-nav vii-minimal-nav" data-portfolio-section="nav" data-portfolio-hidden={member.portfolioSections.nav.visible?'false':'true'} style={{...sectionStyle('nav'),'--vii-menu-light-opacity':String(config.menuButtonLightOpacity/100)} as CSSProperties}>
+      <a className="vii-header-home" href="/" aria-label="VIIVII sara 홈으로 이동" onClick={event=>{event.preventDefault();if(!visualEditing)onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:<span className="vii-header-home-name" data-portfolio-edit="siteName" style={globalTextStyle('navBrand')}>{config.name}</span>}<sup aria-hidden="true">®</sup></a>
       <div className="nav-tools"><SiteMenu items={menuItems} fontFamily={config.font} onAdmin={onAdmin} onEdit={onEditSite} theme={theme} onToggleTheme={()=>{if(!visualEditing)onToggleTheme()}} editing={visualEditing}/></div>
     </header>
     {renderDividers('nav')}
