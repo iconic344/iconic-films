@@ -67,7 +67,7 @@ export default function EditSiteFullSettings({
 
    {page==='design'&&<div className="editor-grid">
     <section className="editor-card"><h3>테마 · 글꼴</h3><label className="field">기본 모드{choice(draft.theme,['light','dark'],value=>{set('theme',value);onThemeChange?.(value)})}</label><label className="field editor-color-field">강조 색상<div className="editor-color-control"><input aria-label="강조 색상 선택" type="color" value={draft.accent} onChange={e=>set('accent',e.target.value)}/><span>{draft.accent.toUpperCase()}</span></div></label><FontPicker label="사이트 기본 글꼴" value={draft.font} onChange={value=>set('font',value)}/>{range('fontSize','본문 크기',16,22)}{range('spacing','섹션 간격',40,160)}{range('columns','작품 열 수',1,3)}</section>
-    <section className="editor-card"><h3>리퀴드 글래스</h3>{range('radius','프레임 곡률',0,50)}{range('blur','글래스 블러',0,50)}{range('glass','글래스 불투명도',20,100)}{range('navOpacity','상단 메뉴바 불투명도',20,85)}<div className="glass-sample" style={{borderRadius:draft.radius,backdropFilter:'blur('+draft.blur+'px)'}}>ICONIC / LIQUID GLASS</div><p>Edit Site 화면에서 실제 조명과 배경에 맞춰 바로 확인하세요.</p></section>
+    <section className="editor-card"><h3>리퀴드 글래스</h3>{range('radius','프레임 곡률',0,50)}{range('blur','글래스 블러',0,50)}{range('glass','글래스 불투명도',20,100)}{range('navOpacity','상단 메뉴바 불투명도',20,85)}{range('menuButtonLightOpacity','라이트 모드 M 버튼 화이트 농도 (%)',15,100)}<div className="glass-sample" style={{borderRadius:draft.radius,backdropFilter:'blur('+draft.blur+'px)'}}>ICONIC / LIQUID GLASS</div><p>Edit Site 화면에서 실제 조명과 배경에 맞춰 바로 확인하세요.</p></section>
    </div>}
 
    {page==='layout'&&<LayoutEditor draft={draft} setDraft={setDraft}/>}
