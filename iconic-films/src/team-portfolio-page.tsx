@@ -72,6 +72,12 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     });
   };
   const openViewer=(i:number,preview?:HTMLVideoElement|null)=>{
+    // Pause background music INSIDE the opening gesture, before the video is
+    // permitted to become audible; do not wait for an effect after paint.
+    if(!viewerMusicHeld.current){
+      viewerMusicHeld.current=true;
+      onVideoViewerOpen();
+    }
     silenceGalleryPreviews(preview);
     // Keep the original decoded iPhone video and its buffered timeline.
     const mobile=window.matchMedia('(max-width: 1024px), (any-pointer: coarse)').matches;
@@ -102,6 +108,10 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     });
     if(handoffVideo){handoffVideo.pause();handoffVideo.muted=true;handoffVideo.defaultMuted=true}
     silenceGalleryPreviews();
+    if(viewerMusicHeld.current){
+      viewerMusicHeld.current=false;
+      onVideoViewerClose();
+    }
     setViewerIndex(null);setHandoffVideo(null);
   };
   useEffect(()=>{
