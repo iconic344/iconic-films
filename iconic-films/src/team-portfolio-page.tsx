@@ -257,7 +257,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     (config.showTeam?<a key={item} href="/#team" data-portfolio-edit="navTeamLabel" style={globalTextStyle('navMenu')} onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('team')}}>{config.navTeamLabel}</a>:null)
     :<button key={item} type="button" className="nav-contact" data-portfolio-edit="navContactLabel" style={globalTextStyle('navMenu')} onClick={()=>{if(!visualEditing)onContact()}}>{config.navContactLabel}</button>;
 
-  const menuItems:SiteMenuItem[]=config.navOrder.flatMap((item:NavItemKey)=>{
+  const menuItems:SiteMenuItem[]=config.navOrder.flatMap<SiteMenuItem>((item:NavItemKey):SiteMenuItem[]=>{
     if(item==='work')return [{key:item,label:config.navWorkLabel,visualTextKey:'navWorkLabel',onSelect:()=>onNavigate('work')}];
     if(item==='about')return config.showAbout?[{key:item,label:config.navAboutLabel,visualTextKey:'navAboutLabel',onSelect:()=>onNavigate('about')}]:[];
     if(item==='team')return config.showTeam?[{key:item,label:config.navTeamLabel,visualTextKey:'navTeamLabel',onSelect:()=>onNavigate('team')}]:[];
