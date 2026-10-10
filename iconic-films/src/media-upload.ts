@@ -1,7 +1,7 @@
 import {adminHeaders} from './admin-session';
 const inferredMime=(name:string,type:string)=>{
   const ext=name.split('.').pop()?.toLowerCase();
-  const inferred=({mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',m4v:'video/x-m4v',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',avif:'image/avif',mp3:'audio/mpeg',m4a:'audio/mp4',wav:'audio/wav',ogg:'audio/ogg',flac:'audio/flac',aac:'audio/aac'} as Record<string,string>)[ext||''];
+  const inferred=({mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',m4v:'video/x-m4v',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',avif:'image/avif',mp3:'audio/mpeg',m4a:'audio/mp4',wav:'audio/wav',ogg:'audio/ogg',flac:'audio/flac',aac:'audio/aac',glb:'model/gltf-binary',gltf:'model/gltf+json',hdr:'image/vnd.radiance'} as Record<string,string>)[ext||''];
   return !type||type==='application/octet-stream'||type==='binary/octet-stream'?inferred||type:type;
 };
 
