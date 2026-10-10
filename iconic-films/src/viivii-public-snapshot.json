@@ -1261,7 +1261,7 @@
   "aboutOffsetY": -166,
   "browserTitle": "VIIVII sara®",
   "heroFadeBlur": 0,
-  "heroMediaFit": "cover",
+  "heroMediaFit": "contain",
   "modelAnimate": true,
   "modelOffsetX": 0,
   "modelOffsetY": -22,
