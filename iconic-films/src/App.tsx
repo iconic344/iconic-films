@@ -8,6 +8,7 @@ import {Switch} from '@/components/ui/switch';
 import {Tabs,TabsList,TabsTrigger,TabsContent} from '@/components/ui/tabs';
 import {Select,SelectTrigger,SelectValue,SelectContent,SelectItem} from '@/components/ui/select';
 import {initial,normalizeConfig,Config,Work,Track,TeamMember,NavItemKey,SiteSectionKey} from './defaults';
+import viiviiPublicSnapshot from './viivii-public-snapshot.json';
 import ModelScene from './model-scene';
 import MediaLibrary,{playlistsOf} from './media-library';
 import PointerExperience from './pointer-experience';
@@ -62,9 +63,11 @@ function Btn({label,children,onClick,active=false}:{label:string;children:React.
 export default function Home(){
  const cached=useRef<Config|null|undefined>(undefined);
  if(cached.current===undefined)cached.current=readCachedConfig();
- const bootConfig=cached.current||initial;
+ // A static, sanitized VIIVII editorial snapshot is always available even
+ // when Supabase temporarily returns 402. Never fall back to retired ICONIC.
+ const bootConfig=cached.current||normalizeConfig(viiviiPublicSnapshot);
  const workbenchPreview=typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('viivii-workbench-preview')==='1';
- const [hasBootConfig]=useState(()=>!!cached.current);
+ const [hasBootConfig]=useState(true);
  const [heroReadySource,setHeroReadySource]=useState<string>('');
  const [saved,setSaved]=useState<Config>(bootConfig),[draft,setDraft]=useState<Config>(bootConfig),[theme,setTheme]=useState(()=>cachedTheme(bootConfig.theme)),[admin,setAdmin]=useState(false),[preview,setPreview]=useState(false),[login,setLogin]=useState(false),[loginTarget,setLoginTarget]=useState<'admin'|'visual'>('admin'),[pin,setPin]=useState(''),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[category,setCategory]=useState('All'),[work,setWork]=useState<Work|null>(null),[music,setMusic]=useState(false),[track,setTrack]=useState(0),[playing,setPlaying]=useState(false),[shuffle,setShuffle]=useState(bootConfig.musicShuffle),[repeat,setRepeat]=useState(bootConfig.musicRepeatMode==='one'?1:bootConfig.musicRepeatMode==='all'?2:0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[group,setGroup]=useState('Tracks'),[filter,setFilter]=useState('All'),[volume,setVolume]=useState(bootConfig.volume),[newPin,setNewPin]=useState(''),[loaded,setLoaded]=useState(false),[scrollTarget,setScrollTarget]=useState<'top'|'bottom'>('bottom'),[autoplayBlocked,setAutoplayBlocked]=useState(false),[editorTab,setEditorTab]=useState('music'),[contactOpen,setContactOpen]=useState(false),[teamRoute,setTeamRoute]=useState(()=>typeof window==='undefined'?'':decodeURIComponent(window.location.pathname.match(/^\/team\/([^/]+)/)?.[1]||'')),[teamPageClosing,setTeamPageClosing]=useState(false),[adminClosing,setAdminClosing]=useState(false),[ownerMode,setOwnerMode]=useState(false),[memberLogin,setMemberLogin]=useState<TeamMember|null>(null),[memberPin,setMemberPin]=useState(''),[memberEditor,setMemberEditor]=useState<TeamMember|null>(null),[memberDraft,setMemberDraft]=useState<TeamMember|null>(null),[memberBusy,setMemberBusy]=useState(false),[teamPins,setTeamPins]=useState<Record<string,string>>({});
  const [focusIndex,setFocusIndex]=useState<number|null>(null);
@@ -115,7 +118,7 @@ export default function Home(){
    if(cancelled)return;
    const message=e instanceof Error?e.message:'사이트 설정을 확인할 수 없습니다.';
    console.warn('VIIVII: retaining last known good config',message);
-   setConfigLoadError(message);setNote(message);setLoaded(true);
+   setConfigLoadError(message);setLoaded(true);
    // Do not save defaults or erase the user's older working cache.
    if(!cached.current||isRetiredIconicSnapshot(cached.current)){
     document.documentElement.dataset.siteBootReady='true';
