@@ -421,7 +421,7 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
           })}
         </div>}
 
-        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={(chosen,preview)=>{if(!visualEditing)openViewer(chosen??index,preview)}} balanceEdges editorialPreview autoPlay={member.portfolioSliderAutoplay!==false} autoplayMs={member.portfolioSliderAutoplayMs||6500} transitionMs={member.portfolioSliderTransitionMs||820} easing={member.portfolioSliderEasing||'smooth'} maxCardHeight={compact?Math.min(layoutMaster.portfolioSliderHeight||760,560):layoutMaster.portfolioSliderHeight||760}/></div>}
+        {!!works.length&&member.portfolioLayout==='slider'&&<div className="team-portfolio-slider"><MediaGallery items={galleryItems} initialIndex={index} onIndexChange={setIndex} onExpand={(chosen,preview)=>{if(!visualEditing)openViewer(chosen??index,preview)}} balanceEdges editorialPreview suspended={viewerIndex!==null} autoPlay={member.portfolioSliderAutoplay!==false} autoplayMs={member.portfolioSliderAutoplayMs||6500} transitionMs={member.portfolioSliderTransitionMs||820} easing={member.portfolioSliderEasing||'smooth'} maxCardHeight={compact?Math.min(layoutMaster.portfolioSliderHeight||760,560):layoutMaster.portfolioSliderHeight||760}/></div>}
       </section>
       {renderDividers('work')}
     </main>
