@@ -76,7 +76,20 @@ async function expectedMemberPin(memberId:string){
 }
 async function currentConfigPair(){
   const bundled=resolveLegacyMedia(seed());
-  const stored=await getSetting('config').catch(()=>null);
+  // Production must NEVER silently impersonate the published VIIVII site with
+  // the legacy ICONIC export when Supabase is down or settings are missing.
+  let stored:any;
+  if(process.env.VERCEL){
+    try{stored=await getSetting('config')}catch(e){
+      console.error('VIIVII persisted config read failed:',e);
+      throw new HttpError(503,'사이트 설정 저장소에 연결할 수 없습니다. 원본 설정은 변경되지 않았습니다.');
+    }
+    if(!stored||typeof stored!=='object'||!Array.isArray(stored.works)||!Array.isArray(stored.tracks)){
+      throw new HttpError(503,'게시된 사이트 설정을 찾지 못했습니다. 기본 사이트로 전환하지 않습니다.');
+    }
+  }else{
+    stored=await getSetting('config').catch(()=>null);
+  }
   const config=stored||bundled?fillMedia(stored||bundled,bundled):null;
   return {bundled,stored,config};
 }
@@ -821,11 +834,10 @@ export default async function handler(req:Req,res:ServerResponse){
 
     if(route==='/api/config'){
       if(method==='GET'){
-        const bundled=resolveLegacyMedia(seed());
-        let stored:any=null;
-        try{stored=await getSetting('config')}catch{}
-        const config=stored||bundled?fillMedia(stored||bundled,bundled):null;
-        json(res,{config});return;
+        const {config,stored}=await currentConfigPair();
+        // Preserve the original development seed for local API tests only.
+        // A public production response must come from the actual saved config.
+        json(res,{config,source:stored?'saved':'development-seed'});return;
       }
       if(method==='PUT'){
         await requireAdmin(req);
