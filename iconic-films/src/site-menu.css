@@ -811,14 +811,20 @@ html.viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-mini
   content:none!important;
   display:none!important;
 }
-/* Match right and diameter to .scroll-toggle: right 28px, size 52px.
-   Position M against the viewport rather than a flex row — this explicitly
-   corrects the stubborn extra-right offset seen in the screenshot. */
+/* Never position M as 'fixed' inside the fixed navigation: upstream
+   transformed/backdrop-filtered ancestors create a different containing block,
+   adding a second top/right offset (the exact misalignment in the screenshot).
+   Anchor it to the SAME flex line as Work/About/Contact instead. */
+.site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap,
+.team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap{
+  position:relative!important;
+  padding-right:calc(52px + clamp(15px,2.5vw,42px))!important;
+}
 .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger,
 .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger{
-  position:fixed!important;
-  top:calc(22px + env(safe-area-inset-top,0px))!important;
-  right:28px!important;
+  position:absolute!important;
+  top:50%!important;
+  right:0!important;
   bottom:auto!important;
   left:auto!important;
   margin:0!important;
@@ -828,15 +834,9 @@ html.viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-mini
   min-height:52px!important;
   max-width:52px!important;
   max-height:52px!important;
-  translate:none!important;
+  translate:0 -50%!important;
   transform:none!important;
   z-index:3!important;
-}
-/* M is out of flow by design. Reserve precisely its width and the original
-   optical spacing, moving all three textual links left together with it. */
-.site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap,
-.team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap{
-  padding-right:calc(52px + clamp(15px,2.5vw,42px))!important;
 }
 @media(max-width:820px){
   .site>header.nav.nav-recomposed.vii-minimal-nav::before,
@@ -847,14 +847,15 @@ html.viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-mini
   }
   .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger,
   .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger{
-    top:calc(12px + env(safe-area-inset-top,0px))!important;
-    right:16px!important;
+    top:50%!important;
+    right:0!important;
     width:46px!important;
     height:46px!important;
     min-width:46px!important;
     min-height:46px!important;
     max-width:46px!important;
     max-height:46px!important;
+    translate:0 -50%!important;
   }
   .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap,
   .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-inline-wrap{
