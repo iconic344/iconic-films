@@ -145,3 +145,21 @@ html[data-theme="light"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav
     transition:none!important;
   }
 }
+
+
+/* PROJECT 09 — dark theme mirrors the light theme's scrolled M behaviour.
+   The enclosing navigation bar is the ONLY visible outline after scrolling.
+   Keep a white M glyph for contrast; do not affect the opening-hero circle,
+   the menu position, text animations, or the sliding liquid-glass panel. */
+html[data-theme="dark"].viivii-nav-scrolled .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger,
+html[data-theme="dark"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger,
+html[data-theme="dark"].viivii-nav-scrolled .site>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger:is(:hover,:active,:focus-visible),
+html[data-theme="dark"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-recomposed.vii-minimal-nav .vii-menu-trigger:is(:hover,:active,:focus-visible){
+  color:#f5f5f7!important;
+  border:1px solid transparent!important;
+  background:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
