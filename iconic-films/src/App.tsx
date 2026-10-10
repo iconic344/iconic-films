@@ -38,11 +38,20 @@ const accentContrast=(hex:string)=>{
 };
 import {api} from './site-api';
 const SITE_CONFIG_CACHE_KEY='viivii-site-config-v1';
+// The bundled ICONIC demo is NOT a published VIIVII config. Never let it
+// overwrite the original site's locally cached portfolio or appear as truth.
+function isRetiredIconicSnapshot(value:any){
+ return !!value&&String(value.name||'').trim()==='ICONIC'
+  &&Array.isArray(value.works)
+  &&value.works.some((item:any)=>item?.title==='Billboard Korea Freaky Day 2');
+}
 function readCachedConfig(){
  try{
   if(typeof window==='undefined')return null;
   const raw=localStorage.getItem(SITE_CONFIG_CACHE_KEY);
-  return raw?normalizeConfig(JSON.parse(raw)):null;
+  if(!raw)return null;
+  const parsed=JSON.parse(raw);
+  return isRetiredIconicSnapshot(parsed)?null:normalizeConfig(parsed);
  }catch{return null}
 }
 function cachedTheme(fallback:string){
@@ -59,6 +68,7 @@ export default function Home(){
  const [heroReadySource,setHeroReadySource]=useState<string>('');
  const [saved,setSaved]=useState<Config>(bootConfig),[draft,setDraft]=useState<Config>(bootConfig),[theme,setTheme]=useState(()=>cachedTheme(bootConfig.theme)),[admin,setAdmin]=useState(false),[preview,setPreview]=useState(false),[login,setLogin]=useState(false),[loginTarget,setLoginTarget]=useState<'admin'|'visual'>('admin'),[pin,setPin]=useState(''),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[category,setCategory]=useState('All'),[work,setWork]=useState<Work|null>(null),[music,setMusic]=useState(false),[track,setTrack]=useState(0),[playing,setPlaying]=useState(false),[shuffle,setShuffle]=useState(bootConfig.musicShuffle),[repeat,setRepeat]=useState(bootConfig.musicRepeatMode==='one'?1:bootConfig.musicRepeatMode==='all'?2:0),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[group,setGroup]=useState('Tracks'),[filter,setFilter]=useState('All'),[volume,setVolume]=useState(bootConfig.volume),[newPin,setNewPin]=useState(''),[loaded,setLoaded]=useState(false),[scrollTarget,setScrollTarget]=useState<'top'|'bottom'>('bottom'),[autoplayBlocked,setAutoplayBlocked]=useState(false),[editorTab,setEditorTab]=useState('music'),[contactOpen,setContactOpen]=useState(false),[teamRoute,setTeamRoute]=useState(()=>typeof window==='undefined'?'':decodeURIComponent(window.location.pathname.match(/^\/team\/([^/]+)/)?.[1]||'')),[teamPageClosing,setTeamPageClosing]=useState(false),[adminClosing,setAdminClosing]=useState(false),[ownerMode,setOwnerMode]=useState(false),[memberLogin,setMemberLogin]=useState<TeamMember|null>(null),[memberPin,setMemberPin]=useState(''),[memberEditor,setMemberEditor]=useState<TeamMember|null>(null),[memberDraft,setMemberDraft]=useState<TeamMember|null>(null),[memberBusy,setMemberBusy]=useState(false),[teamPins,setTeamPins]=useState<Record<string,string>>({});
  const [focusIndex,setFocusIndex]=useState<number|null>(null);
+ const [configLoadError,setConfigLoadError]=useState('');
  const [visualEdit,setVisualEdit]=useState(false),[visualSelection,setVisualSelection]=useState<VisualSelection>('hero');
  const draftRef=useRef<Config>(bootConfig),visualUndoStack=useRef<Config[]>([]),visualLastMutationAt=useRef(0);
  const visualEntryThemeRef=useRef(theme),visualThemeEditedRef=useRef(false);
@@ -85,7 +95,34 @@ export default function Home(){
   margin:compactViewport ? `${Math.min(20,Math.max(0,divider.marginTop))}px auto ${Math.min(20,Math.max(0,divider.marginBottom))}px` : `${divider.marginTop}px auto ${divider.marginBottom}px`,
   translate:compactViewport?'0 0':`0 ${divider.offsetY||0}px`
  });
- useEffect(()=>{if(workbenchPreview)return;api('/api/config').then(j=>{const v=normalizeConfig(j.config||{});try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(v))}catch{}setSaved(v);setDraft(v);setTheme(cachedTheme(v.theme));setVolume(v.volume);setShuffle(v.musicShuffle);setRepeat(v.musicRepeatMode==='one'?1:v.musicRepeatMode==='all'?2:0);setLoaded(true)}).catch(e=>{setLoaded(true);setNote(e.message)});},[]);
+ useEffect(()=>{
+  if(workbenchPreview)return;
+  let cancelled=false;
+  api('/api/config').then(j=>{
+   if(!j.config||isRetiredIconicSnapshot(j.config)||j.source==='development-seed'){
+    throw Error('현재 게시된 VIIVII 설정이 아닌 기본 설정이 반환됐습니다.');
+   }
+   if(cancelled)return;
+   const v=normalizeConfig(j.config);
+   if(isRetiredIconicSnapshot(v))throw Error('기존 ICONIC 기본 설정은 적용하지 않습니다.');
+   // Only a confirmed saved config may replace the last good local snapshot.
+   try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(v))}catch{}
+   setSaved(v);setDraft(v);setTheme(cachedTheme(v.theme));
+   setVolume(v.volume);setShuffle(v.musicShuffle);
+   setRepeat(v.musicRepeatMode==='one'?1:v.musicRepeatMode==='all'?2:0);
+   setConfigLoadError('');setLoaded(true);
+  }).catch(e=>{
+   if(cancelled)return;
+   const message=e instanceof Error?e.message:'사이트 설정을 확인할 수 없습니다.';
+   console.warn('VIIVII: retaining last known good config',message);
+   setConfigLoadError(message);setNote(message);setLoaded(true);
+   // Do not save defaults or erase the user's older working cache.
+   if(!cached.current||isRetiredIconicSnapshot(cached.current)){
+    document.documentElement.dataset.siteBootReady='true';
+   }
+  });
+  return()=>{cancelled=true};
+ },[]);
  useEffect(()=>{
   if(!workbenchPreview||window.parent===window)return;
   document.documentElement.dataset.viiviiPreview='true';
@@ -194,7 +231,10 @@ export default function Home(){
   root.style.setProperty('--hover-transition-ms',Math.max(0,c.hoverTransitionMs||300)+'ms');
   root.style.setProperty('--reveal-transition-ms',Math.max(0,c.revealTransitionMs||650)+'ms');
  },[c.sliderTransitionMs,c.sliderAutoplayMs,c.sliderEasing,c.uiTransitionMs,c.hoverTransitionMs,c.revealTransitionMs]);
- useEffect(()=>{if(!loaded)return;try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(saved))}catch{}},[loaded,saved]);
+ useEffect(()=>{
+  if(!loaded||configLoadError||isRetiredIconicSnapshot(saved))return;
+  try{localStorage.setItem(SITE_CONFIG_CACHE_KEY,JSON.stringify(saved))}catch{}
+ },[loaded,configLoadError,saved]);
  useEffect(()=>{draftRef.current=draft},[draft]);
  useEffect(()=>{if(!visualEdit)return;const onKey=(e:KeyboardEvent)=>{const target=e.target as HTMLElement|null;if(target?.closest('input,textarea,select,[contenteditable="true"]'))return;if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'){e.preventDefault();undoVisualEdit();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();void saveVisualEdit()}};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey)},[visualEdit]);
  useEffect(()=>{
@@ -645,6 +685,17 @@ export default function Home(){
  '--footer-copy-font':c.textStyles.footerCopyright.font||c.font,'--footer-copy-size':c.textStyles.footerCopyright.size+'px','--footer-copy-color':c.textStyles.footerCopyright.color||'var(--soft)','--footer-copy-letter':(c.textStyles.footerCopyright.letterSpacing??0)+'px','--footer-copy-weight':String(c.textStyles.footerCopyright.weight??400),'--footer-copy-opacity':String((c.textStyles.footerCopyright.opacity??100)/100),
  '--footer-admin-font':c.textStyles.footerAdmin.font||c.font,'--footer-admin-size':c.textStyles.footerAdmin.size+'px','--footer-admin-color':c.textStyles.footerAdmin.color||'var(--soft)','--footer-admin-letter':(c.textStyles.footerAdmin.letterSpacing??0)+'px','--footer-admin-weight':String(c.textStyles.footerAdmin.weight??400),'--footer-admin-opacity':String((c.textStyles.footerAdmin.opacity??100)/100),
  fontFamily:c.font,fontSize:c.fontSize+'px'} as CSSProperties;
+ // While the owner data is unavailable, never display the old unrelated
+ // ICONIC demo as if it were the public site. No writes occur from this state.
+ if(!workbenchPreview&&!hasBootConfig&&(!loaded||configLoadError)){
+  return <main role="status" style={{minHeight:'100dvh',display:'flex',alignItems:'center',justifyContent:'center',background:'#080808',color:'#f5f5f5',padding:'32px',textAlign:'center',fontFamily:'Arial,sans-serif'}}>
+   <div style={{maxWidth:420,display:'grid',gap:20}}>
+    <strong style={{fontSize:24,letterSpacing:'-.04em'}}>VIIVII sara®</strong>
+    <p style={{fontSize:14,lineHeight:1.75,opacity:.7,margin:0}}>{configLoadError?'저장된 사이트 설정에 일시적으로 연결할 수 없습니다. 기존 작품과 설정을 보호하기 위해 다른 사이트로 대체하지 않습니다.':'사이트 설정을 안전하게 불러오고 있습니다.'}</p>
+    {configLoadError&&<button type="button" onClick={()=>window.location.reload()} style={{padding:'13px 22px',border:'1px solid rgba(255,255,255,.35)',borderRadius:999,background:'transparent',color:'inherit',cursor:'pointer'}}>다시 연결</button>}
+   </div>
+  </main>;
+ }
  return <div id="top" style={style} onClickCapture={selectVisualTarget} className={'site '+(!teamPage?'has-section-order ':'')+(!hasBootConfig&&!loaded?'is-config-syncing ':'')+(ownerMode&&!admin&&!login?'has-owner-notice ':'')+(visualEdit?'visual-editing':'')}>
  <ScrollReveal enabled={!admin||preview}/>
  <PointerExperience enabled={!compactViewport&&!visualEdit&&(!admin||preview)&&!login&&c.motion>0}/>
