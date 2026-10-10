@@ -6,6 +6,7 @@ import type {Config,NavItemKey,PortfolioDivider,PortfolioMediaRatio,PortfolioSec
 import TeamMedia,{teamMediaType} from './team-media';
 import PortfolioHoverCredits from './portfolio-hover-credits';
 import useCompactLayout from './use-compact-layout';
+import SiteMenu,{type SiteMenuItem} from './site-menu';
 
 function PortfolioGridCard({src,ratio,index,sourceIndex,name,title,kicker,info,credits,onOpen,visualEditing,viewerOpen}:{src:string;ratio:PortfolioMediaRatio;index:number;sourceIndex:number;name:string;title:string;kicker?:string;info?:string;credits?:string;onOpen:(preview?:HTMLVideoElement|null)=>void;visualEditing:boolean;viewerOpen:boolean}){
   const [frameRatio,setFrameRatio]=useState(()=>ratio==='auto'?4/5:portfolioMediaFrame(1,1,ratio).ratio);
@@ -256,6 +257,12 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
     (config.showTeam?<a key={item} href="/#team" data-portfolio-edit="navTeamLabel" style={globalTextStyle('navMenu')} onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('team')}}>{config.navTeamLabel}</a>:null)
     :<button key={item} type="button" className="nav-contact" data-portfolio-edit="navContactLabel" style={globalTextStyle('navMenu')} onClick={()=>{if(!visualEditing)onContact()}}>{config.navContactLabel}</button>;
 
+  const menuItems:SiteMenuItem[]=config.navOrder.flatMap((item:NavItemKey)=>{
+    if(item==='work')return [{key:item,label:config.navWorkLabel,visualTextKey:'navWorkLabel',onSelect:()=>onNavigate('work')}];
+    if(item==='about')return config.showAbout?[{key:item,label:config.navAboutLabel,visualTextKey:'navAboutLabel',onSelect:()=>onNavigate('about')}]:[];
+    if(item==='team')return config.showTeam?[{key:item,label:config.navTeamLabel,visualTextKey:'navTeamLabel',onSelect:()=>onNavigate('team')}]:[];
+    return [{key:item,label:config.navContactLabel,visualTextKey:'navContactLabel',onSelect:onContact}];
+  });
   const pageStyle={
     '--portfolio-columns':String(layoutMaster.portfolioColumns||3),
     '--portfolio-gap':(layoutMaster.portfolioGap||14)+'px',
@@ -332,15 +339,10 @@ export default function TeamPortfolioPage({config,member,theme,onBack,onNavigate
   const renderDividers=(_after:PortfolioSectionKey)=>null;
 
   return <div className={'team-portfolio-page'+(visualEditing?' is-visual-editing':'')} style={pageStyle}>
-    <header className="nav nav-recomposed team-portfolio-site-nav" data-portfolio-section="nav" data-portfolio-hidden={member.portfolioSections.nav.visible?'false':'true'} style={sectionStyle('nav')}>
+    <header className="nav nav-recomposed team-portfolio-site-nav vii-minimal-nav" data-portfolio-section="nav" data-portfolio-hidden={member.portfolioSections.nav.visible?'false':'true'} style={sectionStyle('nav')}>
       <div className="nav-left-tools"><button type="button" className="icon" aria-label={theme==='light'?'다크 모드':'라이트 모드'} title={theme==='light'?'다크 모드':'라이트 모드'} onClick={()=>{if(!visualEditing)onToggleTheme()}}>{theme==='light'?<Moon size={18}/>:<Sun size={18}/>}</button></div>
-      <nav className="nav-menu nav-menu-left">{config.navOrder.slice(0,2).map(renderSiteNavItem)}</nav>
       <a href="/" className="brand nav-centered-brand" onClick={e=>{e.preventDefault();if(!visualEditing)onNavigate('top')}}>{config.logo?<img src={config.logo} alt={config.name}/>:<span className="brand-editable-text" data-portfolio-edit="siteName" style={globalTextStyle('navBrand')}>{config.name}</span>}<span>®</span></a>
-      <nav className="nav-menu nav-menu-right">{config.navOrder.slice(2).map(renderSiteNavItem)}</nav>
-      <div className="nav-tools">
-        <button type="button" className="admin-link" onClick={()=>{if(!visualEditing)onAdmin()}}>Admin</button>
-        <button type="button" className="nav-edit-link" disabled={visualEditing} onClick={onEditSite}>{visualEditing?'Editing':'Edit Site'}</button>
-      </div>
+      <div className="nav-tools"><SiteMenu items={menuItems} fontFamily={config.font} onAdmin={onAdmin} onEdit={onEditSite} editing={visualEditing}/></div>
     </header>
     {renderDividers('nav')}
 
