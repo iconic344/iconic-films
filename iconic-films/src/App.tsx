@@ -117,12 +117,14 @@ export default function Home(){
   }).catch(e=>{
    if(cancelled)return;
    const message=e instanceof Error?e.message:'사이트 설정을 확인할 수 없습니다.';
-   console.warn('VIIVII: retaining last known good config',message);
+   console.warn('VIIVII: using offline editorial snapshot until database recovers',message);
+   // A cached page can still contain now-blocked Supabase media URLs. Use the
+   // media-independent snapshot for visitors, while preserving their cached
+   // full settings and never writing an offline config back to Supabase.
+   const offline=normalizeConfig(viiviiPublicSnapshot);
+   setSaved(offline);setDraft(offline);
    setConfigLoadError(message);setLoaded(true);
-   // Do not save defaults or erase the user's older working cache.
-   if(!cached.current||isRetiredIconicSnapshot(cached.current)){
-    document.documentElement.dataset.siteBootReady='true';
-   }
+   document.documentElement.dataset.siteBootReady='true';
   });
   return()=>{cancelled=true};
  },[]);
