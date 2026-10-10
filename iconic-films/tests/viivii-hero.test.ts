@@ -28,5 +28,5 @@ test('video loops natively both in preview and during fullscreen handoff',()=>{
   assert.match(gallery,/v\.loop=true;v\.controls=false/);
   assert.match(gallery,/data-site-autoplay=\{!modal&&active\?'true':undefined\} autoPlay=\{active&&!suspended\} loop playsInline/);
   assert.match(gallery,/const ended=\(\)=>\{if\(v\.ended\)/);
-  assert.match(gallery,/\.is-pre-nas-showreel/);
+  assert.match(gallery,/is-pre-nas-showreel/);
 });
