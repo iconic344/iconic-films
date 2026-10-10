@@ -73,9 +73,11 @@ export default function TeamSection({config,onOpen,order,minHeight=0}:{config:Co
           aria-label={(member.name||'Portfolio category')+' 포트폴리오 보기'}
         >
           <div className="team-stack-visual">
-            {member.photo
-              ?<TeamMedia src={member.photo} alt={member.name||'Portfolio'} className="team-stack-media"/>
-              :<span className="team-stack-placeholder" aria-hidden="true"/>}
+            <span className="team-stack-placeholder" aria-hidden="true">
+              <strong>{(member.name||'P').trim().charAt(0).toUpperCase()||'P'}</strong>
+              <small>PORTFOLIO</small>
+            </span>
+            {member.photo&&<TeamMedia src={member.photo} alt={member.name||'Portfolio'} className="team-stack-media"/>}
           </div>
 
           <div className="team-stack-copy team-stack-copy--portfolio">
