@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useRef,useState,type CSSProperties,type MouseEvent as ReactMouseEvent} from 'react';
 import {createPortal} from 'react-dom';
+import {Moon,Sun,X} from 'lucide-react';
 
 export type SiteMenuItem={
  key:string;
@@ -14,6 +15,8 @@ type Props={
  items:SiteMenuItem[];
  onAdmin:()=>void;
  onEdit:()=>void;
+ theme:string;
+ onToggleTheme:()=>void;
  editing?:boolean;
  fontFamily?:string;
 };
@@ -76,7 +79,7 @@ function ScrambleMenuItem({item,index,close}:{item:SiteMenuItem;index:number;clo
  return item.href?<a {...common} href={item.href}>{inner}</a>:<button type="button" {...common}>{inner}</button>;
 }
 
-export default function SiteMenu({items,onAdmin,onEdit,editing=false,fontFamily}:Props){
+export default function SiteMenu({items,onAdmin,onEdit,theme,onToggleTheme,editing=false,fontFamily}:Props){
  const [open,setOpen]=useState(false);
  const opener=useRef<HTMLButtonElement>(null);
  const closeButton=useRef<HTMLButtonElement>(null);
@@ -128,9 +131,16 @@ export default function SiteMenu({items,onAdmin,onEdit,editing=false,fontFamily}
     <aside id="viivii-site-menu-panel" className="vii-site-menu-panel" aria-label="사이트 메뉴" style={{'--vii-menu-font':fontFamily||'inherit'} as CSSProperties}>
      <div className="vii-site-menu-glare" aria-hidden="true"/>
      <div className="vii-site-menu-top">
-      <span>VIIVII SARA <span aria-hidden="true">®</span></span>
+      <button
+       type="button"
+       className="vii-site-menu-theme"
+       onClick={onToggleTheme}
+       aria-label={theme==='light'?'다크 모드로 전환':'라이트 모드로 전환'}
+       title={theme==='light'?'다크 모드':'라이트 모드'}
+       tabIndex={open?0:-1}
+      >{theme==='light'?<Moon size={19} strokeWidth={1.75} aria-hidden="true"/>:<Sun size={19} strokeWidth={1.75} aria-hidden="true"/>}</button>
       <button type="button" ref={closeButton} className="vii-site-menu-close" onClick={dismiss} aria-label="메뉴 닫기" tabIndex={open?0:-1}>
-       <span aria-hidden="true">×</span>
+       <X size={19} strokeWidth={1.9} aria-hidden="true"/>
       </button>
      </div>
      <nav aria-label="메인 메뉴" className="vii-site-menu-links">
