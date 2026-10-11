@@ -260,3 +260,15 @@ html[data-theme="dark"].viivii-nav-scrolled .team-portfolio-page>header.nav.nav-
 }
 /* Fullscreen already allocates the full viewport; letterbox rather than
    cutting off the top of the model's head on non-16:9 displays. */
+
+/* PROJECT 10 / mobile frame protection: the original mobile layout uses
+   a more specific .is-clean-preview + data-hero-has-media cover selector.
+   Scope this override ONLY to the temporary 777 film, keeping other works
+   and all editor-controlled gallery crop modes unchanged. */
+@media(max-width:1024px), (max-width:1366px) and (any-pointer:coarse){
+  .site .hero>.hero-media-shell[data-hero-has-media="true"] .hero-gallery .media-gallery.is-clean-preview.is-pre-nas-showreel:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>video,
+  .site .hero>.hero-media-shell[data-hero-has-media="true"] .hero-gallery .media-gallery.is-clean-preview.is-pre-nas-showreel:not(.is-modal):not(.is-fullscreen) .media-gallery-artwork>.media-gallery-video-poster{
+    object-fit:contain!important;
+    object-position:50% 50%!important;
+  }
+}
