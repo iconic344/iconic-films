@@ -24,7 +24,7 @@ async function collect(page, selector) {
   };
  });
 }
-async function verifyViewport(width,height,checkFullscreen=false){
+async function verifyViewport(width,height,checkLoop=false){
  const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
  page.on('pageerror',e=>console.log('Browser JS error:',String(e).slice(0,220)));
  page.on('response',response=>{if(/\/media\/viivii-hero-777|\/api\/config/.test(response.url()))console.log('NETWORK',response.status(),response.url())});
@@ -58,41 +58,43 @@ async function verifyViewport(width,height,checkFullscreen=false){
   assert.equal(state.videoHeight,2160,'Opening film must decode as actual 4K height');
   assert.equal(state.objectFit,'contain','No-crop preview must use contain');
   assert.equal(state.loop,true,'Native seamless looping must stay enabled');
-  if(checkFullscreen){
-   await page.waitForFunction(selector=>{
-    const v=document.querySelector(selector);
-    return v instanceof HTMLVideoElement && !v.paused && v.currentTime>0.5;
-   },selector,{timeout:14000});
-   const artwork=page.locator('.site .hero-media-shell .media-gallery-artwork').first();
-   await artwork.click({force:true});
-   await page.waitForTimeout(350);
-   console.log('AFTER USER CLICK',await page.evaluate(()=>({
-    dialogs:[...document.querySelectorAll('[role="dialog"]')].map(e=>({className:e.className,html:e.outerHTML.slice(0,150)})),
-    galleries:[...document.querySelectorAll('.media-gallery')].map(e=>e.className),
-    hit:(()=>{const v=document.querySelector('.site .hero-media-shell .media-gallery-artwork');if(!v)return null;const b=v.getBoundingClientRect();const hit=document.elementFromPoint(b.x+b.width/2,b.y+b.height/2);return {hit:hit?.tagName,className:hit?.className,withinArtwork:v.contains(hit)}})()
-   })));
-   const fullSelector='.unified-media-dialog .media-gallery.is-fullscreen video';
-   await page.locator(fullSelector).first().waitFor({state:'attached',timeout:12000});
-   state=await collect(page,fullSelector);
-   console.log('FULLSCREEN',width,height,JSON.stringify(state));
-   assert.equal(state.objectFit,'contain','Fullscreen should never crop the showreel');
-   assert.equal(state.loop,true,'Fullscreen must preserve looping');
-   // Observe an actual playback rollover while the fullscreen viewer is open.
+  // The hero is a visual-only 4K background, not a clickable player.
+  assert.equal(state.paused,false,'Hero must already be auto-playing');
+  assert.equal(await page.locator('.unified-media-dialog').count(),0,'No player should be open on arrival');
+  const heroVideo=await page.locator(selector).first().elementHandle();
+  const artwork=page.locator('.site .hero-media-shell .media-gallery-artwork').first();
+  await artwork.click({force:true});
+  await page.waitForTimeout(450);
+  assert.equal(await page.locator('.unified-media-dialog').count(),0,'Clicking home film must not open a modal player');
+  const afterClick=await collect(page,selector);
+  assert.equal(afterClick.paused,false,'Click must not pause the home video');
+  assert.equal(afterClick.loop,true,'Looping must survive user click');
+  assert.equal(await page.locator(selector).first().evaluate((v,node)=>v===node,heroVideo),true,'Click must preserve the same streaming video element');
+  await artwork.click({force:true});
+  assert.equal(await page.locator('.unified-media-dialog').count(),0,'Repeated clicks must remain inert');
+  await page.mouse.move(0,0);
+  await page.waitForTimeout(550);
+  const afterLeave=await collect(page,selector);
+  assert.equal(afterLeave.paused,false,'Moving the mouse off the showreel must not pause it');
+  assert.equal(afterLeave.loop,true);
+  console.log('PASS: clicking the showreel twice did not open a viewer, change the video, or stop playback');
+  if(checkLoop){
    await page.waitForFunction(selector=>{
     const v=document.querySelector(selector);
     return v instanceof HTMLVideoElement && v.duration>0 &&
       v.currentTime>Math.max(3,v.duration-2.2) && !v.paused;
-   },fullSelector,{timeout:23000});
+   },selector,{timeout:25000});
    await page.waitForFunction(selector=>{
     const v=document.querySelector(selector);
     return v instanceof HTMLVideoElement && v.currentTime<1.8 && !v.paused;
-   },fullSelector,{timeout:10000});
-   console.log('PASS: fullscreen video continued playing after crossing its ending timestamp');
+   },selector,{timeout:10000});
+   assert.equal(await page.locator('.unified-media-dialog').count(),0);
+   console.log('PASS: the homepage background video looped at the end without opening a player');
   }
   console.log('PASS: browser viewport',width+'x'+height);
  } finally {await page.close()}
 }
 try{
  await verifyViewport(1920,1080,true);
- await verifyViewport(390,844,false);
+ await verifyViewport(390,844,true);
 }finally{await browser.close()}
