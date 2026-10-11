@@ -6,6 +6,7 @@ import path from 'node:path';
 const root=process.cwd();
 const snapshot=JSON.parse(readFileSync(path.join(root,'src/viivii-public-snapshot.json'),'utf8'));
 const gallery=readFileSync(path.join(root,'src/media-gallery.tsx'),'utf8');
+const app=readFileSync(path.join(root,'src/App.tsx'),'utf8');
 const css=readFileSync(path.join(root,'src/portfolio-slider-unified.css'),'utf8');
 const originalCss=readFileSync(path.join(root,'src/hero-gallery-poster-fix.css'),'utf8');
 
@@ -29,4 +30,11 @@ test('video loops natively both in preview and during fullscreen handoff',()=>{
   assert.match(gallery,/data-site-autoplay=\{!modal&&active\?'true':undefined\} autoPlay=\{active&&!suspended\} loop playsInline/);
   assert.match(gallery,/const ended=\(\)=>\{if\(v\.ended\)/);
   assert.match(gallery,/is-pre-nas-showreel/);
+});
+
+test('pointer-captured hero tap opens the viewer and reuses its decoded video',()=>{
+  assert.match(gallery,/!balanceEdges&&!modal&&!isFullscreen&&start\.slideIndex===index&&onExpand/);
+  assert.match(gallery,/onExpand\(index,video\.current\)/);
+  assert.match(app,/setBorrowedHeroVideo\(previewVideo\|\|null\)/);
+  assert.match(app,/borrowedVideo=\{work\?\.id==='reel'\?borrowedHeroVideo:null\}/);
 });
