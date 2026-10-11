@@ -29,6 +29,6 @@ jobs:
       - name: Install isolated browser verification dependencies
         run: |
           npm install --no-save --package-lock=false playwright@1.55.1
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chrome
       - name: Verify deployed PC/mobile media and fullscreen loop
         run: node scripts/verify-live-browser.mjs
