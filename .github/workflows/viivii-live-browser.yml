@@ -6,6 +6,7 @@ on:
       - 'iconic-films/scripts/verify-live-browser.mjs'
       - '.github/workflows/viivii-live-browser.yml'
       - 'iconic-films/src/media-gallery.tsx'
+      - 'iconic-films/src/App.tsx'
       - 'iconic-films/src/portfolio-slider-unified.css'
       - 'iconic-films/src/viivii-public-snapshot.json'
   workflow_dispatch:
