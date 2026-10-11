@@ -32,9 +32,16 @@ test('video loops natively both in preview and during fullscreen handoff',()=>{
   assert.match(gallery,/is-pre-nas-showreel/);
 });
 
-test('pointer-captured hero tap opens the viewer and reuses its decoded video',()=>{
-  assert.match(gallery,/!balanceEdges&&!modal&&!isFullscreen&&start\.slideIndex===index&&onExpand/);
-  assert.match(gallery,/onExpand\(index,video\.current\)/);
-  assert.match(app,/setBorrowedHeroVideo\(previewVideo\|\|null\)/);
-  assert.match(app,/borrowedVideo=\{work\?\.id==='reel'\?borrowedHeroVideo:null\}/);
+test('home showreel is an inert, always-looping visual with NO fullscreen or play-toggle action',()=>{
+  const hero=app.match(/<MediaGallery items=\{heroItems\}[\s\S]*?\/>/)?.[0];
+  assert(hero,'the home showreel must render a gallery');
+  assert.match(hero,/passivePreview/);
+  assert.doesNotMatch(hero,/onExpand=/,'hero must not open a video player');
+  assert.doesNotMatch(app,/borrowedHeroVideo|setBorrowedHeroVideo/,'hero cannot hand off its video to a popup');
+  assert.match(gallery,/onPointerDown=\{e=>\{if\(passivePreview\|\|/);
+  assert.match(gallery,/onPointerUp=\{e=>\{if\(passivePreview\|\|/);
+  assert.match(gallery,/onClick=\{\(\)=>\{if\(passivePreview\)return;/);
+  assert.match(gallery,/autoPlay=\{active&&!suspended\} loop playsInline/);
+  // Other WORK/TEAM players remain available; only the homepage is passive.
+  assert.match(app,/<MediaGalleryDialog items=\{filmItems\}/);
 });
