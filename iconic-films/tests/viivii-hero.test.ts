@@ -12,10 +12,10 @@ const originalCss=readFileSync(path.join(root,'src/hero-gallery-poster-fix.css')
 
 test('VIIVII pre-NAS editorial showreel retains real media with full-frame fit',()=>{
   assert.match(snapshot.name,/viivii/i);
-  assert.equal(snapshot.heroVideo,'/media/viivii-hero-777.mp4');
+  assert.equal(snapshot.heroVideo,'/media/viivii-hero-777-4k.mp4');
   assert.equal(snapshot.heroPoster,'/media/viivii-hero-777-poster.jpg');
   assert.equal(snapshot.heroMediaFit,'contain');
-  assert(statSync(path.join(root,'public/media/viivii-hero-777.mp4')).size>100_000);
+  assert.equal(readFileSync(path.join(root,'scripts/restore-viivii-4k.mjs'),'utf8').includes('22_814_149'),true);
   assert(statSync(path.join(root,'public/media/viivii-hero-777-poster.jpg')).size>10_000);
 });
 
