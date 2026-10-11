@@ -30,8 +30,23 @@ async function verifyViewport(width,height,checkLoop=false){
  page.on('response',response=>{if(/\/media\/viivii-hero-777|\/api\/config/.test(response.url()))console.log('NETWORK',response.status(),response.url())});
  page.on('requestfailed',request=>{if(/\/media\/|\/api\//.test(request.url()))console.log('REQUEST FAILED',request.failure()?.errorText,request.url())});
  try{
-  const response=await page.goto(origin,{waitUntil:'domcontentloaded',timeout:30000});
-  assert.equal(response?.status(),200,'Site homepage must respond 200');
+  // GitHub and Vercel are independent deployment pipelines. Do not
+  // mistake a still-cached old release for the commit being verified.
+  let deployed=false;
+  for(let attempt=0;attempt<18;attempt++){
+   const probeUrl=origin+'/?verified_sha='+encodeURIComponent(process.env.GITHUB_SHA||'main')+'&try='+attempt;
+   const response=await page.goto(probeUrl,{waitUntil:'domcontentloaded',timeout:30000});
+   assert.equal(response?.status(),200,'Site homepage must respond 200');
+   try{
+    await page.locator('.site .hero-media-shell .media-gallery.is-passive-preview').first()
+      .waitFor({state:'attached',timeout:4500});
+    deployed=true;break;
+   }catch{
+    console.log('WAITING FOR NEW DEPLOYMENT',attempt+1,'passive background mode not yet present');
+    await page.waitForTimeout(6000);
+   }
+  }
+  assert(deployed,'The version without a clickable hero player has not yet deployed');
   const selector='.site .hero-media-shell .media-gallery-artwork video';
   await page.locator(selector).first().waitFor({state:'attached',timeout:24000});
   console.log('CODEC SUPPORT',await page.evaluate(()=>({mp4:document.createElement('video').canPlayType('video/mp4; codecs="avc1.640032"'),h264:document.createElement('video').canPlayType('video/mp4; codecs="avc1.640028"')})));
