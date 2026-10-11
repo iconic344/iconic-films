@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 
 const origin = 'https://viiviisara.com';
-const browser = await chromium.launch({headless:true,args:['--no-sandbox']});
+const browser = await chromium.launch({channel:'chrome',headless:true,args:['--no-sandbox']});
 async function collect(page, selector) {
  return await page.locator(selector).first().evaluate(v=>{
   const style=getComputedStyle(v);
@@ -34,6 +34,7 @@ async function verifyViewport(width,height,checkFullscreen=false){
   assert.equal(response?.status(),200,'Site homepage must respond 200');
   const selector='.site .hero-media-shell .media-gallery-artwork video';
   await page.locator(selector).first().waitFor({state:'attached',timeout:24000});
+  console.log('CODEC SUPPORT',await page.evaluate(()=>({mp4:document.createElement('video').canPlayType('video/mp4; codecs="avc1.640032"'),h264:document.createElement('video').canPlayType('video/mp4; codecs="avc1.640028"')})));
   console.log('ATTACHED',width,height,JSON.stringify(await collect(page,selector)));
   try{
    await page.waitForFunction(selector=>{
