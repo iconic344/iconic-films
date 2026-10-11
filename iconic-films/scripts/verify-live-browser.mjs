@@ -62,7 +62,14 @@ async function verifyViewport(width,height,checkFullscreen=false){
     const v=document.querySelector(selector);
     return v instanceof HTMLVideoElement && !v.paused && v.currentTime>0.5;
    },selector,{timeout:14000});
-   await page.locator('.site .hero-media-shell .media-gallery-artwork').first().click({force:true});
+   const artwork=page.locator('.site .hero-media-shell .media-gallery-artwork').first();
+   await artwork.click({force:true});
+   await page.waitForTimeout(350);
+   console.log('AFTER USER CLICK',await page.evaluate(()=>({
+    dialogs:[...document.querySelectorAll('[role="dialog"]')].map(e=>({className:e.className,html:e.outerHTML.slice(0,150)})),
+    galleries:[...document.querySelectorAll('.media-gallery')].map(e=>e.className),
+    hit:(()=>{const v=document.querySelector('.site .hero-media-shell .media-gallery-artwork');if(!v)return null;const b=v.getBoundingClientRect();const hit=document.elementFromPoint(b.x+b.width/2,b.y+b.height/2);return {hit:hit?.tagName,className:hit?.className,withinArtwork:v.contains(hit)}})()
+   })));
    const fullSelector='.unified-media-dialog .media-gallery.is-fullscreen video';
    await page.locator(fullSelector).first().waitFor({state:'attached',timeout:12000});
    state=await collect(page,fullSelector);
