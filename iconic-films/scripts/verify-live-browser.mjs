@@ -53,8 +53,9 @@ async function verifyViewport(width,height,checkFullscreen=false){
   }
   let state=await collect(page,selector);
   console.log('PREVIEW',width,height,JSON.stringify(state));
-  assert.match(state.currentSrc,/\/media\/viivii-hero-777\.mp4/,'Opening reel must have the expected source');
-  assert(state.videoWidth>=1280 && state.videoHeight>=720,'Media should decode as video');
+  assert.match(state.currentSrc,/\/media\/viivii-hero-777-4k\.mp4/,'Opening reel must use the real 4K asset');
+  assert.equal(state.videoWidth,3840,'Opening film must decode as actual 4K width');
+  assert.equal(state.videoHeight,2160,'Opening film must decode as actual 4K height');
   assert.equal(state.objectFit,'contain','No-crop preview must use contain');
   assert.equal(state.loop,true,'Native seamless looping must stay enabled');
   if(checkFullscreen){
